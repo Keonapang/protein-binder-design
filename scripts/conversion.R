@@ -1,13 +1,11 @@
 
-# new_chain="B"
-# parameter="1seqs_50diff_05temp" 
-
-# for cycle in "1AA" "1BB" "1CC" "1DD"; do
-# Rscript "/Users/keonapang/Desktop/conversion.R" $cycle $new_chain $parameter
-# done
+# cycle="1A"
+# diffusion="50"
+# temp="0.5"
+# DIR_WORK="/Users/keonapang/Desktop/NVIDIA/Sept12"
 
 # for cycle in "1A" "1B" "1C" "1D"; do
-# Rscript "/Users/keonapang/Desktop/conversion.R" $cycle $new_chain $parameter
+# Rscript "/Users/keonapang/Desktop/conversion.R" $cycle $diffusion $temp $DIR_WORK
 # done
 
 suppressMessages(library(data.table))
@@ -16,21 +14,22 @@ suppressMessages(library(tidyr))
 
 args <- commandArgs(trailingOnly = TRUE)
 cycle <- args[1]
-new_chain <- args[2]
-parameter <- args[3]
+diffusion <- args[2]
+temp <- args[3]
+DIR_WORK <- args[4]
 
+new_chain <- "B"
 cat("====================================================\n")
 
 # Predicted binder structure 
-DIR_IN <- paste0("/Users/keonapang/Desktop/3_ProteinPMNN_original") # <------- NEW 
+DIR_IN <- DIR_WORK
 cat("DIR_IN: ", DIR_IN, "\n")
 setwd(DIR_IN)
 
 # OUTPUT FILE 
-DIR_OUT <- "/Users/keonapang/Desktop/5_pdb_original"
+DIR_OUT <- paste0(DIR_WORK,"/prodigy_input_pdb")
 if (!dir.exists(DIR_OUT)) {dir.create(DIR_OUT, recursive = TRUE)}
-outfile <- paste0(DIR_OUT, "/cycle", cycle, "_", parameter,".pdb")
-
+outfile <- paste0(DIR_OUT, "/cycle", cycle, "_", diffusion, "diff_", temp, "temp.pdb")
 
 # Search for the specific file
 matching_file <- list.files(
@@ -48,7 +47,7 @@ if (length(matching_file) > 0) {
 
 # Target ApoB AlphaFold2 structure (.pdb)
 
-orgfile <- paste0("/Users/keonapang/Desktop/1_AlphaFold/pep",cycle,".pdb") 
+orgfile <- paste0(DIR_WORK, "/pep",cycle,".pdb") 
 cat("orgfile: ", orgfile, "\n")
 cat("infile: ", infile, "\n")
 cat("Parameter: ", parameter, "\n")

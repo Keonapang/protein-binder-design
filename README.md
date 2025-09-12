@@ -35,7 +35,6 @@ The example workflow illustrated below generates 8 peptide binders for target pr
 
 ![Fig 2. Manually identify the binding sites](docs/ApoB_3D_seq.png) **Fig 2**. Manually identify the 8 target binding sites
 
-
 **Table 1**. 8 target sequences of length 40 amino acids.
 
 | Cycle         | ApoB-100 target sequence          | Amino Acid Position |
@@ -53,11 +52,17 @@ The example workflow illustrated below generates 8 peptide binders for target pr
 
 For each of the 8 target sequences (**Table 1**), compute their 3D structure (.PDB) on [AlphaFold2 colab](https://colab.research.google.com/github/sokrypton/ColabFold/blob/main/AlphaFold2.ipynb#scrollTo=R_AH6JSXaeb2). On this colab notebook, perform the following steps for each sequence:
 
-1. Input sequence under `query_sequence`
-2. Hit `Runtime` > `Run all` and wait ~ 5mins
-3. Download .zip results, decompress it and save the model with this suffix `...rank_001_alphafold2_ptm_model_1_seed_000.pdb` (this is because AlphaFold2 automatically generates 5 possible structures, with the first model being the one with the highest confidence, based on [pLDDT](https://www.ebi.ac.uk/training/online/courses/alphafold/inputs-and-outputs/evaluating-alphafolds-predicted-structures-using-confidence-scores/plddt-understanding-local-confidence/))
-4. Rename this model file to `pep${Cycle}.pdb`.
+1. Input sequence under `query_sequence`.
+2. Hit `Runtime` > `Run all` and wait ~ 5mins.
+3. Download .zip results, unpack it and identify the model with this suffix `...rank_001_alphafold2_ptm_model_1_seed_000.pdb` (This is because AlphaFold2 automatically generates 5 possible structures, with the first-ranked structure being the one with highest confidence, based on [pLDDT](https://www.ebi.ac.uk/training/online/courses/alphafold/inputs-and-outputs/evaluating-alphafolds-predicted-structures-using-confidence-scores/plddt-understanding-local-confidence/)).
+4. Rename only the first-ranked model file to `pep${cycle}.pdb` (i.e. if `cycle="1A"`, then this would be pep1A.pdb).
+5. Store this model in a new working directory and assign it's path to `$DIR_WORK` (which will also be used later on).
 
+```bash
+    DIR_WORK="/your/local/working/directory"
+    mkdir -p $DIR_WORK
+    cd $DIR_WORK # contains RFDiffusion and ProteinPMNN results
+```
 
 ## 3. Launch a NVIDIA cloud virtual machine (VM)
 
@@ -163,13 +168,7 @@ For each of the 8 target sequences (**Table 1**), compute their 3D structure (.P
     done
 ```
 
-While results are being generated, ensure you download them into a new directory on your local computer:
-
-```bash
-    DIR_WORK="/set/your/local/directory"
-    mkdir -p $DIR_WORK
-    cd $DIR_WORK # contains RFDiffusion and ProteinPMNN results
-```
+While results are being generated, ensure you download them into `$DIR_WORK` directory on your local computer:
 
 ![results](docs/results.png) **Fig 3**. Example of the output directory containing results from this notebook example.
 
@@ -182,8 +181,7 @@ While results are being generated, ensure you download them into a new directory
 
 [PRODIGY web server](https://rascar.science.uu.nl/prodigy/) can calculate gibbs free energy.
 
-1. We must provide the PDB of the binder-target complex as a multi-PDB file. To generate this file, you will need two inputs: 
-(a) the PDB of the original protein structure and (b) PDB of the generated protein binder (i.e. peptide 1A). 
+1. We must provide the PDB of the entire binder-target complex. To generate this PDB file, you will need two inputs: (a) the PDB of the target protein structure and (b) PDB of the generated protein binder from RFDiffusion.
 
 Run code below:
 
