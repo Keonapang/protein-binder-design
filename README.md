@@ -13,33 +13,27 @@ Once completed, this Blueprint outputs predicted multimer structures (in PDB for
 
 ## System Requirements
 
-The docker compose setup for this NIM Agent Blueprint requires the following specifications:
 - At least 1300 GB (1.3 TB) of fast NVMe SSD space
 - A modern CPU with at least 24 CPU cores
 - At least 64 GB of RAM
 - Two or more NVIDIA L40s, A100, or H100 GPUs
 
-## Get Started
-
-- [Deploy with Docker Compose](deploy)
-- [Source code](src)
-
 
 ## Software Pre-requisites
 
-  -Python 3.11+
+- Python 3.11+
 
 ## Hardware requirements
 
 Total: 2 x GPU, 47 GiB GPU memory, 1.3TB GB SSD drive space, 60GiB RAM,24 CPU
-  -**RFdiffusion** runs on 1 x GPU, ≥12 GiB GPU memory, 15GB free SSD drive space
-  -**ProteinMPNN** runs on 1 x GPU, ≥3 GiB GPU memory, 10GB free SSD drive space
+-**RFdiffusion** runs on 1 x GPU, ≥12 GiB GPU memory, 15GB free SSD drive space
+-**ProteinMPNN** runs on 1 x GPU, ≥3 GiB GPU memory, 10GB free SSD drive space
 
 ## Ensure that you have these files
 
--`protein-binder-design_v3.ipynb` uploaded to a [public Github repo](https://github.com/Keonapang/generative-protein-binder-design/blob/main/src/protein-binder-design.ipynb)
+-`protein-binder-design_v3.ipynb` from [this repo](scripts/protein-binder-design_v3.ipynb)
 
--`docker-compose.yaml` (3MB) from the original [BioNeMo repo](https://github.com/NVIDIA-BioNeMo-blueprints/generative-protein-binder-design/blob/main/deploy/docker-compose.yaml)
+-`docker-compose.yaml` (3MB) from [this repo](deploy/docker-compose.yaml)
 
 -`cycle1_alphafold2_output.pdb` (~80KB) pre-computed on [AlphaFold2 colab](https://colab.research.google.com/github/sokrypton/ColabFold/blob/main/AlphaFold2.ipynb#scrollTo=R_AH6JSXaeb2)
 
