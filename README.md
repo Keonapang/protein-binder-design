@@ -231,11 +231,37 @@ Optionally, you could visualize the entire binding complex (multiple peptides bi
     Rscript "${root}/conversion_all.R" $cycle $diffusion $temp $DIR_WORK
 ```
 
+3. Open PyMoL and enter the following code:
 
-3. Open PyMoL and load in `cycle1_50diff_0.5temp_complex.pdb`.
+```bash
+    # Cycle 1 - COMPLETE PRODUCT (APR 30, 2025)
+    load /Users/keonapang/Desktop/NVIDIA/1_AlphaFold/pep1.pdb, scaffold
+    load /Users/keonapang/Desktop/NVIDIA/5_pdb_original/cycle1A_1seqs_50diff_05temp.pdb, peptide1 # 
+    load /Users/keonapang/Desktop/NVIDIA/5_pdb_original/cycle1B_1seqs_50diff_05temp.pdb, peptide2 # 
+    load /Users/keonapang/Desktop/NVIDIA/5_pdb_original/cycle1DD_1seqs_50diff_05temp.pdb, peptide3 # note: this is actually 1C--
+    load /Users/keonapang/Desktop/NVIDIA/5_pdb_original/cycle1D_1seqs_50diff_05temp.pdb, peptide4 #
+    
+    # Step 2: Align Chain A of each peptide to the scaffold
+    align peptide1 and chain A, scaffold
+    align peptide2 and chain A, scaffold
+    align peptide3 and chain A, scaffold
+    align peptide4 and chain A, scaffold
+    
+    # Step 3: Extract only the peptide chains (Chain B) and rename
+    extract peptide1_chainB, peptide1 and chain B
+    alter peptide1_chainB, chain="C"
+    extract peptide2_chainB, peptide2 and chain B
+    alter peptide2_chainB, chain="D"
+    extract peptide3_chainB, peptide3 and chain B
+    alter peptide3_chainB, chain="E"
+    extract peptide4_chainB, peptide4 and chain B
+    alter peptide4_chainB, chain="F"
+    
+    # Step 4: Merge scaffold and peptide chains into a single object
+    create combined, scaffold or peptide1_chainB or peptide2_chainB or peptide3_chainB or peptide4_chainB
+    save /Users/keonapang/Desktop/NVIDIA/scaffold_peptides_1ABCD_new.pdb, combined
+```
 
-4. Change the Color setting by clicking on the colorful **"C"** button > **'by chain'** > **'by chain'** :
-![pymol1.](docs/pymol1.png)
 
 ![Fig 5.](docs/Fig1_visualization.png) **Fig 5**. First 4 peptides (cycle 1A, 1B, 1C, 1D) binding to ApoB, visualized on PyMOL (left) and SWISS-MODEL (right).
 
