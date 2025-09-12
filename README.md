@@ -30,7 +30,7 @@ The example workflow illustrated below generates 8 peptide binders for target pr
 
 1. Get on the [SWISS-MODEL](https://swissmodel.expasy.org/) repository and search for your target protein to view the interactive 3D model. In this example, we used [ApoB-100](https://swissmodel.expasy.org/repository/uniprot/P04114?template=9eag.1.A&range=38-4563) (**Fig 1**).
 2. Define your 'binding window' size, which affects how long your generated peptide binder will be. In this example, we designed 8 binding windows of **40aa** in length.
-3. Manually select the sequences for these 8 binding sites, using the 3D interactive model to help orient you. In this example, we chose 4 peptides in the first half of the ApoB protein sequence (residues A91–357; cycle 1) and 4 peptides in the second half (residues A390–642; cycle 2). The full *ApoB-100* protein backbone consists of 4,563 amino acids (**Fig 2**).
+3. Manually select the sequences for these 8 binding sites, using the 3D interactive model to help orient you. In this example, we chose 4 peptides in the first target region of ApoB (residues A91–357; **cycle 1**) and 4 peptides in a second target region (residues A390–642; **cycle 2**). The full *ApoB-100* protein backbone consists of 4,563 amino acids (**Fig 2**).
 
 ![Fig 2. Manually identify the binding sites](docs/ApoB_3D_seq.png) **Fig 2**. Manually identify the 8 target binding sites
 
@@ -264,7 +264,11 @@ Optionally, you could visualize the entire binding complex (multiple peptides bi
 
 ![Fig 5.](docs/pymol2.png) **Fig 5**. Example of the 3D peptide-target binding complex rendering on PyMOL.
 
-![Fig 5.](docs/Fig1_visualization.png) **Fig 6**. First 4 peptides (cycle 1A, 1B, 1C, 1D) binding to ApoB, visualized on PyMOL (left) and SWISS-MODEL (right).
+## The end
+
+From manually selecting binding sites on a target region (**cycle 1**) of the protein via SWISS-MODEL, to finally, generating 4 non-overlapping, unique peptide binders for this target region.
+
+![Fig 6](docs/Fig1_visualization.png) **Fig 6**. First 4 peptides (cycle 1A, 1B, 1C, 1D) binding to ApoB, visualized on PyMOL (left) and SWISS-MODEL (right).
 
 
 ## Jupyter notebook version
