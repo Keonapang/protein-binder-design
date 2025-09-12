@@ -75,7 +75,7 @@ For each of the 8 target sequences (**Table 1**), compute their 3D structure (.P
 
 4. Start a new terminal session by clicking the "+" button at the top right.
 
-5. An **NGC Personal API Key** is required to download and run any NVIDIA NIMs. If this is your first time, [generate](https://catalog.ngc.nvidia.com/orgs/nvidia/teams/clara/containers/bionemo-framework) it once and store it for future use.
+5. An **NGC Personal API Key** is required to download and run any NVIDIA NIMs. If this is your first time, start by creating an account on [NGC](https://catalog.ngc.nvidia.com/). Then [generate the key](https://org.ngc.nvidia.com/setup/api-key) and note it down somewhere secure for future use.
 
 ```bash
     export NGC_CLI_API_KEY=<enter-key> 
@@ -92,7 +92,8 @@ For each of the 8 target sequences (**Table 1**), compute their 3D structure (.P
     sudo apt-get install -y docker-compose # docker compose version 2+
     sudo apt install python3.11
 
-    ## Create the nim cache directory to download any model data to your local/server disk 
+    # The NIM cache allows you to download models and store previously-downloaded models on your local/server disk,
+    # so that you don’t need to download them again later when you run the NIM again. 
     mkdir -p ~/.cache/nim
     chmod -R 777 ~/.cache/nim    
     export HOST_NIM_CACHE=~/.cache/nim
@@ -102,7 +103,9 @@ For each of the 8 target sequences (**Table 1**), compute their 3D structure (.P
     docker compose up # runs /deploy/docker-compose.yaml
 ```
 
-7. Once docker set up is complete, open a new Terminal tab and check to ensure it was successful.
+7. Open a new terminal, leaving the current terminal open with the launched service.
+
+8. Open a new Terminal tab to view running containers. Wait until the health check of your containers returns `{"status":"ready"}` before running any models.
 
 ```bash
     # 1. Check storage space
@@ -110,12 +113,13 @@ For each of the 8 target sequences (**Table 1**), compute their 3D structure (.P
 
     # 2. Check which dockers are currently active/on stand-by
     docker container ls
+    docker ps 
     # Example:
         # CONTAINER ID   IMAGE                             COMMAND                   CREATED         STATUS         PORTS                                                             NAMES
         # 8ac6ad7cbb27   nvcr.io/nim/ipd/rfdiffusion:2.0   "/bin/sh -c 'exec \"$…"   2 minutes ago   Up 2 minutes   0.0.0.0:8082->8000/tcp, [::]:8082->8000/tcp                       protein-binder-design-rfdiffusion-1
         # 87cf41c4e7c6   nvcr.io/nim/ipd/proteinmpnn:1.0   "/bin/sh -c 'exec \"$…"   2 minutes ago   Up 2 minutes   6006/tcp, 8888/tcp, 0.0.0.0:8083->8000/tcp, [::]:8083->8000/tcp   protein-binder-design-proteinmpnn-1
 
-    # 3. Check health of docker images (model) 
+    # 3. Health check 
     curl localhost:8082/v1/health/ready # RFdiffusion
     curl localhost:8083/v1/health/ready # Protein MPNN
     # Example:
@@ -153,18 +157,16 @@ For each of the 8 target sequences (**Table 1**), compute their 3D structure (.P
     done
 ```
 
-After running this script, ensure you download all your results into a new, common directory:
+While results are being generated, ensure you download them into a new directory on your local computer:
 
 ```bash
-    DIR_WORK="/set/directory"
+    DIR_WORK="/set/your/local/directory"
     mkdir -p $DIR_WORK
-    cd $DIR_WORK
+    cd $DIR_WORK # contains RFDiffusion and ProteinPMNN results
 ```
 
-Now, you may exit and shutdown the NVIDIA VM.
-
 > [!NOTE]
-> In the ProteinMPNN output, the 'score' average over residues that were designed negative log probability of sampled amino acids. Whereas the 'global score' is averaged over all residues in all chains negative log probability of sampled/fixed amino acids.
+> Now, you may exit and shutdown the NVIDIA VM so it doesn't keep charging money.
 
 ## 5. Visualization and validation of binder-target 
 
@@ -224,3 +226,13 @@ Rscript "./src/conversion_all.R" $cycle $parameter`
 ## Notebook
 
 A similar example of the workflow is available in jupyter notebook format [/scripts/protein-binder-design_Sept2025.ipynb](/scripts/protein-binder-design_Sept2025.ipynbscript/protein-binder-design_Sept2025.ipynb)
+
+## Full NVIDIA pipeline
+
+Downloading the [AlphaFold2]() and [AlphaFold2-Multimer](https://docs.nvidia.com/nim/bionemo/alphafold2-multimer/latest/quickstart-guide.html) model requires an additional 1250GB and 512GB of free SSD drive space respectively. Their download time (running the `docker compose pull` step) is also very long, up to 4-10 hours on 100+ Mbps internet connection for both models.
+
+These models can:
+
+- AlphaFold: Predict protein structure given a protein sequence
+- AlphaFold2-Multimer: Predict protein structure given multiple protein sequences
+
