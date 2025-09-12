@@ -49,18 +49,16 @@ The example workflow illustrated below generates 8 peptide binders for target pr
 | 2C      | LRKMEPKDKDQEVLLQTFLDDASPGDKRLAAYLMLMRSPS    | A531-570           |
 | 2D      | EQVKNFVASHIANILNSEELDIQDLKKLVKEALKESQLPT    | A587-626           |
 
-## 2. AlphaFold2
+## 2. AlphaFold2 Colab (free)
 
-## Amino Acid Table
+For each of the 8 target sequences (**Table 1**), compute their 3D structure (.PDB) on [AlphaFold2 colab](https://colab.research.google.com/github/sokrypton/ColabFold/blob/main/AlphaFold2.ipynb#scrollTo=R_AH6JSXaeb2). Perform these steps for each sequence:
 
-For each of the 8 target sequences (**Table 1**), compute their 3D structure (.PDB) on [AlphaFold2 colab](https://colab.research.google.com/github/sokrypton/ColabFold/blob/main/AlphaFold2.ipynb#scrollTo=R_AH6JSXaeb2). 
-
-1. On the AlphaFold2 colab notebook, input sequence(s) under `query_sequence`
+1. On the AlphaFold2 colab notebook, input sequence under `query_sequence`
 2. Hit `Runtime` > `Run all` and wait ~5-10mins
-3. Download .zip results, decompress it and extract the `....rank_001_alphafold2_ptm_model_1_seed_000.pdb` (this is because AlphaFold2 automatically generates 5 possible structures, with the first model being the one with the highest confidence, based on the [pLDDT metric](https://www.ebi.ac.uk/training/online/courses/alphafold/inputs-and-outputs/evaluating-alphafolds-predicted-structures-using-confidence-scores/plddt-understanding-local-confidence/)).
+3. Download .zip results, decompress it and save the model with this suffix `...rank_001_alphafold2_ptm_model_1_seed_000.pdb` (this is because AlphaFold2 automatically generates 5 possible structures, with the first model being the one with the highest confidence, based on [pLDDT](https://www.ebi.ac.uk/training/online/courses/alphafold/inputs-and-outputs/evaluating-alphafolds-predicted-structures-using-confidence-scores/plddt-understanding-local-confidence/)).
 
 
-## 3. 
+## 3. RFDiffusion
 
 - `protein-binder-design_v3.ipynb` from [this repo](scripts/protein-binder-design_v3.ipynb)
 
