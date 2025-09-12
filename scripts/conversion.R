@@ -40,17 +40,15 @@ matching_file <- list.files(
 
 if (length(matching_file) > 0) {
   infile <- matching_file[1] 
+  cat("infile: ", infile, "\n")
 } else {
   infile <- NULL
   cat("No matching file found.\n")
 }
 
 # Target ApoB AlphaFold2 structure (.pdb)
-
 orgfile <- paste0(DIR_WORK, "/pep",cycle,".pdb") 
 cat("orgfile: ", orgfile, "\n")
-cat("infile: ", infile, "\n")
-cat("Parameter: ", parameter, "\n")
 
 #########################################################
 

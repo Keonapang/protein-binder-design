@@ -179,34 +179,38 @@ While results are being generated, ensure you download them into `$DIR_WORK` dir
 
 ### (a) PRODIGY Gibbs Free Energy
 
-[PRODIGY web server](https://rascar.science.uu.nl/prodigy/) can calculate gibbs free energy.
+The [PRODIGY web server](https://rascar.science.uu.nl/prodigy/) tool can provide a prediction of the binding affinity/gibbs free energy.
 
-1. We must provide the PDB of the entire binder-target complex. To generate this PDB file, you will need two inputs: (a) the PDB of the target protein structure and (b) PDB of the generated protein binder from RFDiffusion.
-
-Run code below:
+1. We must provide a PDB of the entire binder-target complex. To generate this PDB file, the script takes in two inputs: (a) PDB of the target sequence and (b) PDB of the RFDiffusion-generated protein binder. Run code below:
 
 ```bash
-root="/directory/of/script/" # where the script is stored
-new_chain="B" # edit chain A to become chain B
-parameter="1seqs_50diff_05temp" # filename
-
-for cycle in "1A" "1B" "1C" "1D"; do
-    Rscript "${root}/conversion.R" $cycle $new_chain $parameter
-done
+    cycle="1A"
+    diffusion="50"
+    temp="0.5" 
+    DIR_WORK="/Users/keonapang/Desktop/NVIDIA/Sept12" # Example (please modify)
+    
+    root="/location/of/this/script"
+    for cycle in "1A" "1B"; do
+        Rscript "${root}/conversion.R" $cycle $diffusion $temp $DIR_WORK
+    done
 ```
 
-An example of a resulting multi-PDB format with designed **peptide binder** (Chain B) binding to a defined region on **ApoB protein** (Chain A):
+After running this script, this is an example of the resulting PDB of the entire complex. The **peptide binder** (Chain B) is merged to the target sequence on **ApoB-100** (Chain A):
 
 ```bash
-MODEL     1                                                                     
-ATOM      1  N   LEU A   1       3.770  10.500 -13.625  1.00 64.62           N  
-ATOM      2  CA  LEU A   1       3.465   9.531 -12.578  1.00 64.62           C  
-ATOM      3  C   LEU A   1       4.594   8.516 -12.430  1.00 64.62           C  
-ATOM      4  CB  LEU A   1       2.152   8.805 -12.883  1.00 64.62           C  
-ATOM      5  O   LEU A   1    
-ATOM      2  CA  GLY B   1      18.770  -4.344 -4.925  1.00 64.62        
-ATOM      2  CA  PRO B   1      11.324  -4.344 -4.925  1.00 30.20        
+    MODEL     1                                                                     
+    ATOM      1  N   LEU A   1       3.770  10.500 -13.625  1.00 64.62           N  
+    ATOM      2  CA  LEU A   1       3.465   9.531 -12.578  1.00 64.62           C  
+    ATOM      3  C   LEU A   1       4.594   8.516 -12.430  1.00 64.62           C  
+    ATOM      4  CB  LEU A   1       2.152   8.805 -12.883  1.00 64.62           C  
+    ATOM      5  O   LEU A   1    
+    ATOM      2  CA  GLY B   1      18.770  -4.344 -4.925  1.00 64.62        
+    ATOM      2  CA  PRO B   1      11.324  -4.344 -4.925  1.00 30.20        
 ```
+
+2. On the web page, select the **PRODIGY (protein-protein)** setting and upload this PDB file. Set **Interactor 1** as A, and **Interactor 2** as B. 
+
+3. Finally, click **Submit Prodigy**.
 
 ### (b) FlexPepDoc
 
@@ -220,10 +224,10 @@ Load the generated multi-PDB files into PyMOL (download latest version [HERE](ht
 Use the command to generate a multi-PDB file consisting of more than one peptide binder:
 
 ```bash
-    cycle="2"
-    diffusion=50
-    temp=0.5 
-    parameter="${diffusion}diff_${temp}temp"
+    cycle="1A"
+    diffusion="50"
+    temp="0.5"
+    DIR_WORK="/Users/keonapang/Desktop/NVIDIA/Sept12"
 
     Rscript "./src/conversion_all.R" $cycle $parameter`
 ```
