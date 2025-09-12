@@ -234,7 +234,7 @@ Optionally, you could visualize the entire binding complex (multiple peptides bi
 
 3. Open PyMoL and load in `cycle1_50diff_0.5temp_complex.pdb`.
 
-4. Change the Color setting by clicking on the colorful **"C"** button on the right-most side > **'by chain'** > **'by chain'** :
+4. Change the Color setting by clicking on the colorful **"C"** button > **'by chain'** > **'by chain'** :
 ![pymol1.](docs/pymol1.png)
 
 ![Fig 5.](docs/Fig1_visualization.png) **Fig 5**. First 4 peptides (cycle 1A, 1B, 1C, 1D) binding to ApoB, visualized on PyMOL (left) and SWISS-MODEL (right).
