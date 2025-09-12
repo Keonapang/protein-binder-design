@@ -56,40 +56,25 @@ For each of the 8 target sequences (**Table 1**), compute their 3D structure (.P
 1. Input sequence under `query_sequence`
 2. Hit `Runtime` > `Run all` and wait ~ 5mins
 3. Download .zip results, decompress it and save the model with this suffix `...rank_001_alphafold2_ptm_model_1_seed_000.pdb` (this is because AlphaFold2 automatically generates 5 possible structures, with the first model being the one with the highest confidence, based on [pLDDT](https://www.ebi.ac.uk/training/online/courses/alphafold/inputs-and-outputs/evaluating-alphafolds-predicted-structures-using-confidence-scores/plddt-understanding-local-confidence/))
+4. Rename this model file to `pep${Cycle}.pdb`.
 
 
 ## 3. Launch a NVIDIA cloud virtual machine (VM)
 
 1. Go to [brev.nvidia](https://brev.nvidia.com/) and click on this [Launchable](https://brev.nvidia.com/launchable/deploy/now?launchableID=env-32aLABBLqme9fNaaSdVL94Bollg). If you would like to create your own, click on Launchables in the menu bar, then `Create Launchables` and follow these settings:
-    - Click "I have codes in a git repository" and enter the link to this repo: `https://github.com/Keonapang/protein-binder-design`
-    - Click 'VM-mode'
-    - You don't need to set up script
-    - Select **compute**. Recommended: A100 (80GiB) 2 GPUs x 24 CPUs | 240GiB  (80GiB GPU memory) ($3.96/hr)
+    - Select "I have codes in a git repository" and enter the URL of this repo
+    - Select 'VM-mode'
+    - Click "Next" until you finally reach **Select compute**. We recommended **A100 (80GiB) 2 GPUs x 24 CPUs | 240GiB  (80GiB GPU memory) ($3.96/hr)**
 
 ![NVIDIA VM settings](docs/NVIDIA_VM.png)
 
-2. Click **"Launch"** and **"Go to Instance Page"**. Wait ~15 minutes for the VM to initiate.
+2.Click **"Deploy Launchable"** and **"Go to Instance Page"**. Wait ~10 minutes for VM to start
 
-3. When the VM is ready, **upload** (i.e.drag and drop) 2 files from this repo: 
-    - `./deploy/docker-compose.yaml` sets up the Docker images, networks, and complex dependencies required by each NIM. 
-    - `./docs/cycle1_alphafold2_output.pdb` from AlphaFold2 on Colab
+3.Enter the VM, **upload** (i.e.drag and drop) the AlphaFold2 .pdb files from step (2) into your workspace
 
-4.  Open terminal on your local computer (Command Prompt for windows, Terminal for mac) and install brev:
+4. Start a new terminal session.
 
 ```bash
-    brew install brevdev/homebrew-/brev && brev login --token <****> # Install the CLI - THIS STEP NEEDS PERMISSION FROM ICT
-```
-5. On your NVIDIA Brev 'Instance' page > under **"Access"** tab, run code on your terminal to connect to VM instance:
-
-```bash
-    brev shell <instance-name> # find instance-name on brev.nvidias 
-```
-5. Ensure that you've [generated](https://catalog.ngc.nvidia.com/orgs/nvidia/teams/clara/containers/bionemo-framework) a **NGC Personal API Key**, and run code:
-
-```bash
-    export NGC_CLI_API_KEY=<enter-key> # enter personal API key
-    docker login nvcr.io --username='$oauthtoken' --password="${NGC_CLI_API_KEY}"
-
     sudo apt-get install -y docker-compose
     sudo apt install python3.11
 
@@ -99,21 +84,28 @@ For each of the 8 target sequences (**Table 1**), compute their 3D structure (.P
     export HOST_NIM_CACHE=~/.cache/nim
 
     # Run Docker compose
-    docker compose 
+    docker compose #     - runs /deploy/docker-compose.yaml to set up the docker images required to run the models
 ```
 
+6.Wait 20-30mins for the docker to build. Check to ensure it is set up correctly
 
-## 4. RFDiffusion
+```bash
+    # check storage space
+    df -h 
 
-- `protein-binder-design_v3.ipynb` from [this repo](scripts/protein-binder-design_v3.ipynb)
+    # check what dockers are running
+    docker container ls
 
-- `docker-compose.yaml` (3MB) from [this repo](deploy/docker-compose.yaml)
+    # check whether the docker images (model) are running 
+    curl localhost:8082/v1/health/ready # RFdiffusion
+    curl localhost:8083/v1/health/ready # Protein MPNN
+```
 
+## 4. Run RFDiffusion and ProteinMPNN
 
-
-
-## 4.
-
+```bash
+    python3.11 4_protein_binder_design.py --cycle "$cycle" --num_seq 5 --diffusion 25 --temp 0.4
+```
 
 
 ## 5. Visualization and validation
