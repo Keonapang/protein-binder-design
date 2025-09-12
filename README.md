@@ -18,16 +18,15 @@ Once completed, this Blueprint outputs predicted multimer structures (in PDB for
 - At least 64 GB of RAM
 - Two or more NVIDIA L40s, A100, or H100 GPUs
 
-
 ## Software Pre-requisites
 
 - Python 3.11+
 
 ## Hardware requirements
 
-Total: 2 x GPU, 47 GiB GPU memory, 1.3TB GB SSD drive space, 60GiB RAM,24 CPU
--**RFdiffusion** runs on 1 x GPU, ≥12 GiB GPU memory, 15GB free SSD drive space
--**ProteinMPNN** runs on 1 x GPU, ≥3 GiB GPU memory, 10GB free SSD drive space
+- Total: 2 x GPU, 47 GiB GPU memory, 1.3TB GB SSD drive space, 60GiB RAM,24 CPU
+- **RFdiffusion** runs on 1 x GPU, ≥12 GiB GPU memory, 15GB free SSD drive space
+- **ProteinMPNN** runs on 1 x GPU, ≥3 GiB GPU memory, 10GB free SSD drive space
 
 ## Ensure that you have these files
 
