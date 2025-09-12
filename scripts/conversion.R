@@ -19,11 +19,10 @@ temp <- args[3]
 DIR_WORK <- args[4]
 
 new_chain <- "B"
-cat("====================================================\n")
+cat("==================== Cycle:", cycle, "======================\n")
 
 # Predicted binder structure 
 DIR_IN <- DIR_WORK
-cat("DIR_IN: ", DIR_IN, "\n")
 setwd(DIR_IN)
 
 # OUTPUT FILE 
@@ -40,7 +39,7 @@ matching_file <- list.files(
 
 if (length(matching_file) > 0) {
   infile <- matching_file[1] 
-  cat("infile: ", infile, "\n")
+  cat("peptide PDB: ", infile, "\n")
 } else {
   infile <- NULL
   cat("No matching file found.\n")
@@ -48,7 +47,7 @@ if (length(matching_file) > 0) {
 
 # Target ApoB AlphaFold2 structure (.pdb)
 orgfile <- paste0(DIR_WORK, "/pep",cycle,".pdb") 
-cat("orgfile: ", orgfile, "\n")
+cat("target protein PDB: ", orgfile, "\n")
 
 #########################################################
 
@@ -84,7 +83,7 @@ modify_pdb_chain <- function(new_chain, infile, orgfile) {
   
   # Output file name with "_new" appended
   writeLines(combined_data, outfile)
-  cat("COMPLETED:", outfile, "\n")
+  cat("Merged result:", outfile, "\n")
 }
 
 modify_pdb_chain(new_chain, infile, orgfile)

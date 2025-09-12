@@ -73,7 +73,7 @@ if (length(infiles)==1) {
 # Path to the original file
 orgfile <- paste0(DIR_WORK, "/pep", cycle, ".pdb")
 cat("\n")
-cat("Target structure:", orgfile, "\n\n")
+cat("Target protein PDB (large):", orgfile, "\n\n")
 
 # output directory
 DIR_OUT <- paste0(DIR_WORK,"/pymol_pdb")
@@ -125,8 +125,7 @@ for (i in seq_along(infiles)) {
 }
 
 writeLines(combined_data, output_file)
-cat("\n")
-cat("Result:", output_file, "\n\n")
+cat("\nMerged result:", output_file, "\n\n")
 
 
 
