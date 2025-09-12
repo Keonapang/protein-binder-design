@@ -27,16 +27,18 @@ The example workflow illustrated below generates 8 peptide binders for target pr
 
 ## 1. Manually select binding sites on target protein
 
-![Fig 1. 3D model of ApoB-100 on SWISS-MODEL](docs/ApoB_3D.png). Fig 1. 3D model of ApoB-100 on SWISS-MODEL
+![Fig 1. 3D model of ApoB-100 on SWISS-MODEL](docs/ApoB_3D.png) **Fig 1**. 3D model of ApoB-100 (target) on SWISS-MODEL
 
-1. Get on the [SWISS-MODEL](https://swissmodel.expasy.org/) repository and in the search bar, type in your target protein of interest to view the interactive 3D model. In this example, we used [ApoB-100](https://swissmodel.expasy.org/repository/uniprot/P04114?template=9eag.1.A&range=38-4563).
-2. Define your 'binding window' size, which affects how long your generated peptide binder will be. In this example, we wanted 8 binding windows of 40 amino acids in length.
-3. Manually select these 8 binding sites on the 3D interactive model. In this example, we chose 4 peptides within the first half of the ApoB protein sequence (residues A91–357) and 4 peptides within the second half (residues A390–642). The full ApoB-100 protein backbone consists of 4,563 amino acids.
+1. Get on the [SWISS-MODEL](https://swissmodel.expasy.org/) repository and in the search bar, type in your target protein of interest to view the interactive 3D model. In this example, we used [ApoB-100](https://swissmodel.expasy.org/repository/uniprot/P04114?template=9eag.1.A&range=38-4563) (**Fig 1**).
+2. Define your 'binding window' size, which affects how long your generated peptide binder will be. In this example, we designed 8 binding windows of 40 amino acids in length.
+3. Manually select these 8 binding sites on the 3D interactive model. In this example, we chose 4 peptides within the first half of the ApoB protein sequence (residues A91–357) and 4 peptides within the second half (residues A390–642). The full ApoB-100 protein backbone consists of 4,563 amino acids (**Fig 2**).
 
-![Fig 2. Manually identify the binding sites](docs/ApoB_3D_seq.png)
+![Fig 2. Manually identify the binding sites](docs/ApoB_3D_seq.png) **Fig 2**. Manually identify the 8 target binding sites
 
 
-| Cycle         | ApoB-100 target sequence   (length=40aa)        | Amino Acid Position |
+**Table 1**. 8 target sequences of length 40 amino acids.
+
+| Cycle         | ApoB-100 target sequence          | Amino Acid Position |
 |---------------|---------------------------------------------|---------------------|
 | 1A      | LKTSQCTLKEVYGFNPEGKALLKKTKNSEEFAAAMSRYEL    | A91-130            |
 | 1B      | EEAKQVLFLDTVYGNCSTHFTVKTRKGNVATEISTERDLG    | A170-209           |
@@ -51,13 +53,11 @@ The example workflow illustrated below generates 8 peptide binders for target pr
 
 ## Amino Acid Table
 
-For each of the 8 target protein sequences, which are the potential binding sites on the on the ApoB-100 protein, we first compute their 3D structure (.PDB) on [AlphaFold2 colab](https://colab.research.google.com/github/sokrypton/ColabFold/blob/main/AlphaFold2.ipynb#scrollTo=R_AH6JSXaeb2):
+For each of the 8 target sequences (**Table 1**), compute their 3D structure (.PDB) on [AlphaFold2 colab](https://colab.research.google.com/github/sokrypton/ColabFold/blob/main/AlphaFold2.ipynb#scrollTo=R_AH6JSXaeb2). 
 
-
-
-- `cycle1_alphafold2_output.pdb` (~80KB) pre-computed on [AlphaFold2 colab](https://colab.research.google.com/github/sokrypton/ColabFold/blob/main/AlphaFold2.ipynb#scrollTo=R_AH6JSXaeb2)
-
-- `cycle2_alphafold2_output.pdb` (~80KB) pre-computed on [AlphaFold2 colab](https://colab.research.google.com/github/sokrypton/ColabFold/blob/main/AlphaFold2.ipynb#scrollTo=R_AH6JSXaeb2)
+1. On the AlphaFold2 colab notebook, input sequence(s) under `query_sequence`
+2. Hit `Runtime` > `Run all` and wait ~5-10mins
+3. Download .zip results, decompress it and extract the `....rank_001_alphafold2_ptm_model_1_seed_000.pdb` (this is because AlphaFold2 automatically generates 5 possible structures, with the first model being the one with the highest confidence, based on the [pLDDT metric](https://www.ebi.ac.uk/training/online/courses/alphafold/inputs-and-outputs/evaluating-alphafolds-predicted-structures-using-confidence-scores/plddt-understanding-local-confidence/)).
 
 
 ## 3. 
