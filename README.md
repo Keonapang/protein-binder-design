@@ -136,29 +136,21 @@ For each of the 8 target sequences (**Table 1**), compute their 3D structure (.P
 ## 4. Run RFDiffusion and ProteinMPNN
 
 ```bash
-    # Define the cycle-to-target_sequence mapping
-    # Example
+    # Define the cycle-to-target_sequence mapping. For simplicity, we use the first two target sequences as example.
     declare -A cycle_to_sequence=(
         ["1A"]="LKTSQCTLKEVYGFNPEGKALLKKTKNSEEFAAAMSRYEL"  
         ["1B"]="EEAKQVLFLDTVYGNCSTHFTVKTRKGNVATEISTERDLG" 
-        # ["1C"]="VAEAICKEQHLFLPFSYKNKYGMVAQVTQTLKLEDTPKIN"
-        # ["1D"]="PKQAEAVLKTLQELKKLTISEQNIQRANLFNKLVTELRGL" 
-        # ["2A"]="CSTHILQWLKRVHANPLLIDVVTYLVALIPEPSAQQLREI" 
-        # ["2B"]="GTQELLDIANYLMEQIQDDCTGDEDYTYLILRVIGNMGQT" 
-        # ["2C"]="LRKMEPKDKDQEVLLQTFLDDASPGDKRLAAYLMLMRSPS"
-        # ["2D"]="EQVKNFVASHIANILNSEELDIQDLKKLVKEALKESQLPT"
     )
 
-    num_seq=1 # one peptide binder per target sequence
-    diffusion=50 # recommended 20-50
-    temp=0.5 # recommended range from 0.2 to 0.8
     contigs="15-20" # RFDiffusion input; sets the expected length of peptide to be between 15-20aa
+    diffusion=50 # recommended range: 20-50
+    temp=0.5 # recommended range range: 0.2 to 0.8
+    num_seq=1 # one peptide binder per target sequence (do not modify)
 
-    # Export your API key one more time before running script (or else there will be an error)
+    # Export API key
     export NGC_CLI_API_KEY=<enter-key> # Example: export NGC_CLI_API_KEY=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
 
-    # cycles=("1A" "1B" "1C" "1D" "2A" "2B" "2C" "2D")
-    cycles=("1A" "1B")
+    cycles=("1A" "1B")    # cycles=("1A" "1B" "1C" "1D" "2A" "2B" "2C" "2D")
     for cycle in "${cycles[@]}"; do
         target_sequence=${cycle_to_sequence[$cycle]}
 
@@ -170,7 +162,8 @@ For each of the 8 target sequences (**Table 1**), compute their 3D structure (.P
 
 While results are being generated, ensure you download them into `$DIR_WORK` directory on your local computer:
 
-![results](docs/results.png) **Fig 3**. Example of the output directory containing results from this notebook example.
+![results](docs/results.png) 
+**Fig 3**. Example of the output directory containing results from this notebook example.
 
 > [!NOTE]
 > Now, you may exit and shutdown the NVIDIA VM so it doesn't keep charging money.
