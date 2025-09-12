@@ -190,7 +190,7 @@ The [PRODIGY web server](https://rascar.science.uu.nl/prodigy/) tool can provide
 
 An example of the resulting PDB of the entire complex can be found in `example/cycle1A_50diff_0.5temp.pdb`. You will find that the **peptide binder** (Chain B) has been merged to the target sequence on **ApoB-100** (Chain A).
 
-2. On the web page, select the **PRODIGY (protein-protein)** setting and upload this PDB file. Set **Interactor 1** as A, and **Interactor 2** as B. 
+2. On the web page, select the **PRODIGY (protein-protein)** setting and upload the PDB file. Set **"Interactor 1"** as A, and **"Interactor 2"** as B. 
 
 3. Finally, click **Submit Prodigy**.
 
@@ -207,22 +207,23 @@ You could also use FlexPepDoc to visualize the 3D structures in `$DIR_WORK/prodi
 
 ### (c) PyMol
 
-Load the generated multi-PDB files into PyMOL (download latest version [HERE](https://www.pymol.org/)) for visualization of all peptide binders (more than one peptide) to the target protein.
+Optionally, you could visualize the entire binding complex (multiple peptides binding to target protein) on PyMOL (download latest version [HERE](https://www.pymol.org/)).
 
-Use the command to generate a multi-PDB file consisting of more than one peptide binder:
+Use this script to generate this multi-PDB file, which takes in multiple inputs, including a PDB of a large proportion of the target protein structure and PDB file(s) of the peptide binders.
 
 ```bash
-    cycle="1A"
+    cycle="1"
     diffusion="50"
     temp="0.5"
-    DIR_WORK="/Users/keonapang/Desktop/NVIDIA/Sept12"
+    DIR_WORK="/Users/keonapang/Desktop/NVIDIA/Sept12" 
+    root="/location/of/this/script"
 
-    Rscript "./src/conversion_all.R" $cycle $parameter`
+    Rscript "${root}/conversion_all.R" $cycle $diffusion $temp $DIR_WORK
 ```
 
-![Fig 3. Visualization](docs/Fig1_visualization.png) **Fig 5**. First 4 peptides (cycle 1A, 1B, 1C, 1D) binding to ApoB, visualized on PyMOL (left) and SWISS-MODEL (right).
+![Fig 5.](docs/Fig1_visualization.png) **Fig 5**. First 4 peptides (cycle 1A, 1B, 1C, 1D) binding to ApoB, visualized on PyMOL (left) and SWISS-MODEL (right).
 
-![Fig 4. Visualization 2](docs/Fig2_visualization.png)  **Fig 6**. Last 4 peptides (cycle 2A, 2B, 2C, 2D) binding to ApoB, visualized on PyMOL (left) and SWISS-MODEL (right).
+![Fig 6.](docs/Fig2_visualization.png)  **Fig 6**. Last 4 peptides (cycle 2A, 2B, 2C, 2D) binding to ApoB, visualized on PyMOL (left) and SWISS-MODEL (right).
 
 ## Notebook
 
