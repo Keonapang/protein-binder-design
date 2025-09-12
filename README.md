@@ -174,7 +174,7 @@ While results are being generated on the cloud (**Fig 3**), ensure you download 
 
 The [PRODIGY web server](https://rascar.science.uu.nl/prodigy/) tool can provide a prediction of binder-target binding affinity. The outputs include the Gibbs free energy change (ΔG) of the binding interaction, dissociation constant (Kd), number of interfacial contacts (ICs) between residues, and the non-interacting surface (NIS) percentage, which reflects the proportion of charged interface surface area not directly involved in binding.
 
-1. Generate a combined PDB of the entire binder-target complex. Run script below on your local device, which takes in two inputs: (a) PDB of the target sequence and (b) PDB of the RFDiffusion-generated protein binder.
+1. Generate a combined PDB of the entire binder-target complex. Run script below on your local device, which takes in two inputs: (a) PDB of the target sequence and (b) PDB of the RFDiffusion-generated protein binder. The output of this script will be found in `$DIR_WORK/prodigy_input_pdb`.
 
 ```bash
     cycle="1A"
@@ -188,17 +188,7 @@ The [PRODIGY web server](https://rascar.science.uu.nl/prodigy/) tool can provide
     done
 ```
 
-An example of the resulting PDB of the entire complex can be found in `example/cycle1A_50diff_0.5temp.pdb`. As you can see, the **peptide binder** (Chain B) has been merged to the target sequence on **ApoB-100** (Chain A):
-        MODEL     1                                                                     
-        ATOM      1  N   LEU A   1       3.770  10.500 -13.625  1.00 64.62           N  
-        ATOM      2  CA  LEU A   1       3.465   9.531 -12.578  1.00 64.62           C  
-        ATOM      3  C   LEU A   1       4.594   8.516 -12.430  1.00 64.62           C  
-        ....
-        TER     317      LEU A  40    
-        ATOM      2  CA  GLY B   1      18.770  -4.344 -4.925  1.00 64.62        
-        ATOM      2  CA  PRO B   1      11.324  -4.344 -4.925  1.00 30.20
-        ....        
-
+An example of the resulting PDB of the entire complex can be found in `example/cycle1A_50diff_0.5temp.pdb`. You will find that the **peptide binder** (Chain B) has been merged to the target sequence on **ApoB-100** (Chain A).
 
 2. On the web page, select the **PRODIGY (protein-protein)** setting and upload this PDB file. Set **Interactor 1** as A, and **Interactor 2** as B. 
 
@@ -206,8 +196,14 @@ An example of the resulting PDB of the entire complex can be found in `example/c
 
 ### (b) FlexPepDoc
 
-Please log in to GitHub to use the [FlexPepDoc ROSIE web server](https://r2.graylab.jhu.edu/auth/login?next=%2Fapps%2Fsubmit%2Fflexpepdock).
+You could also use FlexPepDoc to visualize the 3D structures in `$DIR_WORK/prodigy_input_pdb`.
 
+1. Log into [FlexPepDoc ROSIE web server](https://r2.graylab.jhu.edu/auth/login?next=%2Fapps%2Fsubmit%2Fflexpepdock) via Github.
+2. Upload a combined pdb file.
+3. Specify **Docking partner** as "A_B".
+
+![flexpepdoc](docs/flexpepdoc.png)
+**Fig 4**. Example of FlexPepDoc visualization.
 
 ### (c) PyMol
 
