@@ -152,7 +152,7 @@ For each of the 8 target sequences (**Table 1**), compute their 3D structure (.P
     num_seq=1 # one peptide binder per target sequence
     diffusion=50 # recommended 20-50
     temp=0.5 # recommended range from 0.2 to 0.8
-    contigs="15-20"
+    contigs="15-20" # RFDiffusion input; sets the expected length of peptide to be between 15-20aa
 
     # Export your API key one more time before running script (or else there will be an error)
     export NGC_CLI_API_KEY=<enter-key> # Example: export NGC_CLI_API_KEY=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
@@ -179,9 +179,9 @@ While results are being generated, ensure you download them into `$DIR_WORK` dir
 
 ### (a) PRODIGY Gibbs Free Energy
 
-The [PRODIGY web server](https://rascar.science.uu.nl/prodigy/) tool can provide a prediction of the binding affinity/gibbs free energy.
+The [PRODIGY web server](https://rascar.science.uu.nl/prodigy/) tool can provide a prediction of binder-target binding affinity. The outputs include the Gibbs free energy change (ΔG) of the binding interaction, dissociation constant (Kd), number of interfacial contacts (ICs) between residues, and the non-interacting surface (NIS) percentage, which reflects the proportion of charged interface surface area not directly involved in binding.
 
-1. We must provide a PDB of the entire binder-target complex. To generate this PDB file, the script takes in two inputs: (a) PDB of the target sequence and (b) PDB of the RFDiffusion-generated protein binder. Run code below:
+1. Generate a combined PDB of the entire binder-target complex. Run script below on your local device, which takes in two inputs: (a) PDB of the target sequence and (b) PDB of the RFDiffusion-generated protein binder.
 
 ```bash
     cycle="1A"
