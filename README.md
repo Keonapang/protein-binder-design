@@ -59,7 +59,7 @@ For each of the 8 target sequences (**Table 1**), compute their 3D structure (.P
 5. Store this model in a new working directory and assign it's path to `$DIR_WORK` (which will also be used later on).
 
 ```bash
-    DIR_WORK="/your/local/working/directory"
+    DIR_WORK="/your/local/working/directory" # DIR_WORK="/Users/keonapang/Desktop/NVIDIA/Sept12"
     mkdir -p $DIR_WORK
     cd $DIR_WORK # contains RFDiffusion and ProteinPMNN results
 ```
@@ -128,7 +128,6 @@ For each of the 8 target sequences (**Table 1**), compute their 3D structure (.P
     curl localhost:8082/v1/health/ready # RFdiffusion
     curl localhost:8083/v1/health/ready # Protein MPNN
     curl localhost:8084/v1/health/ready # AlphaFold multimer
-
     # Example:
         # {"status":"ready"}
 ```
@@ -177,7 +176,7 @@ While results are being generated on the cloud (**Fig 3**), ensure you download 
 
 The [PRODIGY web server](https://rascar.science.uu.nl/prodigy/) tool can provide a prediction of binder-target binding affinity. The outputs include the Gibbs free energy change (ΔG) of the binding interaction, dissociation constant (Kd), number of interfacial contacts (ICs) between residues, and the non-interacting surface (NIS) percentage, which reflects the proportion of charged interface surface area not directly involved in binding.
 
-1. Generate a combined PDB of the entire binder-target complex. Run script below on your local device, which takes in two inputs: (a) PDB of the target sequence and (b) PDB of the RFDiffusion-generated protein binder. The output of this script will be found in `$DIR_WORK/prodigy_input_pdb`.
+1. Generate a **combined PDB of the entire binder-target complex**. Run script below on your local device, which takes in two inputs: (a) PDB of the target sequence and (b) PDB of the RFDiffusion-generated protein binder. The output of this script will be found in `$DIR_WORK/prodigy_input_pdb`.
 
 ```bash
     cycle="1A"
@@ -212,7 +211,9 @@ You could also use FlexPepDoc to visualize the 3D structures in `$DIR_WORK/prodi
 
 Optionally, you could visualize the entire binding complex (multiple peptides binding to target protein) on PyMOL (download latest version [HERE](https://www.pymol.org/)).
 
-Use this script to generate this multi-PDB file, which takes in multiple inputs, including a large PDB of (ideally) the entire target protein structure** and PDB file(s) of peptide binders. **note: PDB structure needs to be large enough to cover all the binding sites of all your peptides. See the ApoB-100 example in `example/pep1.pdb`.
+1. If not done so already, generate the entire target protein structure on [AlphaFold2 colab](https://colab.research.google.com/github/sokrypton/ColabFold/blob/main/AlphaFold2.ipynb#scrollTo=R_AH6JSXaeb2) (or download from a PDB repository). Note that if the protein is super big (i.e. ApoB-100 is > 4000aa in length), then you do not need to generate the entire structure. The structure just needs to be large enough to cover all the binding sites of all your peptides. See example in `example/pep1.pdb`.
+
+2. Use this script to generate a **multi-PDB file**, which takes in the large PDB from step (1) and PDB files of peptide binders.
 
 ```bash
     cycle="1"
@@ -224,7 +225,9 @@ Use this script to generate this multi-PDB file, which takes in multiple inputs,
     Rscript "${root}/conversion_all.R" $cycle $diffusion $temp $DIR_WORK
 ```
 
-An example of the output can be found in `example/pymol_pdb/cycle1_50diff_0.5temp_complex.pdb`, merging all target protein (chain A), peptide 1 (chain B) and peptide 2 (chain C) structures into one file.
+    An example of the output can be found in `example/pymol_pdb/cycle1_50diff_0.5temp_complex.pdb`, merging all target protein (chain A), peptide 1 (chain B) and peptide 2 (chain C) structures into one file.
+
+3. Open PyMoL and visualize `cycle1_50diff_0.5temp_complex.pdb`.
 
 ![Fig 5.](docs/Fig1_visualization.png) **Fig 5**. First 4 peptides (cycle 1A, 1B, 1C, 1D) binding to ApoB, visualized on PyMOL (left) and SWISS-MODEL (right).
 
