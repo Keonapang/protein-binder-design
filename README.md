@@ -1,4 +1,4 @@
-# NVIDIA BioNeMo: Protein Binder Design for Drug Discovery
+# Adaption of NVIDIA BioNeMo Blueprint: Protein Binder Design
 
 This workflow is designed for _in silico_ protein binder design by generating binder sequences and predicted structures for the binder and target. Unlike the original NVIDIA pipeline, this approach **does not** require running Alphafold2 on cloud GPU. 
 
