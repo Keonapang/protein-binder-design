@@ -51,14 +51,59 @@ The example workflow illustrated below generates 8 peptide binders for target pr
 
 ## 2. AlphaFold2 Colab (free)
 
-For each of the 8 target sequences (**Table 1**), compute their 3D structure (.PDB) on [AlphaFold2 colab](https://colab.research.google.com/github/sokrypton/ColabFold/blob/main/AlphaFold2.ipynb#scrollTo=R_AH6JSXaeb2). Perform these steps for each sequence:
+For each of the 8 target sequences (**Table 1**), compute their 3D structure (.PDB) on [AlphaFold2 colab](https://colab.research.google.com/github/sokrypton/ColabFold/blob/main/AlphaFold2.ipynb#scrollTo=R_AH6JSXaeb2). On this colab notebook, perform the following steps for each sequence:
 
-1. On the AlphaFold2 colab notebook, input sequence under `query_sequence`
-2. Hit `Runtime` > `Run all` and wait ~5-10mins
-3. Download .zip results, decompress it and save the model with this suffix `...rank_001_alphafold2_ptm_model_1_seed_000.pdb` (this is because AlphaFold2 automatically generates 5 possible structures, with the first model being the one with the highest confidence, based on [pLDDT](https://www.ebi.ac.uk/training/online/courses/alphafold/inputs-and-outputs/evaluating-alphafolds-predicted-structures-using-confidence-scores/plddt-understanding-local-confidence/)).
+1. Input sequence under `query_sequence`
+2. Hit `Runtime` > `Run all` and wait ~ 5mins
+3. Download .zip results, decompress it and save the model with this suffix `...rank_001_alphafold2_ptm_model_1_seed_000.pdb` (this is because AlphaFold2 automatically generates 5 possible structures, with the first model being the one with the highest confidence, based on [pLDDT](https://www.ebi.ac.uk/training/online/courses/alphafold/inputs-and-outputs/evaluating-alphafolds-predicted-structures-using-confidence-scores/plddt-understanding-local-confidence/))
 
 
-## 3. RFDiffusion
+## 3. Launch a NVIDIA cloud virtual machine (VM)
+
+1. Go to [brev.nvidia](https://brev.nvidia.com/) and click on this [Launchable](https://brev.nvidia.com/launchable/deploy/now?launchableID=env-32aLABBLqme9fNaaSdVL94Bollg). If you would like to create your own, click on Launchables in the menu bar, then `Create Launchables` and follow these settings:
+    - Click "I have codes in a git repository" and enter the link to this repo: `https://github.com/Keonapang/protein-binder-design`
+    - Click 'VM-mode'
+    - You don't need to set up script
+    - Select **compute**. Recommended: A100 (80GiB) 2 GPUs x 24 CPUs | 240GiB  (80GiB GPU memory) ($3.96/hr)
+
+![NVIDIA VM settings](docs/NVIDIA_VM.png)
+
+2. Click **"Launch"** and **"Go to Instance Page"**. Wait ~15 minutes for the VM to initiate.
+
+3. When the VM is ready, **upload** (i.e.drag and drop) 2 files from this repo: 
+    - `./deploy/docker-compose.yaml` sets up the Docker images, networks, and complex dependencies required by each NIM. 
+    - `./docs/cycle1_alphafold2_output.pdb` from AlphaFold2 on Colab
+
+4.  Open terminal on your local computer (Command Prompt for windows, Terminal for mac) and install brev:
+
+```bash
+    brew install brevdev/homebrew-/brev && brev login --token <****> # Install the CLI - THIS STEP NEEDS PERMISSION FROM ICT
+```
+5. On your NVIDIA Brev 'Instance' page > under **"Access"** tab, run code on your terminal to connect to VM instance:
+
+```bash
+    brev shell <instance-name> # find instance-name on brev.nvidias 
+```
+5. Ensure that you've [generated](https://catalog.ngc.nvidia.com/orgs/nvidia/teams/clara/containers/bionemo-framework) a **NGC Personal API Key**, and run code:
+
+```bash
+    export NGC_CLI_API_KEY=<enter-key> # enter personal API key
+    docker login nvcr.io --username='$oauthtoken' --password="${NGC_CLI_API_KEY}"
+
+    sudo apt-get install -y docker-compose
+    sudo apt install python3.11
+
+    ## Create the nim cache directory to download any model data to your local/server disk 
+    mkdir -p ~/.cache/nim
+    chmod -R 777 ~/.cache/nim    ## Make it writable by the NIM
+    export HOST_NIM_CACHE=~/.cache/nim
+
+    # Run Docker compose
+    docker compose 
+```
+
+
+## 4. RFDiffusion
 
 - `protein-binder-design_v3.ipynb` from [this repo](scripts/protein-binder-design_v3.ipynb)
 
