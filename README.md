@@ -151,21 +151,19 @@ For each of the 8 target sequences (**Table 1**), compute their 3D structure (.P
     done
 ```
 
+After running this script, ensure you downloaded all your results.
+Now, you may exit and shutdown the NVIDIA VM.
+
 > [!NOTE]
-> Example of a ProteinMPNN output:
-    > T=0.5, sample=1, score=2.0571, global_score=2.0571, seq_recovery=0.0000 TQEQLAQNKKEERVKLEKQMS
-    > -`sample` - sequence sample no. 1, 2,...etc
-    > - score` - average over residues that were designed negative log probability of sampled amino acids
-    > -`global score` - average over all residues in all chains negative log probability of sampled/fixed amino acids
-    > -`TQEQLAQNKKEERVKLEKQMS` - generated peptide binder
+> In the ProteinMPNN output, the 'score' average over residues that were designed negative log probability of sampled amino acids. Whereas the 'global score' is averaged over all residues in all chains negative log probability of sampled/fixed amino acids.
 
 ## 5. Visualization and validation of binder-target 
 
-### Option 1: PRODIGY Gibbs Free Energy
+### (a) PRODIGY Gibbs Free Energy
 
 [PRODIGY web server](https://rascar.science.uu.nl/prodigy/) can calculate gibbs free energy.
 
-1. We must provide the PDB of the binder-target complex in a multi-PDB file. To generate this file, you will need two inputs: 
+1. We must provide the PDB of the binder-target complex as a multi-PDB file. To generate this file, you will need two inputs: 
 (a) the PDB of the original protein structure and (b) PDB of the generated protein binder (i.e. peptide 1A). 
 
 Run code below:
@@ -192,14 +190,25 @@ ATOM      2  CA  GLY B   1      18.770  -4.344 -4.925  1.00 64.62
 ATOM      2  CA  PRO B   1      11.324  -4.344 -4.925  1.00 30.20        
 ```
 
-### Option 2: FlexPepDoc
+### (b) FlexPepDoc
 
 Please log in to GitHub to use the [FlexPepDoc ROSIE web server](https://r2.graylab.jhu.edu/auth/login?next=%2Fapps%2Fsubmit%2Fflexpepdock).
 
-<div style="text-align: center;">
-  ![Fig 3. Visualization](docs/Fig1_visualization.png)  
-  **Fig 3**. First 4 peptides from Cycle 1 binding to ApoB, visualised using Swiss model (left) and PyMOL (right).
-</div>
+
+### (c) PyMol
+
+Load the generated multi-PDB files into PyMOL (download latest version [HERE](https://www.pymol.org/)) for visualization of all peptide binders (more than one peptide) to the target protein.
+
+Use the command to generate a multi-PDB file consisting of more than one peptide binder:
+
+```bash
+cycle="2"
+parameter="50diff_05temp"
+Rscript "./src/conversion_all.R" $cycle $parameter`
+```
+
+![Fig 3. Visualization](docs/Fig1_visualization.png) **Fig 3**. First 4 peptides from Cycle 1 binding to ApoB, visualised using Swiss model (left) and PyMOL (right).
+
 
 ![Fig 4. Visualization 2](docs/Fig2_visualization.png) **Fig 4**. Last 4 peptides from Cycle 2 binding to ApoB, visualised using Swiss model (left) and PyMOL (right).
 
