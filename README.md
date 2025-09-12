@@ -151,14 +151,59 @@ For each of the 8 target sequences (**Table 1**), compute their 3D structure (.P
     done
 ```
 
+> [!NOTE]
+> Example of a ProteinMPNN output:
+> **>T=0.5, sample=1, score=2.0571, global_score=2.0571, seq_recovery=0.0000 TQEQLAQNKKEERVKLEKQMS**
+> -`T=0.5` - temperature 0.5 was used to sample sequences
+> -`sample` - sequence sample no. 1, 2,...etc
+> -`score` - average over residues that were designed negative log probability of sampled amino acids
+> -`global score` - average over all residues in all chains negative log probability of sampled/fixed amino acids
+> -`TQEQLAQNKKEERVKLEKQMS` - generated peptide binder
 
-## 5. Visualization and validation
+## 5. Visualization and validation of binder-target 
 
+### Option 1: PRODIGY Gibbs Free Energy
+
+[PRODIGY web server](https://rascar.science.uu.nl/prodigy/) can calculate gibbs free energy.
+
+1. We must provide the PDB of the binder-target complex in a multi-PDB file. To generate this file, you will need two inputs: 
+(a) the PDB of the original protein structure and (b) PDB of the generated protein binder (i.e. peptide 1A). 
+
+Run code below:
+
+```bash
+new_chain="B" # edit chain A to become chain B
+parameter="1seqs_50diff_05temp" # filename
+
+for cycle in "1A" "1B" "1C" "1D"; do
+    Rscript "./scripts/conversion.R" $cycle $new_chain $parameter
+done
+```
+
+An example of a resulting multi-PDB format with designed **peptide binder** (Chain B) binding to a defined region on **ApoB protein** (Chain A):
+
+```bash
+MODEL     1                                                                     
+ATOM      1  N   LEU A   1       3.770  10.500 -13.625  1.00 64.62           N  
+ATOM      2  CA  LEU A   1       3.465   9.531 -12.578  1.00 64.62           C  
+ATOM      3  C   LEU A   1       4.594   8.516 -12.430  1.00 64.62           C  
+ATOM      4  CB  LEU A   1       2.152   8.805 -12.883  1.00 64.62           C  
+ATOM      5  O   LEU A   1    
+ATOM      2  CA  GLY B   1      18.770  -4.344 -4.925  1.00 64.62        
+ATOM      2  CA  PRO B   1      11.324  -4.344 -4.925  1.00 30.20        
+```
+
+### Option 2: FlexPepDoc
+
+Please log in to GitHub to use the [FlexPepDoc ROSIE web server](https://r2.graylab.jhu.edu/auth/login?next=%2Fapps%2Fsubmit%2Fflexpepdock).
+
+<div style="text-align: center;">
+  ![Fig 3. Visualization](docs/Fig1_visualization.png)  
+  **Fig 3**. First 4 peptides from Cycle 1 binding to ApoB, visualised using Swiss model (left) and PyMOL (right).
+</div>
+
+![Fig 4. Visualization 2](docs/Fig2_visualization.png) **Fig 4**. Last 4 peptides from Cycle 2 binding to ApoB, visualised using Swiss model (left) and PyMOL (right).
 
 ## Notebook
 
-A detailed example of the workflow is located in [/scripts/protein-binder-design_Sept2025.ipynb](/scripts/protein-binder-design_Sept2025.ipynbscript/protein-binder-design_Sept2025.ipynb)
-
-![Fig 3. Visualization](docs/Fig1_visualization.png)
-
-![Fig 4. Visualization 2](docs/Fig2_visualization.png)
+A similar example of the workflow is available in jupyter notebook format [/scripts/protein-binder-design_Sept2025.ipynb](/scripts/protein-binder-design_Sept2025.ipynbscript/protein-binder-design_Sept2025.ipynb)

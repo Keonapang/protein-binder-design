@@ -11,10 +11,12 @@
 #  - `cycle1_alphafold2_output.pdb` (80KB) pre-computed on [AlphaFold2 colab](https://colab.research.google.com/github/sokrypton/ColabFold/blob/main/AlphaFold2.ipynb#scrollTo=R_AH6JSXaeb2)
 
 # Get from brev.nvidia
-brew install brevdev/homebrew-/brev && brev login --token <****> # Install the CLI
+brew install brevdev/homebrew-/brev
+brev login --token <****> # Install the CLI
 brev shell <instance-name> # find instance-name on brev.nvidias # Open a terminal locally
 
 # Run on Terminal
+sudo apt-get update
 sudo apt-get install -y docker-compose
 sudo apt install python3.11
 
@@ -27,8 +29,10 @@ mkdir -p ~/.cache/nim
 chmod -R 777 ~/.cache/nim    ## Make it writable by the NIM
 export HOST_NIM_CACHE=~/.cache/nim
 
-# Run Docker compose
-docker compose 
+## From the root of the cloned Protein Design repository:
+cd deploy/
+docker compose up
+# docker-compose -f /home/ubuntu/protein-binder-design/deploy/docker-compose.yaml up
 
 # check status of NIMs
 curl localhost:8082/v1/health/ready # RFdiffusion
@@ -37,6 +41,8 @@ curl localhost:8083/v1/health/ready # Protein MPNN
 pip install requests
 
 # ----------------------------------------------------
+# pwd: /home/ubuntu/protein-binder-design
+
 for cycle in "1A" "1B" "1C" "1D" "2A" "2B" "2C" "2D"; do
     python3.11 /home/ubuntu/3_protein_binder_design.py --cycle "$cycle" --num_seq 1 --diffusion 30 --temp 0.4
 done
@@ -62,9 +68,23 @@ python3.11 2_protein_binder_design.py --cycle "2" --num_seq 2 --diffusion 25 --t
 
 # ----------------------------------------------------
 
-python3.11 -m pip install biopython
-python3.11 -m pip install prodigy-prot
+declare -A cycle_to_sequence=(
+    ["1A"]="LKTSQCTLKEVYGFNPEGKALLKKTKNSEEFAAAMSRYEL"
+)
 
+    num_seq=1 # one peptide binder per target sequence
+    diffusion=30 # recommended 20-40
+    temp=0.4 # recommended range from 0.2 to 0.8
+    contigs="15-20"
+
+    cycles=("1A")
+    for cycle in "${cycles[@]}"; do
+        target_sequence=${cycle_to_sequence[$cycle]}
+
+        echo "Running script for $cycle..."
+        dir="/home/ubuntu/protein-binder-design/scripts"
+        python3.11 ${dir}/4_protein_binder_design.py --cycle ${cycle} --num_seq ${num_seq} --diffusion ${diffusion} --temp ${temp} --target_sequence ${target_sequence} --contigs ${contigs}
+    done
 
 # ----------------------------------------------------
 # Convert JSON to PDB

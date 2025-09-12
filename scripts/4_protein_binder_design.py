@@ -70,12 +70,11 @@ os.makedirs(root, exist_ok=True)
 # Set output directory
 outdir = f"{root}/{diffusion}diff_{temp}temp_{num_seq}seq"
 os.makedirs(outdir, exist_ok=True)
-print(f"Output dir : {outdir}")
 if os.path.exists(outdir):
-    print(f"{outdir} already exists. Please double check path.")
+    print(f"{outdir} already exists. Overwriting...")
     
 # Set input variables and path
-print(f"Generating {num_seq} peptide binders per input sequence...")
+print(f"\nGenerating {num_seq} peptide binder(s) per input sequence...")
 name = f"cycle{cycle}_{diffusion}diff_{temp}temp_{num_seq}seqs"
 
 pdb_path = f"{root}/input/pep{cycle}.pdb" 
@@ -211,7 +210,7 @@ rc, rfdiffusion_response = query_nim(
     nim_port=NIM_PORTS.RFDIFFUSION_PORT.value
 )
 
-print(rfdiffusion_response["output_pdb"][0:160])
+print(rfdiffusion_response["output_pdb"][0:100])
 with open(f"{outdir}/2_{name}_rfdiffusion.pdb", "w") as pdb_file:
     pdb_file.write(rfdiffusion_response["output_pdb"])
 
@@ -237,13 +236,8 @@ rc, proteinmpnn_response = query_nim(
 # binder sequences are stored in fasta_sequences
 fasta_sequences = [x.strip() for x in proteinmpnn_response["mfasta"].split("\n") if '>' not in x][2:]
 binder_target_pairs = [[binder, example.target_sequence] for binder in fasta_sequences]
-print()
-print(fasta_sequences)
-print()
-print(proteinmpnn_response["mfasta"])
-print()
-print(proteinmpnn_response)
-print()
+# print(proteinmpnn_response["mfasta"])
+# print()
 
 # Save binder_target_pairs as .json file
 fasta_sequences = []
@@ -262,6 +256,12 @@ print()
 # Save proteinmpnn_response["mfasta"] to a .fasta file
 with open(f"{outdir}/3_{name}_proteinmpnn.fasta", "w") as fasta_file:
     fasta_file.write(proteinmpnn_response["mfasta"])
+
+print(f"Results saved in : {outdir}")
+
+
+##############################################################
+# Print probabilities and sequence scores
 
 # probs = proteinmpnn_response["probs"]
 # with open(f"{outdir}/3_{name}_proteinmpnn_probs.txt", "w") as probs_file:
