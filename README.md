@@ -1,4 +1,4 @@
-# Adaption of NVIDIA BioNeMo Blueprint: Protein Binder Design
+# Adaption of NVIDIA BioNeMo: Protein Binder Design
 
 This workflow is designed for _in silico_ protein binder design by generating binder sequences and predicted structures for the binder and target. Unlike the original NVIDIA pipeline, this approach **does not** require running Alphafold2 on cloud GPU. 
 
@@ -238,15 +238,13 @@ Optionally, you could visualize the entire binding complex (multiple peptides bi
 
 ![Fig 6.](docs/Fig2_visualization.png)  **Fig 6**. Last 4 peptides (cycle 2A, 2B, 2C, 2D) binding to ApoB, visualized on PyMOL (left) and SWISS-MODEL (right).
 
-## Notebook
+## Jupyter notebook version
 
 A similar example of the workflow is available in jupyter notebook format [/scripts/protein-binder-design_Sept2025.ipynb](/scripts/protein-binder-design_Sept2025.ipynbscript/protein-binder-design_Sept2025.ipynb)
 
-## Full NVIDIA pipeline
+## Why did this workflow not use the full BioNeMo pipeline?
 
 Downloading the [AlphaFold2](https://docs.nvidia.com/nim/bionemo/alphafold2/latest/prerequisites.html) and [AlphaFold2-Multimer](https://docs.nvidia.com/nim/bionemo/alphafold2-multimer/latest/quickstart-guide.html) model requires an additional 1250GB and 512GB of free SSD drive space respectively. Their download time (running the `docker compose pull` step) is also very long, up to 4-10 hours on 100+ Mbps internet connection for both models.
-
-These models can:
 
 - AlphaFold: Predict protein structure given a protein sequence
 - AlphaFold2-Multimer: Predict protein structure given multiple protein sequences
