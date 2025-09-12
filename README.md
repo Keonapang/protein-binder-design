@@ -1,4 +1,4 @@
-# NVIDIA BioNeMo: Protein Binder Design for Drug Discovery
+# Adaption of NVIDIA BioNeMo Blueprint: Protein Binder Design
 
 This workflow is designed for _in silico_ protein binder design by generating binder sequences and predicted structures for the binder and target. Unlike the original NVIDIA pipeline, this approach **does not** require running Alphafold2 on cloud GPU. 
 
@@ -134,6 +134,8 @@ For each of the 8 target sequences (**Table 1**), compute their 3D structure (.P
 
 ## 4. Run RFDiffusion and ProteinMPNN
 
+1. In your current bash terminal, run the following:
+
 ```bash
     # Define the cycle-to-target_sequence mapping. For simplicity, we use the first two target sequences as example.
     declare -A cycle_to_sequence=(
@@ -159,7 +161,7 @@ For each of the 8 target sequences (**Table 1**), compute their 3D structure (.P
     done
 ```
 
-While results are being generated on the cloud (**Fig 3**), ensure you download them into `$DIR_WORK` directory on your local computer.
+2. While results are being generated (**Fig 3**), ensure you download them into `$DIR_WORK` on your local computer.
 
 ![results](docs/results.png)
 
@@ -190,7 +192,7 @@ The [PRODIGY web server](https://rascar.science.uu.nl/prodigy/) tool can provide
     done
 ```
 
-An example of the resulting PDB of the entire complex can be found in `example/prodigy_input_pdb/cycle1A_50diff_0.5temp.pdb`. You will find that the **peptide binder** (Chain B) has been merged to the target sequence on **ApoB-100** (Chain A).
+    - An example of the resulting PDB can be found in `example/prodigy_input_pdb/cycle1A_50diff_0.5temp.pdb`. You will find that the **peptide binder** (Chain B) has been merged to the target sequence on **ApoB-100** (Chain A).
 
 2. On the web page, select the **PRODIGY (protein-protein)** setting and upload the PDB file. Set **"Interactor 1"** as A, and **"Interactor 2"** as B. 
 
@@ -211,9 +213,9 @@ You could also use FlexPepDoc to visualize the 3D structures in `$DIR_WORK/prodi
 
 Optionally, you could visualize the entire binding complex (multiple peptides binding to target protein) on PyMOL (download latest version [HERE](https://www.pymol.org/)).
 
-1. Generate the entire target protein structure on [AlphaFold2 colab](https://colab.research.google.com/github/sokrypton/ColabFold/blob/main/AlphaFold2.ipynb#scrollTo=R_AH6JSXaeb2) (or download from a PDB repository). 
+1. Generate the entire target protein structure on [AlphaFold2 colab](https://colab.research.google.com/github/sokrypton/ColabFold/blob/main/AlphaFold2.ipynb#scrollTo=R_AH6JSXaeb2) (or download from a PDB repository).
 
-- Note: if the protein is super big (i.e. ApoB-100 is > 4000aa), then you don't need to generate the entire structure. Just generate a portion of the protein that is **sufficiently large enough to cover all the binding sites** of the peptides that you plan to visualize. See `example/pep1.pdb`.
+    - Note: if the protein is super big (i.e. ApoB-100 is > 4000aa), then you don't need to generate the entire structure. Just generate a portion of the protein that is **sufficiently large enough to cover all the binding sites** of the peptides that you plan to visualize. See `example/pep1.pdb`.
 
 2. Use this script to generate a **multi-PDB file**, which takes in the large PDB from step (1) and PDB files of peptide binders. An example of the output can be found in `example/pymol_pdb/cycle1_50diff_0.5temp_complex.pdb`.
 
