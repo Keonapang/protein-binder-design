@@ -50,11 +50,10 @@ Total: 2 x GPU, 47 GiB GPU memory, 1.3TB GB SSD drive space, 60GiB RAM,24 CPU
 
 A detailed example of the workflow is located in [/scripts/protein-binder-design_Sept2025.ipynb](/scripts/protein-binder-design_Sept2025.ipynbscript/protein-binder-design_Sept2025.ipynb)
 
+![Fig 1. 3D rendering of ApoB protein, with two distinct regions for binding](docs/ApoB_3D.png)
 
-[Fig 1. 3D rendering of ApoB protein, with two distinct regions for binding](docs/ApoB_3D.png)
+![Fig 2. Finding sequences](docs/ApoB_3D_seq.png)
 
-[Fig 2. Finding sequences](docs/ApoB_3D_seq.png)
+![Fig 3. Visualization](docs/Fig1_visualization.png)
 
-[Fig 3. Visualization](docs/Fig1_visualization.png)
-
-[Fig 4. Visualization 2](docs/Fig2_visualization.png)
+![Fig 4. Visualization 2](docs/Fig2_visualization.png)
