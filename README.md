@@ -8,14 +8,10 @@ The example workflow illustrated below generates 8 peptide binders for target pr
 
 ### System Requirements
 
-- at least 240 GB of fast NVMe SSD space (assuming you're not running AlphaFold2 NIM. If so, you will need a min. of 2TB instead)
-- modern CPU with at least 24 CPU cores
-- at least 64 GB RAM
+- at least **240 GB** of fast NVMe SSD space *(assuming you're not running AlphaFold2. If so, you will need at least 2TB)*
+- at least **24 CPU** cores
+- at least **64 GB RAM**
 - 2 or more NVIDIA L40s, A100, or H100 GPUs
-
-### Software Pre-requisites
-
-- Python 3.11+
 
 ### Hardware requirements
 
@@ -24,14 +20,17 @@ The example workflow illustrated below generates 8 peptide binders for target pr
     - **RFdiffusion** runs on 1 x GPU, ≥12 GiB GPU memory, 15GB free SSD drive space
     - **ProteinMPNN** runs on 1 x GPU, ≥3 GiB GPU memory, 10GB free SSD drive space
 
+### Software Pre-requisites
+
+- Python 3.11+
 
 ## 1. Manually select binding sites on target protein
 
 ![Fig 1. 3D model of ApoB-100 on SWISS-MODEL](docs/ApoB_3D.png) **Fig 1**. 3D model of ApoB-100 (target) on SWISS-MODEL
 
-1. Get on the [SWISS-MODEL](https://swissmodel.expasy.org/) repository and in the search bar, type in your target protein of interest to view the interactive 3D model. In this example, we used [ApoB-100](https://swissmodel.expasy.org/repository/uniprot/P04114?template=9eag.1.A&range=38-4563) (**Fig 1**).
-2. Define your 'binding window' size, which affects how long your generated peptide binder will be. In this example, we designed 8 binding windows of 40 amino acids in length.
-3. Manually select these 8 binding sites on the 3D interactive model. In this example, we chose 4 peptides within the first half of the ApoB protein sequence (residues A91–357) and 4 peptides within the second half (residues A390–642). The full ApoB-100 protein backbone consists of 4,563 amino acids (**Fig 2**).
+1. Get on the [SWISS-MODEL](https://swissmodel.expasy.org/) repository and search for your target protein to view the interactive 3D model. In this example, we used [ApoB-100](https://swissmodel.expasy.org/repository/uniprot/P04114?template=9eag.1.A&range=38-4563) (**Fig 1**).
+2. Define your 'binding window' size, which affects how long your generated peptide binder will be. In this example, we designed 8 binding windows of **40aa** in length.
+3. Manually select the sequences for these 8 binding sites, using the 3D interactive model to help orient you. In this example, we chose 4 peptides in the first half of the ApoB protein sequence (residues A91–357; cycle 1) and 4 peptides in the second half (residues A390–642; cycle 2). The full *ApoB-100* protein backbone consists of 4,563 amino acids (**Fig 2**).
 
 ![Fig 2. Manually identify the binding sites](docs/ApoB_3D_seq.png) **Fig 2**. Manually identify the 8 target binding sites
 
@@ -54,9 +53,9 @@ For each of the 8 target sequences (**Table 1**), compute their 3D structure (.P
 
 1. Input sequence under `query_sequence`.
 2. Hit `Runtime` > `Run all` and wait ~ 5mins.
-3. Download .zip results, unpack it and identify the model with this suffix `...rank_001_alphafold2_ptm_model_1_seed_000.pdb` (This is because AlphaFold2 automatically generates 5 possible structures, with the first-ranked structure being the one with highest confidence, based on [pLDDT](https://www.ebi.ac.uk/training/online/courses/alphafold/inputs-and-outputs/evaluating-alphafolds-predicted-structures-using-confidence-scores/plddt-understanding-local-confidence/)).
-4. Rename only the first-ranked model file to `pep${cycle}.pdb` (i.e. if `cycle="1A"`, then this would be pep1A.pdb).
-5. Store this model in a new working directory and assign it's path to `$DIR_WORK` (which will also be used later on).
+3. Download .zip results, unpack it and find the file with this suffix `...rank_001_alphafold2_ptm_model_1_seed_000.pdb` (*This is because AlphaFold2 automatically generates 5 slightly different structures, with the first-ranked being the one with highest confidence based on [pLDDT](https://www.ebi.ac.uk/training/online/courses/alphafold/inputs-and-outputs/evaluating-alphafolds-predicted-structures-using-confidence-scores/plddt-understanding-local-confidence/)*).
+4. Rename the first-ranked model file to `pep${cycle}.pdb`. For example, if `cycle="1A"`, then this would be `input/pep1A.pdb`.
+5. Store this model in a new directory and assign it's path to `$DIR_WORK`.
 
 ```bash
     DIR_WORK="/your/local/working/directory" # DIR_WORK="/Users/keonapang/Desktop/NVIDIA/Sept12"
