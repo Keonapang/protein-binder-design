@@ -195,17 +195,18 @@ The [PRODIGY web server](https://rascar.science.uu.nl/prodigy/) tool can provide
     done
 ```
 
-After running this script, this is an example of the resulting PDB of the entire complex. The **peptide binder** (Chain B) is merged to the target sequence on **ApoB-100** (Chain A):
+An example of the resulting PDB of the entire complex can be found in `example/cycle1A_50diff_0.5temp.pdb`. The **peptide binder** (Chain B) is merged to the target sequence on **ApoB-100** (Chain A):
 
 ```bash
     MODEL     1                                                                     
     ATOM      1  N   LEU A   1       3.770  10.500 -13.625  1.00 64.62           N  
     ATOM      2  CA  LEU A   1       3.465   9.531 -12.578  1.00 64.62           C  
     ATOM      3  C   LEU A   1       4.594   8.516 -12.430  1.00 64.62           C  
-    ATOM      4  CB  LEU A   1       2.152   8.805 -12.883  1.00 64.62           C  
-    ATOM      5  O   LEU A   1    
+    ....
+    TER     317      LEU A  40    
     ATOM      2  CA  GLY B   1      18.770  -4.344 -4.925  1.00 64.62        
-    ATOM      2  CA  PRO B   1      11.324  -4.344 -4.925  1.00 30.20        
+    ATOM      2  CA  PRO B   1      11.324  -4.344 -4.925  1.00 30.20
+    ....        
 ```
 
 2. On the web page, select the **PRODIGY (protein-protein)** setting and upload this PDB file. Set **Interactor 1** as A, and **Interactor 2** as B. 
