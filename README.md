@@ -220,9 +220,9 @@ Use the command to generate a multi-PDB file consisting of more than one peptide
     Rscript "./src/conversion_all.R" $cycle $parameter`
 ```
 
-![Fig 3. Visualization](docs/Fig1_visualization.png)
+![Fig 3. Visualization](docs/Fig1_visualization.png) **Fig 5**. First 4 peptides (cycle 1A, 1B, 1C, 1D) binding to ApoB, visualized on PyMOL (left) and SWISS-MODEL (right).
 
-![Fig 4. Visualization 2](docs/Fig2_visualization.png)
+![Fig 4. Visualization 2](docs/Fig2_visualization.png)  **Fig 6**. Last 4 peptides (cycle 2A, 2B, 2C, 2D) binding to ApoB, visualized on PyMOL (left) and SWISS-MODEL (right).
 
 ## Notebook
 
