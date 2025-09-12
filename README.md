@@ -163,10 +163,13 @@ For each of the 8 target sequences (**Table 1**), compute their 3D structure (.P
 While results are being generated on the cloud (**Fig 3**), ensure you download them into `$DIR_WORK` directory on your local computer.
 
 ![results](docs/results.png)
+
 **Fig 3**. Example of the output directory on the cloud VM.
+
 
 > [!NOTE]
 > Now, you may exit and shutdown the NVIDIA VM so it doesn't keep charging money.
+
 
 ## 5. Visualization and validation of binder-target (locally)
 

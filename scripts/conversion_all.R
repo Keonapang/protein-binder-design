@@ -33,9 +33,9 @@ setwd(DIR_WORK)
 pattern <- paste0("2_cycle", cycle, "[A-D]_", diffusion, "diff_", temp, "temp_1seqs_rfdiffusion.pdb")
 infiles <- list.files(path = ".", pattern = pattern, full.names = TRUE)
 if (length(infiles) > 0) {
-  print(paste("Found", length(infiles), "file(s):"))
+  print(paste("Found", length(infiles), "file(s) in current directory:"))
   print(infiles)
-  ca("\n")
+  cat("\n")
 } else {
   print("No matching files found.\n")
 }
@@ -72,7 +72,6 @@ if (length(infiles)==1) {
 
 # Path to the original file
 orgfile <- paste0(DIR_WORK, "/pep", cycle, ".pdb")
-cat("\n")
 cat("Target protein PDB (large):", orgfile, "\n\n")
 
 # output directory
@@ -117,7 +116,7 @@ if (length(combined_data) > 2) {
 for (i in seq_along(infiles)) {
   infile <- file.path(DIR_WORK, infiles[i])  # infile <- file.path("/Users/keonapang/Desktop/4_alphafold", infiles[i])
 
-  cat("Processing", infile, "\n\n") 
+  cat("Peptide binder PDB", infile, "\n") 
   new_chain <- new_chains[i]
   
   # Modify the chain and append the infile to combined_data
