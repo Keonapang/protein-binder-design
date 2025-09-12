@@ -25,11 +25,11 @@ The example workflow illustrated below generates 8 peptide binders for target pr
     - **ProteinMPNN** runs on 1 x GPU, ≥3 GiB GPU memory, 10GB free SSD drive space
 
 
-## 1. Manually identify and select potential binding sites
+## 1. Manually select binding sites on target protein
 
-![Fig 1. 3D model of ApoB-100 on SWISS-MODEL](docs/ApoB_3D.png)
+![Fig 1. 3D model of ApoB-100 on SWISS-MODEL](docs/ApoB_3D.png). Fig 1. 3D model of ApoB-100 on SWISS-MODEL
 
-1. Get on the [SWISS-MODEL](https://swissmodel.expasy.org/) repository and on the front page search bar, type in your target protein of interest to view the interactive 3D model. In this example, we used [ApoB-100](https://swissmodel.expasy.org/repository/uniprot/P04114?template=9eag.1.A&range=38-4563).
+1. Get on the [SWISS-MODEL](https://swissmodel.expasy.org/) repository and in the search bar, type in your target protein of interest to view the interactive 3D model. In this example, we used [ApoB-100](https://swissmodel.expasy.org/repository/uniprot/P04114?template=9eag.1.A&range=38-4563).
 2. Define your 'binding window' size, which affects how long your generated peptide binder will be. In this example, we wanted 8 binding windows of 40 amino acids in length.
 3. Manually select these 8 binding sites on the 3D interactive model. In this example, we chose 4 peptides within the first half of the ApoB protein sequence (residues A91–357) and 4 peptides within the second half (residues A390–642). The full ApoB-100 protein backbone consists of 4,563 amino acids.
 
