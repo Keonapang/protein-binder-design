@@ -188,19 +188,17 @@ The [PRODIGY web server](https://rascar.science.uu.nl/prodigy/) tool can provide
     done
 ```
 
-An example of the resulting PDB of the entire complex can be found in `example/cycle1A_50diff_0.5temp.pdb`. The **peptide binder** (Chain B) is merged to the target sequence on **ApoB-100** (Chain A):
+An example of the resulting PDB of the entire complex can be found in `example/cycle1A_50diff_0.5temp.pdb`. As you can see, the **peptide binder** (Chain B) has been merged to the target sequence on **ApoB-100** (Chain A):
+        MODEL     1                                                                     
+        ATOM      1  N   LEU A   1       3.770  10.500 -13.625  1.00 64.62           N  
+        ATOM      2  CA  LEU A   1       3.465   9.531 -12.578  1.00 64.62           C  
+        ATOM      3  C   LEU A   1       4.594   8.516 -12.430  1.00 64.62           C  
+        ....
+        TER     317      LEU A  40    
+        ATOM      2  CA  GLY B   1      18.770  -4.344 -4.925  1.00 64.62        
+        ATOM      2  CA  PRO B   1      11.324  -4.344 -4.925  1.00 30.20
+        ....        
 
-```bash
-    MODEL     1                                                                     
-    ATOM      1  N   LEU A   1       3.770  10.500 -13.625  1.00 64.62           N  
-    ATOM      2  CA  LEU A   1       3.465   9.531 -12.578  1.00 64.62           C  
-    ATOM      3  C   LEU A   1       4.594   8.516 -12.430  1.00 64.62           C  
-    ....
-    TER     317      LEU A  40    
-    ATOM      2  CA  GLY B   1      18.770  -4.344 -4.925  1.00 64.62        
-    ATOM      2  CA  PRO B   1      11.324  -4.344 -4.925  1.00 30.20
-    ....        
-```
 
 2. On the web page, select the **PRODIGY (protein-protein)** setting and upload this PDB file. Set **Interactor 1** as A, and **Interactor 2** as B. 
 
@@ -226,10 +224,9 @@ Use the command to generate a multi-PDB file consisting of more than one peptide
     Rscript "./src/conversion_all.R" $cycle $parameter`
 ```
 
-![Fig 3. Visualization](docs/Fig1_visualization.png) **Fig 4**. First 4 peptides from Cycle 1 binding to ApoB, visualised using Swiss model (left) and PyMOL (right).
+![Fig 3. Visualization](docs/Fig1_visualization.png)
 
-
-![Fig 4. Visualization 2](docs/Fig2_visualization.png) **Fig 5**. Last 4 peptides from Cycle 2 binding to ApoB, visualised using Swiss model (left) and PyMOL (right).
+![Fig 4. Visualization 2](docs/Fig2_visualization.png)
 
 ## Notebook
 
