@@ -30,7 +30,7 @@ DIR_WORK <- as.character(args[4])
 setwd(DIR_WORK)
 
 # find matching files in the directory
-pattern <- paste0("2_cycle", cycle, "[A-D]_1seqs_", diffusion, "diff_", temp, "temp_rfdiffusion.pdb")
+pattern <- paste0("2_cycle", cycle, "[A-D]_?", diffusion, "diff_", temp, "temp_rfdiffusion.pdb")
 infiles <- list.files(path = ".", pattern = pattern, full.names = TRUE)
 if (length(infiles) > 0) {
   print(paste("Found", length(infiles), "file(s):"))
@@ -38,20 +38,19 @@ if (length(infiles) > 0) {
 } else {
   print("No matching files found.")
 }
-
 # if (cycle=="1") {
 #   infiles <- c(
-#     paste0("2_cycle1A_1seqs_",diffusion,"diff_",temp,"temp_rfdiffusion.pdb"),
-#     paste0("2_cycle1B_1seqs_",diffusion,"diff_",temp,"temp_rfdiffusion.pdb"),
-#     paste0("2_cycle1C_1seqs_",diffusion,"diff_",temp,"temp_rfdiffusion.pdb"),
-#     paste0("2_cycle1D_1seqs_",diffusion,"diff_",temp,"temp_rfdiffusion.pdb")
+#     paste0("2_cycle1A",diffusion,"diff_",temp,"temp_rfdiffusion.pdb"),
+#     paste0("2_cycle1B_",diffusion,"diff_",temp,"temp_rfdiffusion.pdb"),
+#     paste0("2_cycle1C_",diffusion,"diff_",temp,"temp_rfdiffusion.pdb"),
+#     paste0("2_cycle1D_",diffusion,"diff_",temp,"temp_rfdiffusion.pdb")
 #   )
 # } else {
 #   infiles <- c( 
-#     paste0("2_cycle2A_1seqs_",diffusion,"diff_",temp,"temp_rfdiffusion.pdb"),
-#     paste0("2_cycle2B_1seqs_",diffusion,"diff_",temp,"temp_rfdiffusion.pdb"),
-#     paste0("2_cycle2C_1seqs_",diffusion,"diff_",temp,"temp_rfdiffusion.pdb"),
-#     paste0("2_cycle2D_1seqs_",diffusion,"diff_",temp,"temp_rfdiffusion.pdb")
+#     paste0("2_cycle2A_",diffusion,"diff_",temp,"temp_rfdiffusion.pdb"),
+#     paste0("2_cycle2B_",diffusion,"diff_",temp,"temp_rfdiffusion.pdb"),
+#     paste0("2_cycle2C_",diffusion,"diff_",temp,"temp_rfdiffusion.pdb"),
+#     paste0("2_cycle2D_",diffusion,"diff_",temp,"temp_rfdiffusion.pdb")
 #   )
 # }
 
