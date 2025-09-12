@@ -30,13 +30,14 @@ DIR_WORK <- as.character(args[4])
 setwd(DIR_WORK)
 
 # find matching files in the directory
-pattern <- paste0("2_cycle", cycle, "[A-D]_?", diffusion, "diff_", temp, "temp_rfdiffusion.pdb")
+pattern <- paste0("2_cycle", cycle, "[A-D]_", diffusion, "diff_", temp, "temp_1seqs_rfdiffusion.pdb")
 infiles <- list.files(path = ".", pattern = pattern, full.names = TRUE)
 if (length(infiles) > 0) {
   print(paste("Found", length(infiles), "file(s):"))
   print(infiles)
+  ca("\n")
 } else {
-  print("No matching files found.")
+  print("No matching files found.\n")
 }
 # if (cycle=="1") {
 #   infiles <- c(
@@ -55,7 +56,11 @@ if (length(infiles) > 0) {
 # }
 
 # Corresponding new_chain values for each infile
-if (length(infiles)==4){
+if (length(infiles)==1) {
+  new_chains <- c("B")
+} else if (length(infiles)==2){
+  new_chains <- c("B", "C")
+} else if (length(infiles)==4){
   new_chains <- c("B", "C", "D", "E")
 } else if (length(infiles)==8) {
   new_chains <- c("B", "C", "D", "E", "F", "G", "H", "I")
