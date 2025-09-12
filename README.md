@@ -105,7 +105,7 @@ For each of the 8 target sequences (**Table 1**), compute their 3D structure (.P
 
 7. Open a new terminal, leaving the current terminal open with the launched service.
 
-8. Open a new Terminal tab to view running containers. Wait until the health check of your containers returns `{"status":"ready"}` before running any models.
+8. In the new terminal, view running containers with the following codes. Wait until the health check returns `{"status":"ready"}` before proceeding.
 
 ```bash
     # 1. Check storage space
@@ -122,6 +122,8 @@ For each of the 8 target sequences (**Table 1**), compute their 3D structure (.P
     # 3. Health check 
     curl localhost:8082/v1/health/ready # RFdiffusion
     curl localhost:8083/v1/health/ready # Protein MPNN
+    curl localhost:8084/v1/health/ready # AlphaFold multimer
+
     # Example:
         # {"status":"ready"}
 ```
@@ -134,20 +136,24 @@ For each of the 8 target sequences (**Table 1**), compute their 3D structure (.P
     declare -A cycle_to_sequence=(
         ["1A"]="LKTSQCTLKEVYGFNPEGKALLKKTKNSEEFAAAMSRYEL"  
         ["1B"]="EEAKQVLFLDTVYGNCSTHFTVKTRKGNVATEISTERDLG" 
-        ["1C"]="VAEAICKEQHLFLPFSYKNKYGMVAQVTQTLKLEDTPKIN"
-        ["1D"]="PKQAEAVLKTLQELKKLTISEQNIQRANLFNKLVTELRGL" 
-        ["2A"]="CSTHILQWLKRVHANPLLIDVVTYLVALIPEPSAQQLREI" 
-        ["2B"]="GTQELLDIANYLMEQIQDDCTGDEDYTYLILRVIGNMGQT" 
-        ["2C"]="LRKMEPKDKDQEVLLQTFLDDASPGDKRLAAYLMLMRSPS"
-        ["2D"]="EQVKNFVASHIANILNSEELDIQDLKKLVKEALKESQLPT"
+        # ["1C"]="VAEAICKEQHLFLPFSYKNKYGMVAQVTQTLKLEDTPKIN"
+        # ["1D"]="PKQAEAVLKTLQELKKLTISEQNIQRANLFNKLVTELRGL" 
+        # ["2A"]="CSTHILQWLKRVHANPLLIDVVTYLVALIPEPSAQQLREI" 
+        # ["2B"]="GTQELLDIANYLMEQIQDDCTGDEDYTYLILRVIGNMGQT" 
+        # ["2C"]="LRKMEPKDKDQEVLLQTFLDDASPGDKRLAAYLMLMRSPS"
+        # ["2D"]="EQVKNFVASHIANILNSEELDIQDLKKLVKEALKESQLPT"
     )
 
     num_seq=1 # one peptide binder per target sequence
-    diffusion=30 # recommended 20-40
-    temp=0.4 # recommended range from 0.2 to 0.8
+    diffusion=50 # recommended 20-50
+    temp=0.5 # recommended range from 0.2 to 0.8
     contigs="15-20"
 
-    cycles=("1A" "1B" "1C" "1D" "2A" "2B" "2C" "2D")
+    # Export your API key one more time before running script (or else there will be an error)
+    export NGC_CLI_API_KEY=<enter-key> # Example: export NGC_CLI_API_KEY=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
+
+    # cycles=("1A" "1B" "1C" "1D" "2A" "2B" "2C" "2D")
+    cycles=("1A" "1B")
     for cycle in "${cycles[@]}"; do
         target_sequence=${cycle_to_sequence[$cycle]}
 
@@ -165,10 +171,12 @@ While results are being generated, ensure you download them into a new directory
     cd $DIR_WORK # contains RFDiffusion and ProteinPMNN results
 ```
 
+![results](docs/results.png) **Fig 3**. Example of the output directory containing results from this notebook example.
+
 > [!NOTE]
 > Now, you may exit and shutdown the NVIDIA VM so it doesn't keep charging money.
 
-## 5. Visualization and validation of binder-target 
+## 5. Visualization and validation of binder-target (locally)
 
 ### (a) PRODIGY Gibbs Free Energy
 
@@ -180,11 +188,12 @@ While results are being generated, ensure you download them into a new directory
 Run code below:
 
 ```bash
+root="/directory/of/script/" # where the script is stored
 new_chain="B" # edit chain A to become chain B
 parameter="1seqs_50diff_05temp" # filename
 
 for cycle in "1A" "1B" "1C" "1D"; do
-    Rscript "./scripts/conversion.R" $cycle $new_chain $parameter
+    Rscript "${root}/conversion.R" $cycle $new_chain $parameter
 done
 ```
 
@@ -213,15 +222,18 @@ Load the generated multi-PDB files into PyMOL (download latest version [HERE](ht
 Use the command to generate a multi-PDB file consisting of more than one peptide binder:
 
 ```bash
-cycle="2"
-parameter="50diff_05temp"
-Rscript "./src/conversion_all.R" $cycle $parameter`
+    cycle="2"
+    diffusion=50
+    temp=0.5 
+    parameter="${diffusion}diff_${temp}temp"
+
+    Rscript "./src/conversion_all.R" $cycle $parameter`
 ```
 
-![Fig 3. Visualization](docs/Fig1_visualization.png) **Fig 3**. First 4 peptides from Cycle 1 binding to ApoB, visualised using Swiss model (left) and PyMOL (right).
+![Fig 3. Visualization](docs/Fig1_visualization.png) **Fig 4**. First 4 peptides from Cycle 1 binding to ApoB, visualised using Swiss model (left) and PyMOL (right).
 
 
-![Fig 4. Visualization 2](docs/Fig2_visualization.png) **Fig 4**. Last 4 peptides from Cycle 2 binding to ApoB, visualised using Swiss model (left) and PyMOL (right).
+![Fig 4. Visualization 2](docs/Fig2_visualization.png) **Fig 5**. Last 4 peptides from Cycle 2 binding to ApoB, visualised using Swiss model (left) and PyMOL (right).
 
 ## Notebook
 
