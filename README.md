@@ -266,7 +266,7 @@ Optionally, you could visualize the entire binding complex (multiple peptides bi
 
 ## The end
 
-From manually selecting binding sites on a target region (**cycle 1**) of the protein via SWISS-MODEL, to finally, generating 4 non-overlapping, unique peptide binders for this target region.
+In summary, we started off with manually selecting binding sites on a target region (**cycle 1**) of the protein via SWISS-MODEL. Finally, we output 4 non-overlapping, unique peptide binders for this region.
 
 ![Fig 6](docs/Fig1_visualization.png) **Fig 6**. First 4 peptides (cycle 1A, 1B, 1C, 1D) binding to ApoB, visualized on PyMOL (left) and SWISS-MODEL (right).
 
