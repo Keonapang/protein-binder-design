@@ -239,7 +239,7 @@ A similar example of the workflow is available in jupyter notebook format [/scri
 
 ## Full NVIDIA pipeline
 
-Downloading the [AlphaFold2]() and [AlphaFold2-Multimer](https://docs.nvidia.com/nim/bionemo/alphafold2-multimer/latest/quickstart-guide.html) model requires an additional 1250GB and 512GB of free SSD drive space respectively. Their download time (running the `docker compose pull` step) is also very long, up to 4-10 hours on 100+ Mbps internet connection for both models.
+Downloading the [AlphaFold2](https://docs.nvidia.com/nim/bionemo/alphafold2/latest/prerequisites.html) and [AlphaFold2-Multimer](https://docs.nvidia.com/nim/bionemo/alphafold2-multimer/latest/quickstart-guide.html) model requires an additional 1250GB and 512GB of free SSD drive space respectively. Their download time (running the `docker compose pull` step) is also very long, up to 4-10 hours on 100+ Mbps internet connection for both models.
 
 These models can:
 
