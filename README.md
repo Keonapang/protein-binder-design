@@ -154,11 +154,8 @@ For each of the 8 target sequences (**Table 1**), compute their 3D structure (.P
 > [!NOTE]
 > Example of a ProteinMPNN output:
     > T=0.5, sample=1, score=2.0571, global_score=2.0571, seq_recovery=0.0000 TQEQLAQNKKEERVKLEKQMS
-    
     > -`sample` - sequence sample no. 1, 2,...etc
-
     > - score` - average over residues that were designed negative log probability of sampled amino acids
-
     > -`global score` - average over all residues in all chains negative log probability of sampled/fixed amino acids
     > -`TQEQLAQNKKEERVKLEKQMS` - generated peptide binder
 
