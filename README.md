@@ -182,13 +182,13 @@ The [PRODIGY web server](https://rascar.science.uu.nl/prodigy/) tool can provide
     temp="0.5" 
     DIR_WORK="/Users/keonapang/Desktop/NVIDIA/Sept12" # Example (please modify)
     
-    root="/location/of/this/script"
+    root="/location/of/this/script" # # root="/Users/keonapang/Desktop/NVIDIA/Sept12"
     for cycle in "1A" "1B"; do
         Rscript "${root}/conversion.R" $cycle $diffusion $temp $DIR_WORK
     done
 ```
 
-An example of the resulting PDB of the entire complex can be found in `example/cycle1A_50diff_0.5temp.pdb`. You will find that the **peptide binder** (Chain B) has been merged to the target sequence on **ApoB-100** (Chain A).
+An example of the resulting PDB of the entire complex can be found in `example/prodigy_input_pdb/cycle1A_50diff_0.5temp.pdb`. You will find that the **peptide binder** (Chain B) has been merged to the target sequence on **ApoB-100** (Chain A).
 
 2. On the web page, select the **PRODIGY (protein-protein)** setting and upload the PDB file. Set **"Interactor 1"** as A, and **"Interactor 2"** as B. 
 
@@ -209,17 +209,19 @@ You could also use FlexPepDoc to visualize the 3D structures in `$DIR_WORK/prodi
 
 Optionally, you could visualize the entire binding complex (multiple peptides binding to target protein) on PyMOL (download latest version [HERE](https://www.pymol.org/)).
 
-Use this script to generate this multi-PDB file, which takes in multiple inputs, including a PDB of a large proportion of the target protein structure and PDB file(s) of the peptide binders.
+Use this script to generate this multi-PDB file, which takes in multiple inputs, including a large PDB of (ideally) the entire target protein structure** and PDB file(s) of peptide binders. **note: PDB structure needs to be large enough to cover all the binding sites of all your peptides. See the ApoB-100 example in `example/pep1.pdb`.
 
 ```bash
     cycle="1"
     diffusion="50"
     temp="0.5"
     DIR_WORK="/Users/keonapang/Desktop/NVIDIA/Sept12" 
-    root="/location/of/this/script"
+    root="/location/of/this/script" # root="/Users/keonapang/Desktop/NVIDIA/Sept12"
 
     Rscript "${root}/conversion_all.R" $cycle $diffusion $temp $DIR_WORK
 ```
+
+An example of the output can be found in `example/pymol_pdb/cycle1_50diff_0.5temp_complex.pdb`, merging all target protein (chain A), peptide 1 (chain B) and peptide 2 (chain C) structures into one file.
 
 ![Fig 5.](docs/Fig1_visualization.png) **Fig 5**. First 4 peptides (cycle 1A, 1B, 1C, 1D) binding to ApoB, visualized on PyMOL (left) and SWISS-MODEL (right).
 
