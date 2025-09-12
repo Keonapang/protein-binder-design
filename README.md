@@ -6,18 +6,18 @@ Instead, you will first pre-compute the target protein structure on [AlphaFold2 
 
 The example workflow illustrated below generates 8 peptide binders for target protein ApoB-100. We will also generate their multimer structures (in PDB format).
 
-## System Requirements
+### System Requirements
 
 - at least 1300 GB (1.3 TB) of fast NVMe SSD space
 - modern CPU with at least 24 CPU cores
 - at least 64 GB RAM
 - 2 or more NVIDIA L40s, A100, or H100 GPUs
 
-## Software Pre-requisites
+### Software Pre-requisites
 
 - Python 3.11+
 
-## Hardware requirements
+### Hardware requirements
 
 - Total: 2 x GPU, 47 GiB GPU memory, 1.3TB GB SSD drive space, 60GiB RAM,24 CPU
 
