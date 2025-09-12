@@ -134,7 +134,7 @@ For each of the 8 target sequences (**Table 1**), compute their 3D structure (.P
 
 ## 4. Run RFDiffusion and ProteinMPNN
 
-1. In your current bash terminal, run the following:
+1. In the same terminal, run the following:
 
 ```bash
     # Define the cycle-to-target_sequence mapping. For simplicity, we use the first two target sequences as example.
@@ -169,10 +169,12 @@ For each of the 8 target sequences (**Table 1**), compute their 3D structure (.P
 
 
 > [!NOTE]
-> Now, you may exit and shutdown the NVIDIA VM so it doesn't keep charging money.
+> Once you're done running the scrips above, you may shutdown the NVIDIA VM so it doesn't keep charging money.
 
 
 ## 5. Visualization and validation of binder-target (locally)
+
+Before you proceed, ensure that all your predicted peptide binder structures are now stored in local directory `$DIR_WORK`.
 
 ### (a) PRODIGY Gibbs Free Energy
 
