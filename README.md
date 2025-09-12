@@ -211,9 +211,11 @@ You could also use FlexPepDoc to visualize the 3D structures in `$DIR_WORK/prodi
 
 Optionally, you could visualize the entire binding complex (multiple peptides binding to target protein) on PyMOL (download latest version [HERE](https://www.pymol.org/)).
 
-1. Generate the entire target protein structure on [AlphaFold2 colab](https://colab.research.google.com/github/sokrypton/ColabFold/blob/main/AlphaFold2.ipynb#scrollTo=R_AH6JSXaeb2) (or download from a PDB repository). Note that if the protein is super big (i.e. ApoB-100 is > 4000aa in length), then you don't need to generate the entire structure. Generate a portion of the protein that is sufficiently large enough to cover all the binding sites of the peptides that you plan to visualize. See `example/pep1.pdb`.
+1. Generate the entire target protein structure on [AlphaFold2 colab](https://colab.research.google.com/github/sokrypton/ColabFold/blob/main/AlphaFold2.ipynb#scrollTo=R_AH6JSXaeb2) (or download from a PDB repository). 
 
-2. Use this script to generate a **multi-PDB file**, which takes in the large PDB from step (1) and PDB files of peptide binders.
+- Note that if the protein is super big (i.e. ApoB-100 is > 4000aa in length), then you don't need to generate the entire structure. Just generate a portion of the protein that is **sufficiently large enough to cover all the binding sites** of the peptides that you plan to visualize. See `example/pep1.pdb`.
+
+2. Use this script to generate a **multi-PDB file**, which takes in the large PDB from step (1) and PDB files of peptide binders. An example of the output can be found in `example/pymol_pdb/cycle1_50diff_0.5temp_complex.pdb`.
 
 ```bash
     # In this example, I wish to visualize peptides 1A and 1B binding to ApoB-100
@@ -226,7 +228,6 @@ Optionally, you could visualize the entire binding complex (multiple peptides bi
     Rscript "${root}/conversion_all.R" $cycle $diffusion $temp $DIR_WORK
 ```
 
-An example of the output can be found in `example/pymol_pdb/cycle1_50diff_0.5temp_complex.pdb`, merging all target protein (chain A), peptide 1 (chain B) and peptide 2 (chain C) structures into one file.
 
 3. Open PyMoL and visualize `cycle1_50diff_0.5temp_complex.pdb`.
 
