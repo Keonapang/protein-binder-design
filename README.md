@@ -2,9 +2,9 @@
 
 This workflow is designed for _in silico_ protein binder design by generating binder sequences and predicted structures for the binder and target. Unlike the original NVIDIA pipeline, this approach **does not** require running Alphafold2 on cloud GPU. 
 
-Instead, you will first pre-compute the target protein structure on [AlphaFold2 colab](https://colab.research.google.com/github/sokrypton/ColabFold/blob/main/AlphaFold2.ipynb#scrollTo=R_AH6JSXaeb2) (step #1), and save it as a `.PDB` file. This becomes the input for **RFDiffusion** (step #2), which generates the protein backbones for binder design. Subsequently, **ProteinMPNN** (step #3) will back-generate the amino acid sequence of this protein binder. Finally, this generated peptide structure is validated (step #4) on [PRODIGY](https://rascar.science.uu.nl/prodigy/) (Gibbs Free Energy) and Rosetta [FlexPepDoc](https://r2.graylab.jhu.edu/auth/login?next=%2Fapps%2Fsubmit%2Fflexpepdock). 
+Instead, you will first pre-compute the target protein structure on [AlphaFold2 colab](https://colab.research.google.com/github/sokrypton/ColabFold/blob/main/AlphaFold2.ipynb#scrollTo=R_AH6JSXaeb2) (model #1), and save it as a `.PDB` file. This becomes the input for **RFDiffusion** (model #2), which generates the protein backbones for binder design. Subsequently, **ProteinMPNN** (model #3) will back-generate the amino acid sequence of this protein binder. Finally, this generated peptide structure is validated (step #4) on [PRODIGY](https://rascar.science.uu.nl/prodigy/) (Gibbs Free Energy) and Rosetta [FlexPepDoc](https://r2.graylab.jhu.edu/auth/login?next=%2Fapps%2Fsubmit%2Fflexpepdock). 
 
-The example workflow illustrated below generates 8 peptide binders for target protein ApoB-100. We will also generate their multimer structures (in PDB format).
+The example below generates 8 peptide binders for target protein ApoB-100.
 
 ### System Requirements
 
@@ -131,7 +131,7 @@ For each of the 8 target sequences (**Table 1**), compute their 3D structure (.P
         # {"status":"ready"}
 ```
 
-## 4. Run RFDiffusion and ProteinMPNN
+## 4. Run RFDiffusion and ProteinMPNN 
 
 1. In the same terminal, run the following:
 
@@ -171,7 +171,7 @@ For each of the 8 target sequences (**Table 1**), compute their 3D structure (.P
 > Once you're done running the scrips above, you may shutdown the NVIDIA VM so it doesn't keep charging money.
 
 
-## 5. Visualization and validation of binder-target (locally)
+## 5. Visualization and validation of binder-target (local)
 
 Before you proceed, ensure that all your predicted peptide binder structures are now stored in local directory `$DIR_WORK`.
 
@@ -270,6 +270,14 @@ In summary, we started off with manually selecting binding sites on a target reg
 
 ![Fig 6](docs/Fig1_visualization.png) **Fig 6**. First 4 peptides (1A, 1B, 1C, 1D) binding to ApoB, visualized on PyMOL (left) and SWISS-MODEL (right).
 
+
+## Areas for improvement
+
+| Improvement         | How?          | Practical challenges |
+|---------------|---------------------------------------------|---------------------|
+| Remove the need for manual selection of binding sites      | Could use PyMOL instead, which inputs the entire protein sequence, and the computer algorithm searches for possible combination of binding regions.  | We'll need the 3D coordinates of the folded protein structure - from where?     |
+| Integrate running AlphaFold directly into the workflow, instead of relying on the free colab notebook      | Will need a VM with 2TB of storage space and 4 x H100 GPU     | Compute cost is high, not worth it to download (4-10hrs) the AlphaFold model everytime. Unless we have permenant cloud storage. |
+| SSH into the virtual machine instead of having to use the web interface    | Theres a way to do so from the Macbook terminal. Its pretty smooth.   | Difficulty getting IT permissions to allow this on our PHRI servers      |
 
 ## Jupyter notebook version
 
