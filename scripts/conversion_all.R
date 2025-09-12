@@ -116,7 +116,7 @@ if (length(combined_data) > 2) {
 for (i in seq_along(infiles)) {
   infile <- file.path(DIR_WORK, infiles[i])  # infile <- file.path("/Users/keonapang/Desktop/4_alphafold", infiles[i])
 
-  cat("Peptide binder PDB", infile, "\n") 
+  cat("Peptide binder PDB:", infile, "\n") 
   new_chain <- new_chains[i]
   
   # Modify the chain and append the infile to combined_data
