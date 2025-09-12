@@ -262,10 +262,10 @@ Optionally, you could visualize the entire binding complex (multiple peptides bi
     save /Users/keonapang/Desktop/NVIDIA/scaffold_peptides_1ABCD_new.pdb, combined
 ```
 
+![Fig 5.](docs/pymol2.png) **Fig 5**. Example of the 3D peptide-target binding complex rendering on PyMOL.
 
-![Fig 5.](docs/Fig1_visualization.png) **Fig 5**. First 4 peptides (cycle 1A, 1B, 1C, 1D) binding to ApoB, visualized on PyMOL (left) and SWISS-MODEL (right).
+![Fig 5.](docs/Fig1_visualization.png) **Fig 6**. First 4 peptides (cycle 1A, 1B, 1C, 1D) binding to ApoB, visualized on PyMOL (left) and SWISS-MODEL (right).
 
-![Fig 6.](docs/Fig2_visualization.png)  **Fig 6**. Last 4 peptides (cycle 2A, 2B, 2C, 2D) binding to ApoB, visualized on PyMOL (left) and SWISS-MODEL (right).
 
 ## Jupyter notebook version
 
