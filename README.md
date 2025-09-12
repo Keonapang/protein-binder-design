@@ -8,7 +8,7 @@ The example workflow illustrated below generates 8 peptide binders for target pr
 
 ### System Requirements
 
-- at least 240 GB of fast NVMe SSD space (assuming you're not running AlphaFold2 NIM. If so, you will need a min. of 1.3TB instead)
+- at least 240 GB of fast NVMe SSD space (assuming you're not running AlphaFold2 NIM. If so, you will need a min. of 2TB instead)
 - modern CPU with at least 24 CPU cores
 - at least 64 GB RAM
 - 2 or more NVIDIA L40s, A100, or H100 GPUs
