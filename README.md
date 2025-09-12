@@ -202,7 +202,7 @@ You could also use FlexPepDoc to visualize the 3D structures in `$DIR_WORK/prodi
 2. Upload a combined pdb file.
 3. Specify **Docking partner** as "A_B".
 
-![flexpepdoc](docs/flexpepdoc.png)
+![flexpepdoc](docs/flexpepdoc1.png)
 **Fig 4**. Example of FlexPepDoc visualization.
 
 ### (c) PyMol
