@@ -64,47 +64,91 @@ For each of the 8 target sequences (**Table 1**), compute their 3D structure (.P
 1. Go to [brev.nvidia](https://brev.nvidia.com/) and click on this [Launchable](https://brev.nvidia.com/launchable/deploy/now?launchableID=env-32aLABBLqme9fNaaSdVL94Bollg). If you would like to create your own, click on Launchables in the menu bar, then `Create Launchables` and follow these settings:
     - Select "I have codes in a git repository" and enter the URL of this repo
     - Select 'VM-mode'
-    - Click "Next" until you finally reach **Select compute**. We recommended **A100 (80GiB) 2 GPUs x 24 CPUs | 240GiB  (80GiB GPU memory) ($3.96/hr)**
+    - Click "Next" until you finally reach **select compute**. We recommended **A100 (80GiB) 2 GPUs x 24 CPUs | 240GiB  (80GiB GPU memory) ($3.96/hr)**
 
 ![NVIDIA VM settings](docs/NVIDIA_VM.png)
 
 2.Click **"Deploy Launchable"** and **"Go to Instance Page"**. Wait ~10 minutes for VM to start
 
-3.Enter the VM, **upload** (i.e.drag and drop) the AlphaFold2 .pdb files from step (2) into your workspace
+3.Enter the VM, then drag and drop the AlphaFold2 .pdb files from **step (2)** into your workspace
 
-4. Start a new terminal session.
+4.Start a new terminal session by clicking the "+" button at the top right.
+
+5.An **NGC Personal API Key** is required to download and run any NVIDIA NIMs. If this is your first time, [generate](https://catalog.ngc.nvidia.com/orgs/nvidia/teams/clara/containers/bionemo-framework) it once and store it for future use.
 
 ```bash
-    sudo apt-get install -y docker-compose
+    export NGC_CLI_API_KEY=<enter-key> 
+    # Example: 
+    #   export NGC_CLI_API_KEY=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
+    docker login nvcr.io --username='$oauthtoken' --password="${NGC_CLI_API_KEY}"
+```
+
+6.Build inference models via docker container. Wait 20-30mins for the docker to build.
+
+```bash
+    # Install Dependencies
+    sudo apt-get update # updated nvidia toolkit
+    sudo apt-get install -y docker-compose # docker compose version 2+
     sudo apt install python3.11
 
     ## Create the nim cache directory to download any model data to your local/server disk 
     mkdir -p ~/.cache/nim
-    chmod -R 777 ~/.cache/nim    ## Make it writable by the NIM
+    chmod -R 777 ~/.cache/nim    
     export HOST_NIM_CACHE=~/.cache/nim
 
-    # Run Docker compose
-    docker compose #     - runs /deploy/docker-compose.yaml to set up the docker images required to run the models
+    # From the root of the cloned protein-binder-design repository:
+    cd deploy/
+    docker compose up # runs /deploy/docker-compose.yaml
 ```
 
-6.Wait 20-30mins for the docker to build. Check to ensure it is set up correctly
+6.Once docker set up is complete, open a new Terminal tab and check to ensure it was successful.
 
 ```bash
-    # check storage space
+    # 1. Check storage space
     df -h 
 
-    # check what dockers are running
+    # 2. Check which dockers are currently active/on stand-by
     docker container ls
+    # Example:
+        # CONTAINER ID   IMAGE                             COMMAND                   CREATED         STATUS         PORTS                                                             NAMES
+        # 8ac6ad7cbb27   nvcr.io/nim/ipd/rfdiffusion:2.0   "/bin/sh -c 'exec \"$…"   2 minutes ago   Up 2 minutes   0.0.0.0:8082->8000/tcp, [::]:8082->8000/tcp                       protein-binder-design-rfdiffusion-1
+        # 87cf41c4e7c6   nvcr.io/nim/ipd/proteinmpnn:1.0   "/bin/sh -c 'exec \"$…"   2 minutes ago   Up 2 minutes   6006/tcp, 8888/tcp, 0.0.0.0:8083->8000/tcp, [::]:8083->8000/tcp   protein-binder-design-proteinmpnn-1
 
-    # check whether the docker images (model) are running 
+    # 3. Check health of docker images (model) 
     curl localhost:8082/v1/health/ready # RFdiffusion
     curl localhost:8083/v1/health/ready # Protein MPNN
+    # Example:
+        # {"status":"ready"}
 ```
 
 ## 4. Run RFDiffusion and ProteinMPNN
 
 ```bash
-    python3.11 4_protein_binder_design.py --cycle "$cycle" --num_seq 5 --diffusion 25 --temp 0.4
+    # Define the cycle-to-target_sequence mapping
+    # Example
+    declare -A cycle_to_sequence=(
+        ["1A"]="LKTSQCTLKEVYGFNPEGKALLKKTKNSEEFAAAMSRYEL"  
+        ["1B"]="EEAKQVLFLDTVYGNCSTHFTVKTRKGNVATEISTERDLG" 
+        ["1C"]="VAEAICKEQHLFLPFSYKNKYGMVAQVTQTLKLEDTPKIN"
+        ["1D"]="PKQAEAVLKTLQELKKLTISEQNIQRANLFNKLVTELRGL" 
+        ["2A"]="CSTHILQWLKRVHANPLLIDVVTYLVALIPEPSAQQLREI" 
+        ["2B"]="GTQELLDIANYLMEQIQDDCTGDEDYTYLILRVIGNMGQT" 
+        ["2C"]="LRKMEPKDKDQEVLLQTFLDDASPGDKRLAAYLMLMRSPS"
+        ["2D"]="EQVKNFVASHIANILNSEELDIQDLKKLVKEALKESQLPT"
+    )
+
+    num_seq=1 # one peptide binder per target sequence
+    diffusion=30 # recommended 20-40
+    temp=0.4 # recommended range from 0.2 to 0.8
+    contigs="15-20"
+
+    cycles=("1A" "1B" "1C" "1D" "2A" "2B" "2C" "2D")
+    for cycle in "${cycles[@]}"; do
+        target_sequence=${cycle_to_sequence[$cycle]}
+
+        echo "Running script for $cycle..."
+        python3.11 /home/ubuntu/4_protein_binder_design.py --cycle ${cycle} --num_seq ${num_seq} --diffusion ${diffusion} --temp ${temp} --target_sequence ${target_sequence} --contigs ${contigs}
+    done
 ```
 
 

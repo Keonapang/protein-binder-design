@@ -19,9 +19,11 @@ from pathlib import Path
 # Load arguments
 parser = argparse.ArgumentParser(description="De Novo Protein Design Workflow")
 parser.add_argument("--cycle", type=str, required=True, help="Cycle number (e.g., '1', '1A', '1B', or '2')")
-parser.add_argument("--num_seq", type=int, default=1, help="Number of sequences to generate per target")
-parser.add_argument("--diffusion", type=int, default=20, help="Number of diffusion steps (15-30 recommended)")
-parser.add_argument("--temp", type=float, default=0.2, help="Sampling temperature (range: 0-1)")
+parser.add_argument("--num_seq", type=int, default=1, required=True, help="Number of sequences to generate per target")
+parser.add_argument("--diffusion", type=int, default=20, required=True, help="Number of diffusion steps (15-30 recommended)")
+parser.add_argument("--temp", type=float, default=0.2, required=True, help="Sampling temperature (range: 0-1)")
+parser.add_argument("--target_sequence", type=str, required=True, help="Input sequence")
+parser.add_argument("--contigs", type=str, required=True, help="contigs")
 args = parser.parse_args()
 
 # Assign input arguments to variables
@@ -29,59 +31,56 @@ cycle = args.cycle
 num_seq = args.num_seq
 diffusion = args.diffusion
 temp = args.temp
+target_sequence = args.target_sequence
+contigs = args.contigs
 
 # cycle = "1A"
 # num_seq = 1
 # diffusion = 40
 # temp = 0.4
+# contigs="15-20"
+# target_sequence="LKTSQCTLKEVYGFNPEGKALLKKTKNSEEFAAAMSRYEL"
 
-# Set up all paths and variables
-root = "/home/ubuntu/nvidia-workbench"
+# if num_seq > 0: # if num_seq > 1, then run code below
+#     if "1" in cycle:
+#         if cycle == "1A": 
+#             target_sequence="LKTSQCTLKEVYGFNPEGKALLKKTKNSEEFAAAMSRYEL" # A91-130
+#         if cycle == "1B":
+#             target_sequence="EEAKQVLFLDTVYGNCSTHFTVKTRKGNVATEISTERDLG"  #A170-209
+#         if cycle == "1C":
+#             target_sequence="VAEAICKEQHLFLPFSYKNKYGMVAQVTQTLKLEDTPKIN" # A255-294
+#         if cycle == "1D":
+#             target_sequence="PKQAEAVLKTLQELKKLTISEQNIQRANLFNKLVTELRGL" # A318-357
+#     elif "2" in cycle:
+#         if cycle == "2A": 
+#             target_sequence="CSTHILQWLKRVHANPLLIDVVTYLVALIPEPSAQQLREI", # A390-429
+#         if cycle == "2B":
+#             target_sequence="GTQELLDIANYLMEQIQDDCTGDEDYTYLILRVIGNMGQT", # A459-498
+#         if cycle == "2C":
+#             target_sequence="LRKMEPKDKDQEVLLQTFLDDASPGDKRLAAYLMLMRSPS", # A531-570
+#         if cycle == "2D":
+#             target_sequence = "EQVKNFVASHIANILNSEELDIQDLKKLVKEALKESQLPT" # A587-626
+#     else:
+#         raise ValueError("Invalid cycle number.")
+
+# Set input directory 
+root = "/home/ubuntu/protein-binder-design"
 os.makedirs(root, exist_ok=True)
-print(f"Generating {num_seq} sequences per target for cycle {cycle}...")
 
-if num_seq > 0: # if num_seq > 1, then run code below
-    contigs="15-25"
-    precomputed_pdb_path = f"/home/ubuntu/pep{cycle}.pdb" 
-    if "1" in cycle:
-        if cycle == "1A": 
-            target_sequence="LKTSQCTLKEVYGFNPEGKALLKKTKNSEEFAAAMSRYEL" # A91-130
-        if cycle == "1B":
-            target_sequence="EEAKQVLFLDTVYGNCSTHFTVKTRKGNVATEISTERDLG"  #A170-209
-        if cycle == "1C":
-            target_sequence="VAEAICKEQHLFLPFSYKNKYGMVAQVTQTLKLEDTPKIN" # A255-294
-        if cycle == "1D":
-            target_sequence="PKQAEAVLKTLQELKKLTISEQNIQRANLFNKLVTELRGL" # A318-357
-    elif "2" in cycle:
-        if cycle == "2A": 
-            target_sequence="CSTHILQWLKRVHANPLLIDVVTYLVALIPEPSAQQLREI", # A390-429
-        if cycle == "2B":
-            target_sequence="GTQELLDIANYLMEQIQDDCTGDEDYTYLILRVIGNMGQT", # A459-498
-        if cycle == "2C":
-            target_sequence="LRKMEPKDKDQEVLLQTFLDDASPGDKRLAAYLMLMRSPS", # A531-570
-        if cycle == "2D":
-            target_sequence = "EQVKNFVASHIANILNSEELDIQDLKKLVKEALKESQLPT" # A587-626
-    else:
-        raise ValueError("Invalid cycle number.")
-
-# Set up variables part 2
-name = f"cycle{cycle}_{num_seq}seqs_{diffusion}diff_{temp}temp"
+# Set output directory
 outdir = f"{root}/{diffusion}diff_{temp}temp_{num_seq}seq"
 os.makedirs(outdir, exist_ok=True)
 print(f"Output dir : {outdir}")
-
-# check if this outdir exists
 if os.path.exists(outdir):
-    print(f"Output dir {outdir} already exists. Please check the path.")
-
-# list all files in outdir
-print("Current directory contents:")
-for file in os.listdir(outdir):
-    print(file)
+    print(f"{outdir} already exists. Please double check path.")
     
-# Check if AlphaFold2 PDB exists
-if not os.path.exists(precomputed_pdb_path):
-    raise FileNotFoundError(f"Precomputed PDB file {precomputed_pdb_path} does not exist.")
+# Set input variables and path
+print(f"Generating {num_seq} peptide binders per input sequence...")
+name = f"cycle{cycle}_{diffusion}diff_{temp}temp_{num_seq}seqs"
+
+pdb_path = f"{root}/input/pep{cycle}.pdb" 
+if not os.path.exists(pdb_path):
+    raise FileNotFoundError(f"Precomputed PDB file {pdb_path} does not exist.")
 
 ##############################################################
 # SET UP 
@@ -177,12 +176,11 @@ status = check_nim_readiness(NIM_PORTS.RFDIFFUSION_PORT.value)
 print(f"RFDiffusion ready: {status}")
 status = check_nim_readiness(NIM_PORTS.PROTEINMPNN_PORT.value)
 print(f"ProteinMPNN ready: {status}")
-print()
-print(f"------------- Cycle {cycle} ------------------")
 
 ##############################################################
 # Query code 
 ##############################################################
+print(f"\n------------- Cycle {cycle} ------------------\n")
 cycle = ExampleRequestParams(
     target_sequence= target_sequence,
     contigs=contigs, 
@@ -199,7 +197,7 @@ example=cycle
 ##############################################################
 # 2. RFdiffusion
 ##############################################################
-precomputed_pdb=get_reduced_pdb(precomputed_pdb_path, rcsb_path=None)
+precomputed_pdb=get_reduced_pdb(pdb_path, rcsb_path=None)
 
 print(f"Running RFdiffusion....")
 rfdiffusion_query = {
