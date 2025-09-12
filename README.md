@@ -68,13 +68,14 @@ For each of the 8 target sequences (**Table 1**), compute their 3D structure (.P
 
 ![NVIDIA VM settings](docs/NVIDIA_VM.png)
 
-2.Click **"Deploy Launchable"** and **"Go to Instance Page"**. Wait ~10 minutes for VM to start
 
-3.Enter the VM, then drag and drop the AlphaFold2 .pdb files from **step (2)** into your workspace
+2. Click **"Deploy Launchable"** and **"Go to Instance Page"**. Wait ~10 minutes for VM to start
 
-4.Start a new terminal session by clicking the "+" button at the top right.
+3. Enter the VM, then drag and drop the AlphaFold2 .pdb files from **step (2)** into your workspace
 
-5.An **NGC Personal API Key** is required to download and run any NVIDIA NIMs. If this is your first time, [generate](https://catalog.ngc.nvidia.com/orgs/nvidia/teams/clara/containers/bionemo-framework) it once and store it for future use.
+4. Start a new terminal session by clicking the "+" button at the top right.
+
+5. An **NGC Personal API Key** is required to download and run any NVIDIA NIMs. If this is your first time, [generate](https://catalog.ngc.nvidia.com/orgs/nvidia/teams/clara/containers/bionemo-framework) it once and store it for future use.
 
 ```bash
     export NGC_CLI_API_KEY=<enter-key> 
@@ -83,7 +84,7 @@ For each of the 8 target sequences (**Table 1**), compute their 3D structure (.P
     docker login nvcr.io --username='$oauthtoken' --password="${NGC_CLI_API_KEY}"
 ```
 
-6.Build inference models via docker container. Wait 20-30mins for the docker to build.
+6. Build inference models via docker container. Wait 20-30mins for the docker to build.
 
 ```bash
     # Install Dependencies
@@ -101,7 +102,7 @@ For each of the 8 target sequences (**Table 1**), compute their 3D structure (.P
     docker compose up # runs /deploy/docker-compose.yaml
 ```
 
-6.Once docker set up is complete, open a new Terminal tab and check to ensure it was successful.
+7. Once docker set up is complete, open a new Terminal tab and check to ensure it was successful.
 
 ```bash
     # 1. Check storage space
@@ -147,11 +148,19 @@ For each of the 8 target sequences (**Table 1**), compute their 3D structure (.P
         target_sequence=${cycle_to_sequence[$cycle]}
 
         echo "Running script for $cycle..."
-        python3.11 /home/ubuntu/4_protein_binder_design.py --cycle ${cycle} --num_seq ${num_seq} --diffusion ${diffusion} --temp ${temp} --target_sequence ${target_sequence} --contigs ${contigs}
+        dir="/home/ubuntu/protein-binder-design/scripts"
+        python3.11 ${dir}/4_protein_binder_design.py  --cycle ${cycle} --num_seq ${num_seq} --diffusion ${diffusion} --temp ${temp} --target_sequence ${target_sequence} --contigs ${contigs}
     done
 ```
 
-After running this script, ensure you downloaded all your results.
+After running this script, ensure you download all your results into a new, common directory:
+
+```bash
+    DIR_WORK="/set/directory"
+    mkdir -p $DIR_WORK
+    cd $DIR_WORK
+```
+
 Now, you may exit and shutdown the NVIDIA VM.
 
 > [!NOTE]
