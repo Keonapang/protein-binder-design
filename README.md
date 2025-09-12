@@ -36,32 +36,14 @@ This workflow outputs peptide binders for each of the target protein sequences o
 
 ## Amino Acid Table
 
-```{r, echo=FALSE, results='asis'}
-library(knitr)
-
-# Create the data as a data frame
-amino_acid_data <- data.frame(
-  `Sequence Number` = c("Sequence 1A", "Sequence 1B", "Sequence 1C", 
-                        "Sequence 2A", "Sequence 2B", "Sequence 2D"),
-  `Sequence` = c("LKTSQCTLKEVYGFNPEGKALLKKTKNSEEFAAAMSRYEL", 
-                 "EEAKQVLFLDTVYGNCSTHFTVKTRKGNVATEISTERDLG", 
-                 "VAEAICKEQHLFLPFSYKNKYGMVAQVTQTLKLEDTPKIN", 
-                 "CSTHILQWLKRVHANPLLIDVVTYLVALIPEPSAQQLREI", 
-                 "GTQELLDIANYLMEQIQDDCTGDEDYTYLILRVIGNMGQT", 
-                 "EQVKNFVASHIANILNSEELDIQDLKKLVKEALKESQLPT"),
-  `Amino Acid Position` = c("A91-130", "A170-209", "A255-294", 
-                            "A390-429", "A459-498", "A587-626")
-)
-
-# Print the table using knitr::kable
-kable(amino_acid_data, format = "markdown", align = "c")
-
-* Sequence "1A": "LKTSQCTLKEVYGFNPEGKALLKKTKNSEEFAAAMSRYEL" # A91-130
-* Sequence "1B": "EEAKQVLFLDTVYGNCSTHFTVKTRKGNVATEISTERDLG"  #A170-209
-* Sequence "1C": "VAEAICKEQHLFLPFSYKNKYGMVAQVTQTLKLEDTPKIN" # A255-294
-* Sequence "2A": "CSTHILQWLKRVHANPLLIDVVTYLVALIPEPSAQQLREI", # A390-429
-* Sequence "2B": "GTQELLDIANYLMEQIQDDCTGDEDYTYLILRVIGNMGQT", # A459-498
-* Sequence "2D": "EQVKNFVASHIANILNSEELDIQDLKKLVKEALKESQLPT" # A587-626
+| Sequence Number | Sequence                                     | Amino Acid Position |
+|------------------|---------------------------------------------|---------------------|
+| Sequence 1A      | LKTSQCTLKEVYGFNPEGKALLKKTKNSEEFAAAMSRYEL    | A91-130            |
+| Sequence 1B      | EEAKQVLFLDTVYGNCSTHFTVKTRKGNVATEISTERDLG    | A170-209           |
+| Sequence 1C      | VAEAICKEQHLFLPFSYKNKYGMVAQVTQTLKLEDTPKIN    | A255-294           |
+| Sequence 2A      | CSTHILQWLKRVHANPLLIDVVTYLVALIPEPSAQQLREI    | A390-429           |
+| Sequence 2B      | GTQELLDIANYLMEQIQDDCTGDEDYTYLILRVIGNMGQT    | A459-498           |
+| Sequence 2D      | EQVKNFVASHIANILNSEELDIQDLKKLVKEALKESQLPT    | A587-626           |
 
 
 - `cycle1_alphafold2_output.pdb` (~80KB) pre-computed on [AlphaFold2 colab](https://colab.research.google.com/github/sokrypton/ColabFold/blob/main/AlphaFold2.ipynb#scrollTo=R_AH6JSXaeb2)
