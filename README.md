@@ -123,12 +123,13 @@ For each of the 8 target sequences (**Table 1**), compute their 3D structure (.P
         # 8ac6ad7cbb27   nvcr.io/nim/ipd/rfdiffusion:2.0   "/bin/sh -c 'exec \"$…"   2 minutes ago   Up 2 minutes   0.0.0.0:8082->8000/tcp, [::]:8082->8000/tcp                       protein-binder-design-rfdiffusion-1
         # 87cf41c4e7c6   nvcr.io/nim/ipd/proteinmpnn:1.0   "/bin/sh -c 'exec \"$…"   2 minutes ago   Up 2 minutes   6006/tcp, 8888/tcp, 0.0.0.0:8083->8000/tcp, [::]:8083->8000/tcp   protein-binder-design-proteinmpnn-1
 
-    # 3. Health check 
+    # 3. Health check  # shoud be {"status":"ready"}
     curl localhost:8082/v1/health/ready # RFdiffusion
     curl localhost:8083/v1/health/ready # Protein MPNN
     curl localhost:8084/v1/health/ready # AlphaFold multimer
-    # Example:
-        # {"status":"ready"}
+
+    # View log (this model takes a long time)
+    docker logs -f protein-binder-design-alphafold-multimer-1
 ```
 
 ## 4. Run RFDiffusion and ProteinMPNN 
