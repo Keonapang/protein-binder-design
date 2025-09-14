@@ -187,18 +187,18 @@ For each of the 8 target sequences (**Table 1**), compute their 3D structure (.P
     done
 ```
 
-## Workflow output 
+### Workflow output 
 
 Example of **Alphafold2** output:
 
 - predicted peptide binder structure only (5 predictions --> outputs best one)
-    - `example/AF2_output/4_AF2_binder_1A i1.pdb` is the peptide for target sequence 1A (i=1)
+    - see `example/AF2_output/4_AF2_binder_1A i1.pdb` (peptide for target sequence 1A, i=1)
 
 Example of **Alphafold2-multimer** output:
 
 - `binder_target_results` contains:
-    - list of 5 structure predictions for peptide + target pair; see `example/AF2_output/4_AF2_complex_1A_i1.pdb`
-    - list of plDDT1 for the 5 predictions; see `example/AF2_output/4_AF2_pLDDT_1.txt`
+    - list of 5 PDB predictions for the given peptide-target pair. See `example/AF2_output/4_AF2_complex_1A_i1.pdb`
+    - list of plDDT1 for the 5 predictions. See `example/AF2_output/4_AF2_pLDDT_1.txt`
 
 ```bash
     # binder_target_results is a list of tuples
