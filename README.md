@@ -83,8 +83,7 @@ For each of the 8 target sequences (**Table 1**), compute their 3D structure (.P
 
 ```bash
     export NGC_CLI_API_KEY=<enter-key> 
-    # Example: 
-    #   export NGC_CLI_API_KEY=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
+    # export NGC_CLI_API_KEY=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
     docker login nvcr.io --username='$oauthtoken' --password="${NGC_CLI_API_KEY}"
 ```
 
@@ -124,11 +123,13 @@ For each of the 8 target sequences (**Table 1**), compute their 3D structure (.P
         # 87cf41c4e7c6   nvcr.io/nim/ipd/proteinmpnn:1.0   "/bin/sh -c 'exec \"$…"   2 minutes ago   Up 2 minutes   6006/tcp, 8888/tcp, 0.0.0.0:8083->8000/tcp, [::]:8083->8000/tcp   protein-binder-design-proteinmpnn-1
 
     # 3. Health check  # shoud be {"status":"ready"}
+    curl localhost:8081/v1/health/ready # AlphaFold2
     curl localhost:8082/v1/health/ready # RFdiffusion
     curl localhost:8083/v1/health/ready # Protein MPNN
-    curl localhost:8084/v1/health/ready # AlphaFold multimer
+    curl localhost:8084/v1/health/ready # AlphaFold2-multimer
 
-    # View log (this model takes a long time)
+    # View log (these models take a long time)
+    docker logs -f protein-binder-design-alphafold-1
     docker logs -f protein-binder-design-alphafold-multimer-1
 ```
 
