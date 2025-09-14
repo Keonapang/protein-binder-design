@@ -138,11 +138,16 @@ HEADERS = {
 NIM_HOST_URL_BASE = "http://localhost"
 
 # 3 different endpoints for the models
+NIM_HOST_URL_BASE = "http://localhost"
+
 class NIM_PORTS(Enum):
+    ALPHAFOLD2_PORT = 8081
     RFDIFFUSION_PORT = 8082
     PROTEINMPNN_PORT = 8083
     AF2_MULTIMER_PORT = 8084
+
 class NIM_ENDPOINTS(StrEnum):
+    ALPHAFOLD2 = "protein-structure/alphafold2/predict-structure-from-sequence"
     RFDIFFUSION =  "biology/ipd/rfdiffusion/generate"
     PROTEINMPNN =  "biology/ipd/proteinmpnn/predict"
     AF2_MULTIMER = "protein-structure/alphafold2/multimer/predict-structure-from-sequences"

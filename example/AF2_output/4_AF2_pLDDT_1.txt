@@ -1,0 +1,8 @@
+Binder: EQEEERQRQLQLQQQQS
+Target: LKTSQCTLKEVYGFNPEGKALLKKTKNSEEFAAAMSRYEL
+pLDDTs for 5 predictions:
+Prediction 1: 55.62
+Prediction 2: 54.72
+Prediction 3: 48.23
+Prediction 4: 47.86
+Prediction 5: 47.71

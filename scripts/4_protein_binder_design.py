@@ -399,7 +399,7 @@ for iteration in range(i):
     for idx, (pair, predictions) in enumerate(zip(binder_target_pairs, multimer_results)):
         if predictions is not None:  
             structure_pLDDTs = [calculate_average_pLDDT(pdb) for pdb in predictions]
-            output_file = os.path.join(outdir, f"4_AF2_complex_pLDDT_i{idx + 1}.txt")
+            output_file = os.path.join(outdir, f"4_AF2_complex_pLDDT_{cycle}_i{idx + 1}.txt")
             with open(output_file, "w") as f:
                 f.write(f"AlphaFold2 Multimer\n")
                 f.write(f"Binder: {pair[0]}\n")
@@ -409,42 +409,42 @@ for iteration in range(i):
                     f.write(f"Prediction {i + 1}: {plddt:.2f}\n")
             print(f"Saved pLDDT values for pair {idx + 1} to {output_file}")
 
-            
-##############################################################
-# Run AlphaFold to predict the structure of the binder alone
-##############################################################
-print(f"Loading AlphaFold2...")
+                
+    ##############################################################
+    # Run AlphaFold to predict the structure of the binder alone
+    ##############################################################
+    print(f"Loading AlphaFold2...")
 
-# Extract the first sequence from binder_target_pairs
-predicted_binder = binder_target_pairs[0][0] 
-print(f"Chosen binder: {predicted_binder}  # Example: 'EQEEERQRQLQLQQQQS'")
-alphafold2_query = {
-    "sequence" : predicted_binder,
-    "algorithm" : "mmseqs2",
-}
-# start time
-start_time = time.time()
-rc, alphafold2_response = query_nim(
-        payload=alphafold2_query,
-        nim_endpoint=NIM_ENDPOINTS.ALPHAFOLD2.value,
-        nim_port=NIM_PORTS.ALPHAFOLD2_PORT.value,
-        echo=True
-)
-alphafold2_response[0][0:160]
-end_time = time.time()
-# calculate minutes
-elapsed_time = end_time - start_time
-elapsed_minutes = elapsed_time / 60
-print(f"AlphaFold2 took {elapsed_minutes:.2f} mins")
+    # Extract the first sequence from binder_target_pairs
+    predicted_binder = binder_target_pairs[0][0] 
+    print(f"Chosen binder: {predicted_binder}  # Example: 'EQEEERQRQLQLQQQQS'")
+    alphafold2_query = {
+        "sequence" : predicted_binder,
+        "algorithm" : "mmseqs2",
+    }
+    # start time
+    start_time = time.time()
+    rc, alphafold2_response = query_nim(
+            payload=alphafold2_query,
+            nim_endpoint=NIM_ENDPOINTS.ALPHAFOLD2.value,
+            nim_port=NIM_PORTS.ALPHAFOLD2_PORT.value,
+            echo=True
+    )
+    alphafold2_response[0][0:160]
+    end_time = time.time()
+    # calculate minutes
+    elapsed_time = end_time - start_time
+    elapsed_minutes = elapsed_time / 60
+    print(f"AlphaFold2 took {elapsed_minutes:.2f} mins")
 
-# Save the first structure prediction to a .pdb file
-if alphafold2_response and len(alphafold2_response) > 0:
-    first_structure = alphafold2_response[0]
-    output_file = os.path.join(outdir, f"4_AF2_binder_i{idx + 1}.pdb")
-    with open(output_file, "w") as f:
-        f.write(first_structure)
-    print(f"Saved first AlphaFold2 structure to {output_file}")
-else:
-    print("No structure predictions found in alphafold2_response!")
+    # Save the first structure prediction to a .pdb file
+    if alphafold2_response and len(alphafold2_response) > 0:
+        first_structure = alphafold2_response[0]
+        output_file = os.path.join(outdir, f"4_AF2_binder_{cycle}_i{idx + 1}.pdb")
+        with open(output_file, "w") as f:
+            f.write(first_structure)
+        print(f"Saved first AlphaFold2 structure to {output_file}")
+    else:
+        print("No structure predictions found in alphafold2_response!")
 
 print(f"Results saved in : {outdir}")
