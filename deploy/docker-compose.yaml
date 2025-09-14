@@ -66,23 +66,23 @@ services:
       - NGC_CLI_API_KEY=${NGC_CLI_API_KEY:?Error NGC_CLI_API_KEY not set}
       - NIM_CACHE_PATH=/home/nvs/.cache/nim/models
 
-  # alphafold-multimer:
-  #   image: nvcr.io/nim/deepmind/alphafold2-multimer:2.1
-  #   pull_policy: always
-  #   runtime: nvidia
-  #   ports:
-  #     - "8084:8000"
-  #   volumes:
-  #     - ${HOST_NIM_CACHE:-~/.cache/nim}:/opt/nim/.cache/
-  #   deploy:
-  #     resources:
-  #       reservations:
-  #         devices:
-  #           - driver: "nvidia"
-  #             capabilities: [gpu]
-  #             device_ids: ['3']
-  #   environment:
-  #     - NGC_API_KEY=${NGC_CLI_API_KEY:?Error NGC_CLI_API_KEY not set}
-  #     - NIM_CACHE_PATH=/opt/nim/.cache/
-  #     - NIM_DISABLE_MODEL_DOWNLOAD=False
-  #     - CUDA_VISIBILE_DEVICES=3
+  alphafold-multimer:
+    image: nvcr.io/nim/deepmind/alphafold2-multimer:2.1
+    pull_policy: always
+    runtime: nvidia
+    ports:
+      - "8084:8000"
+    volumes:
+      - ${HOST_NIM_CACHE:-~/.cache/nim}:/opt/nim/.cache/
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: "nvidia"
+              capabilities: [gpu]
+              device_ids: ['2']
+    environment:
+      - NGC_API_KEY=${NGC_CLI_API_KEY:?Error NGC_CLI_API_KEY not set}
+      - NIM_CACHE_PATH=/opt/nim/.cache/
+      - NIM_DISABLE_MODEL_DOWNLOAD=False
+      - CUDA_VISIBILE_DEVICES=3

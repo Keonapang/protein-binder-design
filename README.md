@@ -103,7 +103,7 @@ For each of the 8 target sequences (**Table 1**), compute their 3D structure (.P
     export HOST_NIM_CACHE=~/.cache/nim
 
     # From the root of the cloned protein-binder-design repository:
-    cd deploy/
+    cd protein-binder-design/deploy/
     docker compose up # runs /deploy/docker-compose.yaml
 ```
 
