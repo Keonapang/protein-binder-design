@@ -257,10 +257,6 @@ print()
 with open(f"{outdir}/3_{name}_proteinmpnn.fasta", "w") as fasta_file:
     fasta_file.write(proteinmpnn_response["mfasta"])
 
-print(f"Results saved in : {outdir}")
-
-
-##############################################################
 # Print probabilities and sequence scores
 
 # probs = proteinmpnn_response["probs"]
@@ -276,3 +272,64 @@ print(f"Results saved in : {outdir}")
 # with open(f"{outdir}/3_{name}_proteinmpnn_scores.txt", "w") as scores_file:
 #     for i, score in enumerate(scores):
 #         scores_file.write(f"Sequence {i+1}: Score = {score}\n")
+
+##############################################################
+# 4. AlphaFold-Multimer
+##############################################################
+print(f"Loading AlphaFold-Multimer...")
+print()
+
+# Load binder_target_pairs from the JSON file
+binder_target_pairs_path = f"{outdir}/3_{name}_binder_target_pairs.json"
+with open(binder_target_pairs_path, "r") as json_file:
+    binder_target_pairs = json.load(json_file)
+
+# print preview of binder_target_pairs
+print(binder_target_pairs[:2])  # Print the first 2 pairs for preview
+n_processed = 0
+multimer_response_codes = [0 for i in binder_target_pairs]
+multimer_results = [None for i in binder_target_pairs]
+
+# change this value to process more or fewer target-binder pairs.
+pairs_to_process = 1
+
+for binder_target_pair in binder_target_pairs:
+    multimer_query = {
+        "sequences" : binder_target_pair,
+        "selected_models" : [1]
+    }
+    print(f"Processing pair number {n_processed+1} of {len(binder_target_pairs)}")
+    rc, multimer_response = query_nim(
+        payload=multimer_query,
+        nim_endpoint=NIM_ENDPOINTS.AF2_MULTIMER.value,
+        nim_port=NIM_PORTS.AF2_MULTIMER_PORT.value
+    )
+    multimer_response_codes[n_processed] = rc
+    multimer_results[n_processed] = multimer_response
+    print(f"Finished binder-target pair number {n_processed+1} of {len(binder_target_pairs)}")
+    n_processed += 1
+    if n_processed >= pairs_to_process:
+        break
+
+## Print just the first 160 characters of the first multimer response
+result_idx = 0
+prediction_idx = 0
+print(multimer_results[result_idx][prediction_idx][0:160])
+print()
+
+# Save all AlphaFold-Multimer results to a .txt file
+with open(f"{root}/4_multimer_{name}.txt", "w") as results_file:
+    for i, result in enumerate(multimer_results):
+        results_file.write(f"Result {i+1}:\n")  # Add a header for each result
+        if result is not None:  # Check if the result exists
+            for prediction_idx, prediction in enumerate(result):
+                results_file.write(f"Prediction {prediction_idx+1}:\n")
+                results_file.write(prediction)
+                results_file.write("\n\n")  # Add spacing between predictions
+        else:
+            results_file.write("No result available for this pair.\n")
+        results_file.write("-" * 50 + "\n")  # Separator between results
+
+
+
+print(f"Results saved in : {outdir}")

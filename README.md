@@ -132,9 +132,9 @@ For each of the 8 target sequences (**Table 1**), compute their 3D structure (.P
     docker logs -f protein-binder-design-alphafold-multimer-1
 ```
 
-## 4. Run RFDiffusion and ProteinMPNN 
+## 4. Run RFDiffusion, ProteinMPNN and AlphaFold2-Multimer
 
-1. In the same terminal, run the following:
+In the same terminal, run the following:
 
 ```bash
     # Define the cycle-to-target_sequence mapping. For simplicity, we use the first two target sequences as example.
@@ -161,7 +161,8 @@ For each of the 8 target sequences (**Table 1**), compute their 3D structure (.P
     done
 ```
 
-2. While results are being generated (**Fig 3**), ensure you download them into `$DIR_WORK` on your local computer.
+
+While results are being generated (**Fig 3**), ensure you download them into `$DIR_WORK` on your local computer.
 
 ![results](docs/results.png)
 
