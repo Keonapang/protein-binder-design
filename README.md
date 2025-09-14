@@ -133,7 +133,29 @@ For each of the 8 target sequences (**Table 1**), compute their 3D structure (.P
     docker logs -f protein-binder-design-alphafold-multimer-1
 ```
 
-## 4. Run RFDiffusion, ProteinMPNN and AlphaFold2-Multimer
+## 4. Download command-line tool for free energy prediction
+
+```bash
+    # HADDOCK
+
+    docker pull ghcr.io/haddocking/haddock3:latest
+    docker tag ghcr.io/haddocking/haddock3:latest haddock3
+
+    # Usage
+    haddock3 -h
+    
+    docker run \
+        -v $(pwd):/cwd  \
+        --workdir /cwd \
+        -u $(id -u)  \
+        haddock3 \
+        myworkflow.cfg
+    # read user manual
+    # https://www.bonvinlab.org/haddock3-user-manual/docking_scenarios/prot-peptide.html
+```
+
+
+## 5. Run RFDiffusion, ProteinMPNN and AlphaFold2-Multimer
 
 - **RFDiffusion**: takes in the target protein PDB structure, outputs a designed peptide binder PDB. Note: every output is a glycine, and no sidechains are output. Read more [HERE](https://github.com/RosettaCommons/RFdiffusion?tab=readme-ov-file#understanding-the-output-files).
 - **ProteinPMNN**: takes in the prediction from RFDiffusion, and outputs the amino acid sequence (.fasta)
@@ -193,12 +215,17 @@ While results are being generated (**Fig 3**), ensure you download them into `$D
 
 **Fig 3**. Example of the output directory on the cloud VM.
 
-
 > [!NOTE]
 > Once you're done running the scrips above, you may shutdown the NVIDIA VM so it doesn't keep charging money.
 
 
-## 5. Visualization and validation of binder-target (local)
+## 6. Calculate binding free energy using HADDOCK
+
+```bash
+    # script TBD
+```
+
+## 7. Visualization and validation of binder-target (local)
 
 Before you proceed, ensure that all your predicted peptide binder structures are now stored in local directory `$DIR_WORK`.
 

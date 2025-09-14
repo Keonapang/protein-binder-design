@@ -11,6 +11,7 @@
 import argparse
 import json
 import os
+from time import time
 import requests
 from enum import StrEnum, Enum  # must be Python 3.11+
 from typing import Tuple, Dict, Any, List
@@ -103,11 +104,16 @@ HEADERS = {
 NIM_HOST_URL_BASE = "http://localhost"
 
 # 3 different endpoints for the models
+NIM_HOST_URL_BASE = "http://localhost"
+
 class NIM_PORTS(Enum):
+    ALPHAFOLD2_PORT = 8081
     RFDIFFUSION_PORT = 8082
     PROTEINMPNN_PORT = 8083
     AF2_MULTIMER_PORT = 8084
+
 class NIM_ENDPOINTS(StrEnum):
+    ALPHAFOLD2 = "protein-structure/alphafold2/predict-structure-from-sequence"
     RFDIFFUSION =  "biology/ipd/rfdiffusion/generate"
     PROTEINMPNN =  "biology/ipd/proteinmpnn/predict"
     AF2_MULTIMER = "protein-structure/alphafold2/multimer/predict-structure-from-sequences"
@@ -183,6 +189,8 @@ status = check_nim_readiness(NIM_PORTS.PROTEINMPNN_PORT.value)
 print(f"ProteinMPNN ready: {status}")
 status = check_nim_readiness(NIM_PORTS.AF2_MULTIMER_PORT.value)
 print(f"AlphaFold-Multimer ready: {status}")
+status = check_nim_readiness(NIM_PORTS.ALPHAFOLD2_PORT.value)
+print(f"AlphaFold2 ready: {status}")
 
 ##############################################################
 # Query code 
@@ -208,7 +216,7 @@ precomputed_pdb=get_reduced_pdb(pdb_path, rcsb_path=None)
 
 # iterate through i iterations
 for iteration in range(i):
-    print(f"\n------- [Iteration {iteration + 1}] -------")
+    print(f"[Iteration {iteration + 1}]")
     print(f"Running RFdiffusion...")
     rfdiffusion_query = {
         "input_pdb": precomputed_pdb,  # Now using the precomputed PDB structure
@@ -277,10 +285,9 @@ for iteration in range(i):
     # 4. AlphaFold-Multimer
     # inputs a binder-target pair (peptide from ProteinMPNN plus the original protein sequence used as input to this workflow).
     ##############################################################
-    print(f"Loading AlphaFold-Multimer...\n")
+    print(f"Loading AlphaFold-Multimer...")
 
     # Preview binder_target_pairs
-    print(binder_target_pairs[:2])  # Print the first 2 pairs for preview
     n_processed = 0
     multimer_response_codes = [0 for i in binder_target_pairs]
     multimer_results = [None for i in binder_target_pairs]
@@ -406,13 +413,17 @@ for iteration in range(i):
 ##############################################################
 # Run AlphaFold to predict the structure of the binder alone
 ##############################################################
+print(f"Loading AlphaFold2...")
+
 # Extract the first sequence from binder_target_pairs
 predicted_binder = binder_target_pairs[0][0] 
-print(predicted_binder)  # Example: 'EQEEERQRQLQLQQQQS'
+print(f"Chosen binder: {predicted_binder}  # Example: 'EQEEERQRQLQLQQQQS'")
 alphafold2_query = {
     "sequence" : predicted_binder,
     "algorithm" : "mmseqs2",
 }
+# start time
+start_time = time.time()
 rc, alphafold2_response = query_nim(
         payload=alphafold2_query,
         nim_endpoint=NIM_ENDPOINTS.ALPHAFOLD2.value,
@@ -420,6 +431,12 @@ rc, alphafold2_response = query_nim(
         echo=True
 )
 alphafold2_response[0][0:160]
+end_time = time.time()
+# calculate minutes
+elapsed_time = end_time - start_time
+elapsed_minutes = elapsed_time / 60
+print(f"AlphaFold2 took {elapsed_minutes:.2f} mins")
+
 # Save the first structure prediction to a .pdb file
 if alphafold2_response and len(alphafold2_response) > 0:
     first_structure = alphafold2_response[0]
@@ -429,4 +446,5 @@ if alphafold2_response and len(alphafold2_response) > 0:
     print(f"Saved first AlphaFold2 structure to {output_file}")
 else:
     print("No structure predictions found in alphafold2_response!")
+
 print(f"Results saved in : {outdir}")
