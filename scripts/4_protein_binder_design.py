@@ -24,6 +24,7 @@ parser.add_argument("--diffusion", type=int, default=20, required=True, help="Nu
 parser.add_argument("--temp", type=float, default=0.2, required=True, help="Sampling temperature (range: 0-1)")
 parser.add_argument("--target_sequence", type=str, required=True, help="Input sequence")
 parser.add_argument("--contigs", type=str, required=True, help="contigs")
+parser.add_argument("--i", type=int, required=True, help="iterations")
 args = parser.parse_args()
 
 # Assign input arguments to variables
@@ -33,6 +34,7 @@ diffusion = args.diffusion
 temp = args.temp
 target_sequence = args.target_sequence
 contigs = args.contigs
+i = args.i
 
 # cycle = "1A"
 # num_seq = 1
@@ -196,93 +198,94 @@ example=cycle
 ##############################################################
 # 2. RFdiffusion
 ##############################################################
+
 precomputed_pdb=get_reduced_pdb(pdb_path, rcsb_path=None)
 
-print(f"Running RFdiffusion....")
-rfdiffusion_query = {
-    "input_pdb": precomputed_pdb,  # Now using the precomputed PDB structure
-    "contigs": example.contigs,
-    "diffusion_steps": example.diffusion_steps
-}
-rc, rfdiffusion_response = query_nim(
-    payload=rfdiffusion_query,
-    nim_endpoint=NIM_ENDPOINTS.RFDIFFUSION.value,
-    nim_port=NIM_PORTS.RFDIFFUSION_PORT.value
-)
+# iterate through i iterations
+for iteration in range(i):
+    print(f"Running RFdiffusion.... (Iteration {iteration + 1})")
+    rfdiffusion_query = {
+        "input_pdb": precomputed_pdb,  # Now using the precomputed PDB structure
+        "contigs": example.contigs,
+        "diffusion_steps": example.diffusion_steps
+    }
+    rc, rfdiffusion_response = query_nim(
+        payload=rfdiffusion_query,
+        nim_endpoint=NIM_ENDPOINTS.RFDIFFUSION.value,
+        nim_port=NIM_PORTS.RFDIFFUSION_PORT.value
+    )
 
-print(rfdiffusion_response["output_pdb"][0:100])
-with open(f"{outdir}/2_{name}_rfdiffusion.pdb", "w") as pdb_file:
-    pdb_file.write(rfdiffusion_response["output_pdb"])
+    print(rfdiffusion_response["output_pdb"][0:100])
+    with open(f"{outdir}/2_{name}_rfdiffusion_{iteration + 1}.pdb", "w") as pdb_file:
+        pdb_file.write(rfdiffusion_response["output_pdb"])
 
 ##############################################################
 # 3. ProteinMPNN
 ##############################################################
-print()
-print(f"Running ProteinMPNN....")
-proteinmpnn_query = {
-    "input_pdb" : rfdiffusion_response["output_pdb"],
-    "input_pdb_chains" : example.input_pdb_chains,
-    "ca_only" : example.ca_only,
-    "use_soluble_model" : example.use_soluble_model,
-    "num_seq_per_target" : example.num_seq_per_target,
-    "sampling_temp" : example.sampling_temp
-}
-rc, proteinmpnn_response = query_nim(
-    payload=proteinmpnn_query,
-    nim_endpoint=NIM_ENDPOINTS.PROTEINMPNN.value,
-    nim_port=NIM_PORTS.PROTEINMPNN_PORT.value
-)
 
-# binder sequences are stored in fasta_sequences
-fasta_sequences = [x.strip() for x in proteinmpnn_response["mfasta"].split("\n") if '>' not in x][2:]
-binder_target_pairs = [[binder, example.target_sequence] for binder in fasta_sequences]
-# print(proteinmpnn_response["mfasta"])
-# print()
+    print(f"\nRunning ProteinMPNN....")
+    proteinmpnn_query = {
+        "input_pdb" : rfdiffusion_response["output_pdb"],
+        "input_pdb_chains" : example.input_pdb_chains,
+        "ca_only" : example.ca_only,
+        "use_soluble_model" : example.use_soluble_model,
+        "num_seq_per_target" : example.num_seq_per_target,
+        "sampling_temp" : example.sampling_temp
+    }
+    rc, proteinmpnn_response = query_nim(
+        payload=proteinmpnn_query,
+        nim_endpoint=NIM_ENDPOINTS.PROTEINMPNN.value,
+        nim_port=NIM_PORTS.PROTEINMPNN_PORT.value
+    )
 
-# Save binder_target_pairs as .json file
-fasta_sequences = []
-lines = proteinmpnn_response["mfasta"].split("\n")
-for i in range(len(lines)):
-    if lines[i].startswith(">T="):  # Identify lines with binder headers
-        if i + 1 < len(lines):  # Ensure the next line exists
-            fasta_sequences.append(lines[i + 1].strip())  # Collect the sequence
+    # Binder sequences are stored in fasta_sequences
+    fasta_sequences = [x.strip() for x in proteinmpnn_response["mfasta"].split("\n") if '>' not in x][2:]
+    binder_target_pairs = [[binder, example.target_sequence] for binder in fasta_sequences]
+    # print(proteinmpnn_response["mfasta"])
 
-binder_target_pairs = [[binder, example.target_sequence] for binder in fasta_sequences]
-with open(f"{outdir}/3_{name}_proteinmpnn_pairs.json", "w") as json_file:
-    json.dump(binder_target_pairs, json_file, indent=4)
-print(binder_target_pairs)
-print()
+    # Save binder_target_pairs as .json file
+    fasta_sequences = []
+    lines = proteinmpnn_response["mfasta"].split("\n")
+    for i in range(len(lines)):
+        if lines[i].startswith(">T="):  # Identify lines with binder headers
+            if i + 1 < len(lines):  # Ensure the next line exists
+                fasta_sequences.append(lines[i + 1].strip())  # Collect the sequence
 
-# Save proteinmpnn_response["mfasta"] to a .fasta file
-with open(f"{outdir}/3_{name}_proteinmpnn.fasta", "w") as fasta_file:
-    fasta_file.write(proteinmpnn_response["mfasta"])
+    # Save proteinmpnn_response["mfasta"] to a .fasta file
+    with open(f"{outdir}/3_{name}_proteinmpnn_{iteration + 1}.fasta", "w") as fasta_file:
+        fasta_file.write(proteinmpnn_response["mfasta"])
 
-# Print probabilities and sequence scores
+    binder_target_pairs = [[binder, example.target_sequence] for binder in fasta_sequences]
+    # with open(f"{outdir}/3_{name}_proteinmpnn_pairs_{iteration + 1}.json", "w") as json_file:
+    #     json.dump(binder_target_pairs, json_file, indent=4)
+    print(binder_target_pairs)
+    print()
 
-# probs = proteinmpnn_response["probs"]
-# with open(f"{outdir}/3_{name}_proteinmpnn_probs.txt", "w") as probs_file:
-#     for i, prob_matrix in enumerate(probs):
-#         probs_file.write(f"Sequence {i+1}:\n")
-#         for position_probs in prob_matrix:
-#             probs_file.write(",".join(map(str, position_probs)) + "\n")
-#         probs_file.write("\n")
+    # Print probabilities and sequence scores
 
-# Save scores and probs to files
-# scores = proteinmpnn_response["scores"]
-# with open(f"{outdir}/3_{name}_proteinmpnn_scores.txt", "w") as scores_file:
-#     for i, score in enumerate(scores):
-#         scores_file.write(f"Sequence {i+1}: Score = {score}\n")
+    # probs = proteinmpnn_response["probs"]
+    # with open(f"{outdir}/3_{name}_proteinmpnn_probs_{iteration + 1}.txt", "w") as probs_file:
+    #     for i, prob_matrix in enumerate(probs):
+    #         probs_file.write(f"Sequence {i+1}:\n")
+    #         for position_probs in prob_matrix:
+    #             probs_file.write(",".join(map(str, position_probs)) + "\n")
+    #         probs_file.write("\n")
+
+    # Save scores and probs to files
+    # scores = proteinmpnn_response["scores"]
+    # with open(f"{outdir}/3_{name}_proteinmpnn_scores_{iteration + 1}.txt", "w") as scores_file:
+    #     for i, score in enumerate(scores):
+    #         scores_file.write(f"Sequence {i+1}: Score = {score}\n")
 
 ##############################################################
 # 4. AlphaFold-Multimer
 ##############################################################
-print(f"Loading AlphaFold-Multimer...")
-print()
+print(f"Loading AlphaFold-Multimer...\n")
 
 # Load binder_target_pairs from the JSON file
-binder_target_pairs_path = f"{outdir}/3_{name}_binder_target_pairs.json"
-with open(binder_target_pairs_path, "r") as json_file:
-    binder_target_pairs = json.load(json_file)
+# binder_target_pairs_path = f"{outdir}/3_{name}_binder_target_pairs.json"
+# with open(binder_target_pairs_path, "r") as json_file:
+#     binder_target_pairs = json.load(json_file)
 
 # print preview of binder_target_pairs
 print(binder_target_pairs[:2])  # Print the first 2 pairs for preview

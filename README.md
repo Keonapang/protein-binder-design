@@ -146,6 +146,7 @@ In the same terminal, run the following:
     contigs="15-20" # RFDiffusion input; sets the expected length of peptide to be between 15-20aa
     diffusion=50 # recommended range: 20-50
     temp=0.5 # recommended range range: 0.2 to 0.8
+    i=5 # number of iterations for each target sequence
     num_seq=1 # one peptide binder per target sequence (do not modify)
 
     # Export API key
@@ -157,10 +158,11 @@ In the same terminal, run the following:
 
         echo "Running script for $cycle..."
         dir="/home/ubuntu/protein-binder-design/scripts"
-        python3.11 ${dir}/4_protein_binder_design.py  --cycle ${cycle} --num_seq ${num_seq} --diffusion ${diffusion} --temp ${temp} --target_sequence ${target_sequence} --contigs ${contigs}
+        python3.11 ${dir}/4_protein_binder_design.py  --cycle ${cycle} --num_seq ${num_seq} --diffusion ${diffusion} --temp ${temp} --target_sequence ${target_sequence} --contigs ${contigs} --i ${i}
     done
 ```
 
+Note: every RFDiffusion designed peptide is output as a glycine, and no sidechains are output. Read more [HERE](https://github.com/RosettaCommons/RFdiffusion?tab=readme-ov-file#understanding-the-output-files).
 
 While results are being generated (**Fig 3**), ensure you download them into `$DIR_WORK` on your local computer.
 
@@ -273,13 +275,12 @@ In summary, we started off with manually selecting binding sites on a target reg
 ![Fig 6](docs/Fig1_visualization.png) **Fig 6**. First 4 peptides (1A, 1B, 1C, 1D) binding to ApoB, visualized on PyMOL (left) and SWISS-MODEL (right).
 
 
-## Areas for improvement
+## Version updates
 
-| Improvement         | How?          | Practical challenges |
-|---------------|---------------------------------------------|---------------------|
-| Remove the need for manual selection of binding sites      | Could use PyMOL instead, which inputs the entire protein sequence, and the computer algorithm searches for possible combination of binding regions.  | We'll need the 3D coordinates of the folded protein structure - from where?     |
-| Integrate running AlphaFold directly into the workflow, instead of relying on the free colab notebook      | Will need a VM with 2TB of storage space and 4 x H100 GPU     | Compute cost is high, not worth it to download (4-10hrs) the AlphaFold model everytime. Unless we have permenant cloud storage. |
-| SSH into the virtual machine instead of having to use the web interface    | Theres a way to do so from the Macbook terminal. Its pretty smooth.   | Difficulty getting IT permissions to allow this on our PHRI servers      |
+| Date         | Update          |
+|---------------|---------------------------------------------|
+| Sept 13, 2025      | New parameter 'i' for iterations per target seq  |
+| Sept 14, 2025      | Added AlphaMissense-multimer code     |
 
 ## Jupyter notebook version
 
