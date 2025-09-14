@@ -42,6 +42,8 @@ i = args.i
 # temp = 0.4
 # contigs="15-20"
 # target_sequence="LKTSQCTLKEVYGFNPEGKALLKKTKNSEEFAAAMSRYEL"
+# contigs="15-20"
+# i=1
 
 # if num_seq > 0: # if num_seq > 1, then run code below
 #     if "1" in cycle:
@@ -104,9 +106,11 @@ NIM_HOST_URL_BASE = "http://localhost"
 class NIM_PORTS(Enum):
     RFDIFFUSION_PORT = 8082
     PROTEINMPNN_PORT = 8083
+    AF2_MULTIMER_PORT = 8084
 class NIM_ENDPOINTS(StrEnum):
     RFDIFFUSION =  "biology/ipd/rfdiffusion/generate"
     PROTEINMPNN =  "biology/ipd/proteinmpnn/predict"
+    AF2_MULTIMER = "protein-structure/alphafold2/multimer/predict-structure-from-sequences"
 
 def query_nim(
             payload: Dict[str, Any],
@@ -177,11 +181,13 @@ status = check_nim_readiness(NIM_PORTS.RFDIFFUSION_PORT.value)
 print(f"RFDiffusion ready: {status}")
 status = check_nim_readiness(NIM_PORTS.PROTEINMPNN_PORT.value)
 print(f"ProteinMPNN ready: {status}")
+status = check_nim_readiness(NIM_PORTS.AF2_MULTIMER_PORT.value)
+print(f"AlphaFold-Multimer ready: {status}")
 
 ##############################################################
 # Query code 
 ##############################################################
-print(f"\n------------- Cycle {cycle} ------------------\n")
+print(f"\n ================== Cycle {cycle} ==================\n")
 cycle = ExampleRequestParams(
     target_sequence= target_sequence,
     contigs=contigs, 
@@ -203,7 +209,8 @@ precomputed_pdb=get_reduced_pdb(pdb_path, rcsb_path=None)
 
 # iterate through i iterations
 for iteration in range(i):
-    print(f"Running RFdiffusion.... (Iteration {iteration + 1})")
+    print(f"\n------- [Iteration {iteration + 1}] -------")
+    print(f"Running RFdiffusion...")
     rfdiffusion_query = {
         "input_pdb": precomputed_pdb,  # Now using the precomputed PDB structure
         "contigs": example.contigs,
@@ -214,15 +221,12 @@ for iteration in range(i):
         nim_endpoint=NIM_ENDPOINTS.RFDIFFUSION.value,
         nim_port=NIM_PORTS.RFDIFFUSION_PORT.value
     )
-
-    print(rfdiffusion_response["output_pdb"][0:100])
+    print(rfdiffusion_response["output_pdb"][0:130])
     with open(f"{outdir}/2_{name}_rfdiffusion_{iteration + 1}.pdb", "w") as pdb_file:
         pdb_file.write(rfdiffusion_response["output_pdb"])
-
 ##############################################################
 # 3. ProteinMPNN
 ##############################################################
-
     print(f"\nRunning ProteinMPNN....")
     proteinmpnn_query = {
         "input_pdb" : rfdiffusion_response["output_pdb"],
@@ -237,12 +241,10 @@ for iteration in range(i):
         nim_endpoint=NIM_ENDPOINTS.PROTEINMPNN.value,
         nim_port=NIM_PORTS.PROTEINMPNN_PORT.value
     )
-
     # Binder sequences are stored in fasta_sequences
     fasta_sequences = [x.strip() for x in proteinmpnn_response["mfasta"].split("\n") if '>' not in x][2:]
     binder_target_pairs = [[binder, example.target_sequence] for binder in fasta_sequences]
     # print(proteinmpnn_response["mfasta"])
-
     # Save binder_target_pairs as .json file
     fasta_sequences = []
     lines = proteinmpnn_response["mfasta"].split("\n")
@@ -250,11 +252,9 @@ for iteration in range(i):
         if lines[i].startswith(">T="):  # Identify lines with binder headers
             if i + 1 < len(lines):  # Ensure the next line exists
                 fasta_sequences.append(lines[i + 1].strip())  # Collect the sequence
-
     # Save proteinmpnn_response["mfasta"] to a .fasta file
     with open(f"{outdir}/3_{name}_proteinmpnn_{iteration + 1}.fasta", "w") as fasta_file:
         fasta_file.write(proteinmpnn_response["mfasta"])
-
     binder_target_pairs = [[binder, example.target_sequence] for binder in fasta_sequences]
     # with open(f"{outdir}/3_{name}_proteinmpnn_pairs_{iteration + 1}.json", "w") as json_file:
     #     json.dump(binder_target_pairs, json_file, indent=4)
@@ -262,7 +262,6 @@ for iteration in range(i):
     print()
 
     # Print probabilities and sequence scores
-
     # probs = proteinmpnn_response["probs"]
     # with open(f"{outdir}/3_{name}_proteinmpnn_probs_{iteration + 1}.txt", "w") as probs_file:
     #     for i, prob_matrix in enumerate(probs):
@@ -270,7 +269,6 @@ for iteration in range(i):
     #         for position_probs in prob_matrix:
     #             probs_file.write(",".join(map(str, position_probs)) + "\n")
     #         probs_file.write("\n")
-
     # Save scores and probs to files
     # scores = proteinmpnn_response["scores"]
     # with open(f"{outdir}/3_{name}_proteinmpnn_scores_{iteration + 1}.txt", "w") as scores_file:
@@ -279,6 +277,8 @@ for iteration in range(i):
 
 ##############################################################
 # 4. AlphaFold-Multimer
+# inputs a single pair of sequences (a peptide chain from ProteinMPNN 
+# plus the original protein sequence used as input to this workflow).
 ##############################################################
 print(f"Loading AlphaFold-Multimer...\n")
 
@@ -301,7 +301,7 @@ for binder_target_pair in binder_target_pairs:
         "sequences" : binder_target_pair,
         "selected_models" : [1]
     }
-    print(f"Processing pair number {n_processed+1} of {len(binder_target_pairs)}")
+    print(f"Processing binder-target pair {n_processed+1} of {len(binder_target_pairs)}")
     rc, multimer_response = query_nim(
         payload=multimer_query,
         nim_endpoint=NIM_ENDPOINTS.AF2_MULTIMER.value,
@@ -309,7 +309,6 @@ for binder_target_pair in binder_target_pairs:
     )
     multimer_response_codes[n_processed] = rc
     multimer_results[n_processed] = multimer_response
-    print(f"Finished binder-target pair number {n_processed+1} of {len(binder_target_pairs)}")
     n_processed += 1
     if n_processed >= pairs_to_process:
         break
@@ -320,19 +319,83 @@ prediction_idx = 0
 print(multimer_results[result_idx][prediction_idx][0:160])
 print()
 
-# Save all AlphaFold-Multimer results to a .txt file
-with open(f"{root}/4_multimer_{name}.txt", "w") as results_file:
-    for i, result in enumerate(multimer_results):
-        results_file.write(f"Result {i+1}:\n")  # Add a header for each result
-        if result is not None:  # Check if the result exists
-            for prediction_idx, prediction in enumerate(result):
-                results_file.write(f"Prediction {prediction_idx+1}:\n")
-                results_file.write(prediction)
-                results_file.write("\n\n")  # Add spacing between predictions
-        else:
-            results_file.write("No result available for this pair.\n")
-        results_file.write("-" * 50 + "\n")  # Separator between results
+print(type(multimer_results))  # Should be a list
+print(len(multimer_results))  # Number of binder-target pairs processed
+# Check the content of the first element (predictions for the first pair)
+print(type(multimer_results[0]))  # Should be a list (5 predictions)
+print(len(multimer_results[0]))  # Should be 5 (5 PDB predictions per pair)
+# Check the first prediction for the first pair
+print(type(multimer_results[0][0]))  # Should be a string (PDB structure)
+print(multimer_results[0][0][0:160])  # Print the first 160 characters of the PDB
 
+# Save all PDB structures for each binder-target pair
+for idx, predictions in enumerate(multimer_results):
+    for pred_idx, pdb_structure in enumerate(predictions):
+        output_file = os.path.join(outdir, f"pair_{idx+1}_prediction_{pred_idx+1}.pdb")
+        with open(output_file, "w") as f:
+            f.write(pdb_structure)
+        print(f"Saved PDB structure for pair {idx+1}, prediction {pred_idx+1} to {output_file}")
 
+##############################################################
+# 5. Analyze AlphaFold-Multimer results
+##############################################################
 
+# Function to calculate average pLDDT over all residues 
+def calculate_average_pLDDT(pdb_string):
+    total_pLDDT = 0.0
+    atom_count = 0
+    pdb_lines = pdb_string.splitlines()
+    for line in pdb_lines:
+        # PDB atom records start with "ATOM"
+        if line.startswith("ATOM"):
+            atom_name = line[12:16].strip() # Extract atom name
+            if atom_name == "CA":  # Only consider atoms with name "CA"
+                try:
+                    # Extract the B-factor value from columns 61-66 (following PDB format specifications)
+                    pLDDT = float(line[60:66].strip())
+                    total_pLDDT += pLDDT
+                    atom_count += 1
+                except ValueError:
+                    pass  # Skip lines where B-factor can't be parsed as a float
+    if atom_count == 0:
+        return 0.0  # Return 0 if no N atoms were found
+    average_pLDDT = total_pLDDT / atom_count
+    return average_pLDDT
+
+plddts = []
+for idx in range(0, len(multimer_results)):
+    if multimer_results[idx] is not None:
+        plddts.append(calculate_average_pLDDT(multimer_results[idx][0]))
+
+##############################################################
+## Combine the results with their pLDDTs, and print top 5 results
+
+# binder_target_results is a list of tuples, where each tuple contains:
+# - binder-target pair (binder_target_pairs[idx]).
+# - list of 5 PDB predictions (multimer_results[idx]).
+# - average pLDDT score (plddts[idx]).
+
+##############################################################
+
+binder_target_results = list(zip(binder_target_pairs, multimer_results, plddts))
+## Sort the results by plddt
+sorted_binder_target_results = sorted(binder_target_results, key=lambda x : x[2])
+for i in range(0, len(sorted_binder_target_results)):
+    print("-"*80)
+    print(f"rank: {i}")
+    print(f"binder: {sorted_binder_target_results[i][0][0]}")
+    print(f"target: {sorted_binder_target_results[i][0][1]}")
+    print(f"pLDDT: {sorted_binder_target_results[i][2]}")
+    print("-"*80)
+
+# First PDB structure prediction for this binder-target pair
+for idx, predictions in enumerate(sorted_binder_target_results):
+    first_pdb = predictions[0] 
+    output_file = os.path.join(outdir, f"4_{name}_AF2_{iteration + 1}.pdb")
+    with open(output_file, "w") as f:
+        f.write(first_pdb)
+
+    print(f"Saved PDB structure for pair {idx+1} to {output_file}")
 print(f"Results saved in : {outdir}")
+
+

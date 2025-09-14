@@ -75,7 +75,7 @@ For each of the 8 target sequences (**Table 1**), compute their 3D structure (.P
 
 2. Click **"Deploy Launchable"** and **"Go to Instance Page"**. Wait ~10 minutes for VM to start
 
-3. Enter the VM, then drag and drop the AlphaFold2 .pdb files from **step (2)** into your workspace
+3. Enter the VM, then drag and drop the AlphaFold2 .pdb files from **step (2)** into the VM workspace, under `protein-binder-design/input/`
 
 4. Start a new terminal session by clicking the "+" button at the top right.
 
@@ -134,7 +134,9 @@ For each of the 8 target sequences (**Table 1**), compute their 3D structure (.P
 
 ## 4. Run RFDiffusion, ProteinMPNN and AlphaFold2-Multimer
 
-In the same terminal, run the following:
+- **RFDiffusion**: takes in the target protein PDB structure, outputs a designed peptide binder PDB. Note: every output is a glycine, and no sidechains are output. Read more [HERE](https://github.com/RosettaCommons/RFdiffusion?tab=readme-ov-file#understanding-the-output-files).
+- **ProteinPMNN**: takes in the prediction from RFDiffusion, and outputs the amino acid sequence (.fasta)
+- **AlphaFold2-Multimer**: takes in a pair of amino acid sequences (peptide chain from ProteinMPNN plus the original target protein sequence used as input to this workflow), and outputs a list of predicted 'combined' structures in PDB format. For a single binder-target pair, AlphaFold-Multimer will generate exactly 5 predicted structures per pair, each with slightly different structures due to stochasticity and model ensemble techniques.
 
 ```bash
     # Define the cycle-to-target_sequence mapping. For simplicity, we use the first two target sequences as example.
@@ -152,7 +154,7 @@ In the same terminal, run the following:
     # Export API key
     export NGC_CLI_API_KEY=<enter-key> # Example: export NGC_CLI_API_KEY=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
 
-    cycles=("1A" "1B")    # cycles=("1A" "1B" "1C" "1D" "2A" "2B" "2C" "2D")
+    cycles=("1A")    # cycles=("1A" "1B" "1C" "1D" "2A" "2B" "2C" "2D")
     for cycle in "${cycles[@]}"; do
         target_sequence=${cycle_to_sequence[$cycle]}
 
@@ -162,7 +164,27 @@ In the same terminal, run the following:
     done
 ```
 
-Note: every RFDiffusion designed peptide is output as a glycine, and no sidechains are output. Read more [HERE](https://github.com/RosettaCommons/RFdiffusion?tab=readme-ov-file#understanding-the-output-files).
+Example structure of Alphafold-multimer output:
+
+```bash
+    # binder_target_results is a list of tuples, where each tuple contains:
+        # 1. binder-target pair (binder_target_pairs[idx]).
+        # 2. list of 5 PDB predictions (multimer_results[idx]).
+        # 3. average pLDDT score (plddts[idx]).
+
+    sorted_binder_target_results = [
+        (
+            ("binder_seq_2", "target_seq_2"),  # Binder-target pair with lowest pLDDT
+            [pdb1, pdb2, pdb3, pdb4, pdb5],    # List of 5 PDB predictions
+            75.0                               # Lowest pLDDT
+        ),
+        (
+            ("binder_seq_1", "target_seq_1"),  # Binder-target pair with higher pLDDT
+            [pdb1, pdb2, pdb3, pdb4, pdb5],    
+            85.0                               # Higher pLDDT
+        )
+    ]
+```
 
 While results are being generated (**Fig 3**), ensure you download them into `$DIR_WORK` on your local computer.
 
