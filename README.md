@@ -133,17 +133,14 @@ For each of the 8 target sequences (**Table 1**), compute their 3D structure (.P
     docker logs -f protein-binder-design-alphafold-multimer-1
 ```
 
-## 4. Download command-line tool for free energy prediction
+## 4. Download command-line tools for validation
 
 ```bash
     # HADDOCK
-
     docker pull ghcr.io/haddocking/haddock3:latest
     docker tag ghcr.io/haddocking/haddock3:latest haddock3
-
     # Usage
     haddock3 -h
-    
     docker run \
         -v $(pwd):/cwd  \
         --workdir /cwd \
@@ -152,6 +149,10 @@ For each of the 8 target sequences (**Table 1**), compute their 3D structure (.P
         myworkflow.cfg
     # read user manual
     # https://www.bonvinlab.org/haddock3-user-manual/docking_scenarios/prot-peptide.html
+
+    # PRODIGY - binding affinity prediction
+    pip install prodigy-prot
+    prodigy -h # check usage
 ```
 
 
@@ -225,11 +226,20 @@ While results are being generated (**Fig 3**), ensure you download them into `$D
 > [!NOTE]
 > Once you're done running the scrips above, you may shutdown the NVIDIA VM so it doesn't keep charging money.
 
+## 6. Calculate free energy/binding affinity
 
-## 6. Calculate binding free energy using HADDOCK
+See [PRODIGY github](https://github.com/haddocking/prodigy)
 
 ```bash
-    # script TBD
+    # PRODIGY - to predict binding affinity (kcal.mol-1)
+    # two use cases:
+
+    directory_with_molecules="/path/to/PDB_dir"
+    prodigy ${directory_with_molecules}
+
+    multi_model_file="/binder_target_complex.pdb" # (an ensemble)
+    np=3 # number of processors to use 
+    prodigy ${multi_model_file} -np ${np}
 ```
 
 ## 7. Visualization and validation of binder-target (local)
