@@ -21,7 +21,7 @@ sudo apt-get install -y docker-compose
 sudo apt install python3.11
 
 # Log in to Docker
-export NGC_CLI_API_KEY=<enter-key> #  export NGC_CLI_API_KEY=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
+export NGC_CLI_API_KEY=<enter-key>
 docker login nvcr.io --username='$oauthtoken' --password="${NGC_CLI_API_KEY}"
 
 ## Create the nim cache directory to download any model data to your local/server disk 

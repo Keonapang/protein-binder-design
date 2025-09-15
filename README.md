@@ -83,7 +83,6 @@ For each of the 8 target sequences (**Table 1**), compute their 3D structure (.P
 
 ```bash
     export NGC_CLI_API_KEY=<enter-key> 
-    # export NGC_CLI_API_KEY=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
     docker login nvcr.io --username='$oauthtoken' --password="${NGC_CLI_API_KEY}"
 ```
 
