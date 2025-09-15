@@ -230,16 +230,37 @@ While results are being generated (**Fig 3**), ensure you download them into `$D
 See [PRODIGY github](https://github.com/haddocking/prodigy)
 
 ```bash
+    # Set up R environment
+    sudo apt install r-base-core
+```
+
+```bash
+    cycle="1A"
+    diffusion="40"
+    temp="0.5" 
+    target_file="/home/ubuntu/protein-binder-design/example/complex/pep1A.pdb"
+    binder_file="/home/ubuntu/protein-binder-design/example/complex/4_AF2_binder_1A_i1.pdb"
+    DIR_OUT="/home/ubuntu/protein-binder-design/example/complex/PRODIGY_output"
+
+    root="/home/ubuntu/protein-binder-design/scripts" # # root="/Users/keonapang/Desktop/NVIDIA/Sept12"
+    Rscript "${root}/conversion.R" $cycle $target_file $binder_file $diffusion $temp $DIR_OUT
+```
+
+```bash
     # PRODIGY - to predict binding affinity (kcal.mol-1)
-    # two use cases:
-
-    directory_with_molecules="/path/to/PDB_dir"
-    prodigy ${directory_with_molecules}
-
-    multi_model_file="/binder_target_complex.pdb" # (an ensemble)
+    multi_model_file="/home/ubuntu/protein-binder-design/example/complex/PRODIGY_output/cycle1A_40diff_0.5temp.pdb"
     np=3 # number of processors to use 
     prodigy ${multi_model_file} -np ${np}
+
+    output_file="${multi_model_file%.pdb}.txt"
+    prodigy_output=$(prodigy "${multi_model_file}" -np ${np})
+    binding_affinity=$(echo "$prodigy_output" | grep "Predicted binding affinity" | awk '{print $6}')
+    echo "$binding_affinity" > "$output_file"
+    echo "Predicted binding affinity ($binding_affinity kcal.mol-1) saved to: $output_file"
 ```
+
+PRODIGY output in terminal:
+![PRODIGY](docs/prodigy.png)
 
 ## 7. Visualization and validation of binder-target (local)
 
@@ -250,18 +271,6 @@ Before you proceed, ensure that all your predicted peptide binder structures are
 The [PRODIGY web server](https://rascar.science.uu.nl/prodigy/) tool can provide a prediction of binder-target binding affinity. The outputs include the Gibbs free energy change (ΔG) of the binding interaction, dissociation constant (Kd), number of interfacial contacts (ICs) between residues, and the non-interacting surface (NIS) percentage, which reflects the proportion of charged interface surface area not directly involved in binding.
 
 1. Generate a **combined PDB of the entire binder-target complex**. Run script below on your local device, which takes in two inputs: (a) PDB of the target sequence and (b) PDB of the RFDiffusion-generated protein binder. The output of this script will be found in `$DIR_WORK/prodigy_input_pdb`.
-
-```bash
-    cycle="1A"
-    diffusion="50"
-    temp="0.5" 
-    DIR_WORK="/Users/keonapang/Desktop/NVIDIA/Sept12" # Example (please modify)
-    
-    root="/location/of/this/script" # # root="/Users/keonapang/Desktop/NVIDIA/Sept12"
-    for cycle in "1A" "1B"; do
-        Rscript "${root}/conversion.R" $cycle $diffusion $temp $DIR_WORK
-    done
-```
 
 - An example of the resulting PDB can be found in `example/prodigy_input_pdb/cycle1A_50diff_0.5temp.pdb`. You will find that the **peptide binder** (Chain B) has been merged to the target sequence on **ApoB-100** (Chain A).
 

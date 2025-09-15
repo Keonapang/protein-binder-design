@@ -5,56 +5,55 @@
 # DIR_WORK="/Users/keonapang/Desktop/NVIDIA/Sept12"
 
 # for cycle in "1A" "1B" "1C" "1D"; do
-# Rscript "/Users/keonapang/Desktop/conversion.R" $cycle $diffusion $temp $DIR_WORK
+# Rscript "/Users/keonapang/Desktop/conversion.R" $cycle $target_file $binder_file $diffusion $temp
 # done
-
-suppressMessages(library(data.table))
-suppressMessages(library(dplyr))
-suppressMessages(library(tidyr))
+# install.packages("data.table")
+# install.packages("dplyr")
+# install.packages("tidyr")
+# suppressMessages(library(data.table))
+# suppressMessages(library(dplyr))
+# suppressMessages(library(tidyr))
 
 args <- commandArgs(trailingOnly = TRUE)
 cycle <- args[1]
-diffusion <- args[2]
-temp <- args[3]
-DIR_WORK <- args[4]
+target_file <- args[2]
+binder_file <- args[3]
+diffusion <- args[4]
+temp <- args[5]
+DIR_OUT <- args[6]
 
 new_chain <- "B"
 cat("==================== Cycle:", cycle, "======================\n")
 
-# Predicted binder structure 
-DIR_IN <- DIR_WORK
-setwd(DIR_IN)
-
 # OUTPUT FILE 
-DIR_OUT <- paste0(DIR_WORK,"/prodigy_input_pdb")
 if (!dir.exists(DIR_OUT)) {dir.create(DIR_OUT, recursive = TRUE)}
 outfile <- paste0(DIR_OUT, "/cycle", cycle, "_", diffusion, "diff_", temp, "temp.pdb")
 
 # Search for the specific file
-matching_file <- list.files(
-  path = DIR_IN,  
-  pattern = paste0(".*", cycle,".*rfdiffusion*\\.pdb$"), # <------- NEW 
-  full.names = TRUE
-)
+# matching_file <- list.files(
+#   path = DIR_IN,  
+#   pattern = paste0(".*", cycle,".*rfdiffusion*\\.pdb$"), # <------- NEW 
+#   full.names = TRUE
+# )
 
-if (length(matching_file) > 0) {
-  infile <- matching_file[1] 
-  cat("peptide PDB: ", infile, "\n")
-} else {
-  infile <- NULL
-  cat("No matching file found.\n")
-}
+# if (length(matching_file) > 0) {
+#   binder_file <- matching_file[1] 
+#   cat("peptide PDB: ", binder_file, "\n")
+# } else {
+#   binder_file <- NULL
+#   cat("No matching file found.\n")
+# }
 
 # Target ApoB AlphaFold2 structure (.pdb)
-orgfile <- paste0(DIR_WORK, "/pep",cycle,".pdb") 
-cat("target protein PDB: ", orgfile, "\n")
+# target_file <- paste0(DIR_WORK, "/pep",cycle,".pdb") 
+cat("target protein PDB: ", target_file, "\n")
 
 #########################################################
 
-modify_pdb_chain <- function(new_chain, infile, orgfile) {
+modify_pdb_chain <- function(new_chain, binder_file, target_file) {
   
   # Read the PDB file into R
-  full_path <- infile
+  full_path <- binder_file
   pdb_data <- readLines(full_path)
   
   # Initialize an empty vector
@@ -70,7 +69,7 @@ modify_pdb_chain <- function(new_chain, infile, orgfile) {
   # remove the first line "MODEL"
   modified_data <- tail(modified_data, -1)
   
-  target_seq <- orgfile
+  target_seq <- target_file
   target_data <- readLines(target_seq)
   
   # Remove the last two lines 
@@ -86,6 +85,6 @@ modify_pdb_chain <- function(new_chain, infile, orgfile) {
   cat("Merged result:", outfile, "\n")
 }
 
-modify_pdb_chain(new_chain, infile, orgfile)
+modify_pdb_chain(new_chain, binder_file, target_file)
 cat("====================================================\n\n")
 
