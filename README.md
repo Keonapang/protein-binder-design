@@ -353,10 +353,11 @@ In summary, we started off with manually selecting binding sites on a target reg
 
 A similar example of the workflow is available in jupyter notebook format [/scripts/protein-binder-design_Sept2025.ipynb](/scripts/protein-binder-design_Sept2025.ipynbscript/protein-binder-design_Sept2025.ipynb)
 
-## Why did this workflow not use the full BioNeMo pipeline?
+## Useful resources
 
-Downloading the [AlphaFold2](https://docs.nvidia.com/nim/bionemo/alphafold2/latest/prerequisites.html) and [AlphaFold2-Multimer](https://docs.nvidia.com/nim/bionemo/alphafold2-multimer/latest/quickstart-guide.html) model requires an additional 1250GB and 512GB of free SSD drive space respectively. Their download time (running the `docker compose pull` step) is also very long, up to 4-10 hours on 100+ Mbps internet connection for both models.
-
-- AlphaFold: Predict protein structure given a protein sequence
-- AlphaFold2-Multimer: Predict protein structure given multiple protein sequences
-
+[dl_binder_design](https://github.com/nrbennet/dl_binder_design?tab=readme-ov-file#inf3)
+[alphafold](https://github.com/google-deepmind/alphafold)
+HADDOCK [web server](https://rascar.science.uu.nl/haddock2.4/)
+PRODIGY [web server](https://rascar.science.uu.nl/prodigy/)
+RosettaCommons [RFDiffusion](https://github.com/RosettaCommons/RFdiffusion)
+[ProteinPMNN](https://github.com/dauparas/ProteinMPNN)
