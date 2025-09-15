@@ -355,9 +355,9 @@ A similar example of the workflow is available in jupyter notebook format [/scri
 
 ## Useful resources
 
-[dl_binder_design](https://github.com/nrbennet/dl_binder_design?tab=readme-ov-file#inf3)
-[alphafold](https://github.com/google-deepmind/alphafold)
-HADDOCK [web server](https://rascar.science.uu.nl/haddock2.4/)
-PRODIGY [web server](https://rascar.science.uu.nl/prodigy/)
-RosettaCommons [RFDiffusion](https://github.com/RosettaCommons/RFdiffusion)
-[ProteinPMNN](https://github.com/dauparas/ProteinMPNN)
+- [dl_binder_design](https://github.com/nrbennet/dl_binder_design?tab=readme-ov-file#inf3)
+- [alphafold](https://github.com/google-deepmind/alphafold)
+- HADDOCK [web server](https://rascar.science.uu.nl/haddock2.4/)
+- PRODIGY [web server](https://rascar.science.uu.nl/prodigy/)
+- RosettaCommons [RFDiffusion](https://github.com/RosettaCommons/RFdiffusion)
+- [ProteinPMNN](https://github.com/dauparas/ProteinMPNN)
