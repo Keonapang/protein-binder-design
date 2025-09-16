@@ -247,8 +247,8 @@ Example of **ProteinPMNN** output if `num_seq=2`:
 ```bash
     # binder_target_pairs
     [
-        ['RIAELLAQLLKELLE','SQVLFSGQGCPSTHVLLTHTISRISTTHNQP'], 
-        ['AIEEALARLLLEQLL', 'SQVLFSGQGCPSTHVLLTHTISRISTTHNQP']
+        ['RIAELLAQLLKELLE','SQVLFSGQGCPSTHVLLTHTISRISTTHNQP'], # binder design 1
+        ['AIEEALARLLLEQLL', 'SQVLFSGQGCPSTHVLLTHTISRISTTHNQP'] # binder design 2
     ]
 ```
 
@@ -276,11 +276,11 @@ Example of **Alphafold2-multimer** output:
     ]
 ```
 
-While results are being generated (**Fig 3**), ensure you download them into `$DIR_WORK` on your local computer.
+Ensure you download your results onto local computer.
 
 ![results](docs/results.png)
 
-**Fig 3**. Example of the output directory on the cloud VM.
+**Fig 3**. Example of output directory, with the input being a single target sequence.
 
 PRODIGY output in terminal:
 ![PRODIGY](docs/prodigy.png)

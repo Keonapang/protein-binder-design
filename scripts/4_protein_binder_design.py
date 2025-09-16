@@ -16,6 +16,7 @@ import requests
 from enum import StrEnum, Enum  # must be Python 3.11+
 from typing import Tuple, Dict, Any, List
 from pathlib import Path
+import gc
 
 # Load arguments
 parser = argparse.ArgumentParser(description="De Novo Protein Design Workflow")
@@ -212,6 +213,8 @@ precomputed_pdb
 # iterate through i iterations
 for iteration in range(i):
     print(f"\n-----------[Iteration {iteration + 1} of {i}]-----------")
+    outfile=f"{outdir}/2_{name}_i{iteration + 1}.pdb"
+    
     print(f"1. Running RFdiffusion...")
     rfdiffusion_query = {
         "input_pdb": precomputed_pdb,  # Now using the precomputed PDB structure
@@ -225,8 +228,14 @@ for iteration in range(i):
         nim_port=NIM_PORTS.RFDIFFUSION_PORT.value
     )
     print(rfdiffusion_response["output_pdb"][0:130])
-    with open(f"{outdir}/2_{name}_i{iteration + 1}.pdb", "w") as pdb_file:
+    with open(outfile, "w") as pdb_file:
         pdb_file.write(rfdiffusion_response["output_pdb"])
+    
+    # clear python memory 
+    del pdb_file
+    del rfdiffusion_query
+    del precomputed_pdb
+    gc.collect()
 ##############################################################
 # 3. ProteinMPNN
 ##############################################################
@@ -265,6 +274,11 @@ for iteration in range(i):
     print()
     # [['RIAELLAQLLKELLE', 'SQVLFSGQGCPSTHVLLTHTISRISTTHNQP'], ['AIEEALARLLLEQLL', 'SQVLFSGQGCPSTHVLLTHTISRISTTHNQP']]
 
+    # clear python memory 
+    del fasta_sequences
+    del proteinmpnn_response
+    del proteinmpnn_query
+    gc.collect()
     ##############################################################
     # 3. AlphaFold to predict the structure of the binder alone
     ##############################################################
@@ -276,6 +290,14 @@ for iteration in range(i):
     results = [None for i in binder_target_pairs]
 
     for binder_target_pair in binder_target_pairs:
+        output_file = os.path.join(outdir, f"4_{name}_binder_i{iteration + 1}_{counter+1}.pdb")
+        
+        # Check if the output file already exists
+        if os.path.exists(output_file):
+            print(f"Output file already exists: {output_file}. Skipping this binder.")
+            counter += 1
+            continue  # Skip this iteration if the file exists
+        
         current_time = time.time()
         predicted_binder = binder_target_pair[0]
         print(f"\nDesigned binder ({counter+1} of {len(binder_target_pairs)}): {predicted_binder}")
@@ -291,7 +313,7 @@ for iteration in range(i):
         alphafold2_response[0][0:160]
         if alphafold2_response and len(alphafold2_response) > 0:
             first_structure = alphafold2_response[0]
-            output_file = os.path.join(outdir, f"4_{name}_binder_i{iteration + 1}_{counter+1}.pdb")
+            
             with open(output_file, "w") as f:
                 f.write(first_structure)
             # print(f"Saved best structure to {output_file}")
@@ -305,6 +327,14 @@ for iteration in range(i):
         counter += 1
         if counter >= num_seq:
             break
+
+        # clear python memory 
+        del first_structure
+        del alphafold2_response
+        del output_file
+        del alphafold2_query
+        gc.collect()
+
 
 print(f"Results saved in : {outdir}")
 end_time = time.time()
