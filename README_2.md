@@ -147,68 +147,58 @@ For each of the 8 target sequences (**Table 1**), compute their 3D structure (.P
 - **AlphaFold2-Multimer**: takes in a pair of amino acid sequences (peptide chain from ProteinMPNN plus the original target protein sequence used as input to this workflow), and outputs a list of predicted 'combined' structures in PDB format. For a single binder-target pair, AlphaFold-Multimer will generate exactly 5 predicted structures per pair, each with slightly different structures due to stochasticity and model ensemble techniques.
 
 ```bash
+    # Map each target seq to a name (i.e.1A"). For simplicity, we use two target sequences as an example:
+    declare -A cycle_to_sequence=(
+        ["1A"]="LKTSQCTLKEVYGFNPEGKALLKKTKNSEEFAAAMSRYEL"  
+        ["1B"]="EEAKQVLFLDTVYGNCSTHFTVKTRKGNVATEISTERDLG" 
+    )
+
+    contigs="15-25" # RFDiffusion input; sets the expected length of peptide to be between 15-20aa
+    diffusion=50 # RFDiffusion input; number of diffusion_steps (recommended range: 20-60)
+    temp=0.15 # (range: 0 to 1) controls the diversity of design outcomes. Higher values will lead to more diversity.
+    i=5 # number of iterations for each target sequence
+    num_seq=1 # num_seq_per_target | how many seqs to generate for a given target protein structure
+    hotspot_res= # array (default: null)
+
     # Export API key
     export NGC_CLI_API_KEY=<enter-key>
-    REPO_DIR="/home/ubuntu/protein-binder-design"
 
-    start_pos=60
-    end_pos=90
-    chain="A"
-    raw_pdb="${REPO_DIR}/input/pdb2e7a.pdb" # input <- modify!
-    target_pdb="${REPO_DIR}/input/target_${chain}${start_pos}_${end_pos}.pdb" # output
+    cycles=("1A")    # cycles=("1A" "1B" "1C" "1D" "2A" "2B" "2C" "2D")
+    for cycle in "${cycles[@]}"; do
+        target_sequence=${cycle_to_sequence[$cycle]}
 
-    contigs="A1-30/0 15-25" # RFDiffusion input; sets the expected length of peptide to be between 15-20aa
-    diffusion=50 # RFDiffusion input; number of diffusion_steps (recommended range: 20-60)
-    temp=0.15 # (range:0-1) controls diversity of designs. Higher values will lead to more diversity.
-    i=5 # number of RFDiffusion iterations for each target sequence
-    num_seq=2 # num_seq_per_target | how many seqs to generate for a given structure from RFDiffusion
-    hotspot_res=A20 # array (default: null)
-
-    # 1. Extract target structure PDB (input for step #3)
-    chmod +x "${REPO_DIR}/scripts/get_target_pdb.sh"
-    get_target_pdb ${raw_pdb} ${target_pdb} ${chain} ${start_pos} ${end_pos}
-
-    # 2. Extract the target amino acid sequence (input for step #3)
-    target_sequence=$(bash ${REPO_DIR}/scripts/get_target_seq.sh ${target_pdb})
-    echo "Input target seq: $target_sequence"
-
-    # 3. Finally, run 3 models sequentially
-    python3.11 "${REPO_DIR}/scripts/4_protein_binder_design.py" --num_seq ${num_seq} --diffusion ${diffusion} --temp ${temp} --target_sequence ${target_sequence} --contigs ${contigs} --i ${i} --hotspot_res ${hotspot_res} --target_pdb ${target_pdb}
+        echo "Running script for $cycle..."
+        dir="/home/ubuntu/protein-binder-design/scripts"
+        python3.11 ${dir}/4_protein_binder_design.py  --cycle ${cycle} --num_seq ${num_seq} --diffusion ${diffusion} --temp ${temp} --target_sequence ${target_sequence} --contigs ${contigs} --i ${i} --hotspot_res ${hotspot_res}
+    done
 ```
 
 ### Workflow output
 
-Example of **ProteinPMNN** output if `num_seq=2`:
-
-```bash
-    # binder_target_pairs
-    [
-        ['RIAELLAQLLKELLE','SQVLFSGQGCPSTHVLLTHTISRISTTHNQP'], 
-        ['AIEEALARLLLEQLL', 'SQVLFSGQGCPSTHVLLTHTISRISTTHNQP']
-    ]
-```
-
 Example of **Alphafold2** output:
 
-- predicted binder structure (5 predictions --> automatically outputs best one)
+- predicted peptide binder structure only (5 predictions --> outputs best one)
     - see `example/AF2_output/4_AF2_binder_1A i1.pdb` (peptide for target sequence 1A, i=1)
 
 Example of **Alphafold2-multimer** output:
 
-- `binder_target_results` (list of tuples) contains:
-    - 5 PDB predictions for the given peptide-target pair. See `example/AF2_output/4_AF2_complex_1A_i1.pdb`
-    - plDDT1 for the 5 predictions. See `example/AF2_output/4_AF2_pLDDT_1.txt`
+- `binder_target_results` contains:
+    - list of 5 PDB predictions for the given peptide-target pair. See `example/AF2_output/4_AF2_complex_1A_i1.pdb`
+    - list of plDDT1 for the 5 predictions. See `example/AF2_output/4_AF2_pLDDT_1.txt`
 
 ```bash
+    # binder_target_results is a list of tuples
     binder_target_results = [
         (
             ("binder_seq_2", "target_seq_2"),  # Binder-target pair with lowest pLDDT
             [pdb1, pdb2, pdb3, pdb4, pdb5],    # List of 5 PDB predictions
-            75.0),                             # Lowest pLDDT
+            75.0                               # Lowest pLDDT
+        ),
         (
             ("binder_seq_1", "target_seq_1"),  # Binder-target pair with higher pLDDT
             [pdb1, pdb2, pdb3, pdb4, pdb5],    
-            85.0)                              # Higher pLDDT
+            85.0                               # Higher pLDDT
+        )
     ]
 ```
 
