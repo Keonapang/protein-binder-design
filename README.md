@@ -233,6 +233,11 @@ Run prediction models sequentially, followed by calculating binding free energy 
     # 4. Calculate binding free energy using PRODIGY
     bash "${REPO_DIR}/scripts/calc_prodigy.sh" ${chain} ${start_pos} ${end_pos} ${diffusion} ${temp} ${num_seq} ${i}
 
+    # 5. Keep only the best peptide structure, based on results from step #4.
+    # After a single run, 5 RFdiffusion candidates + 2 proteinPMNN seqs per candidate are generated - thats 10 predicted binder designs. How many to keep?
+    # right now, script outputs and keeps all 10 results
+    # remove the other structure files?
+
 ```
 
 ### Workflow output
