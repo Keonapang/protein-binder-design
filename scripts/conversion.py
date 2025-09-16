@@ -1,5 +1,6 @@
 import os
 import sys
+# python modify_pdb_chain.py <target_file> <binder_file> <diffusion> <temp> <DIR_OUT>
 
 # Parse command-line arguments
 if len(sys.argv) != 6:
