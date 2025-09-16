@@ -11,7 +11,7 @@
 import argparse
 import json
 import os
-from time import time
+import time
 import requests
 from enum import StrEnum, Enum  # must be Python 3.11+
 from typing import Tuple, Dict, Any, List
@@ -23,7 +23,7 @@ parser.add_argument("--num_seq", type=int, default=1, required=True, help="Numbe
 parser.add_argument("--diffusion", type=int, default=50,help="Number of diffusion steps (15-30 recommended)")
 parser.add_argument("--temp", type=float, default=0.2,help="Sampling temperature (range: 0-1)")
 parser.add_argument("--target_sequence", type=str, required=True, help="Input sequence")
-parser.add_argument("--contigs", type=str, required=True, default="15-20",help="contigs")
+parser.add_argument("--contigs",type=str,required=True,help="Contigs string, e.g., 'A60-90/0 15-25'")
 parser.add_argument("--i", type=int, required=True, default=1,help="iterations")
 parser.add_argument("--hotspot_res", nargs='+', required=True, help="Hotspot residues (e.g., A67 A80)")
 parser.add_argument("--target_pdb", type=str, required=True, help="Path to precomputed PDB file of target protein")
@@ -51,8 +51,7 @@ target_pdb = args.target_pdb
 # i=1
 # hotspot_res=['A20']
 
-print(f"\nCycle: {cycle}"
-      f"\nNumber of seqs to generate per target: {num_seq}"
+print(f"Number of seqs to generate per target: {num_seq}"
       f"\nDiffusion: {diffusion}"
       f"\nSampling temp: {temp}"
       f"\nContigs: {contigs}"
@@ -63,18 +62,19 @@ print(f"\nCycle: {cycle}"
 root = "/home/ubuntu/protein-binder-design"
 os.makedirs(root, exist_ok=True)
 
-# Set output directory
-outdir = f"{root}/{diffusion}diff_{temp}temp"
-os.makedirs(outdir, exist_ok=True)
-if os.path.exists(outdir):
-    print(f"{outdir} already exists. Overwriting...")
-    
 # Set input variables and path
 print(f"\nGenerating {num_seq} peptide binder(s) per input sequence...")
 # Extract the filename without the extension
 cycle = os.path.splitext(os.path.basename(target_pdb))[0]
 name = f"{cycle}_{diffusion}diff_{temp}temp"
 
+# Set output directory
+# outdir = f"{root}/{diffusion}diff_{temp}temp"
+outdir = f"{root}/{cycle}"
+os.makedirs(outdir, exist_ok=True)
+if os.path.exists(outdir):
+    print(f"{outdir} already exists. Overwriting...")
+    
 pdb_path = target_pdb
 if not os.path.exists(pdb_path):
     raise FileNotFoundError(f"Precomputed PDB file {pdb_path} does not exist.")
@@ -211,7 +211,7 @@ precomputed_pdb
 
 # iterate through i iterations
 for iteration in range(i):
-    print(f"[Iteration {iteration + 1}]")
+    print(f"\n-----------[Iteration {iteration + 1} of {i}]-----------")
     print(f"1. Running RFdiffusion...")
     rfdiffusion_query = {
         "input_pdb": precomputed_pdb,  # Now using the precomputed PDB structure
@@ -230,7 +230,7 @@ for iteration in range(i):
 ##############################################################
 # 3. ProteinMPNN
 ##############################################################
-    print(f"\n2.Running ProteinMPNN....")
+    print(f"\n2.Running ProteinMPNN to generate {num_seq} seq per target....")
     proteinmpnn_query = {
         "input_pdb" : rfdiffusion_response["output_pdb"],
         "input_pdb_chains" : example.input_pdb_chains,
@@ -268,7 +268,7 @@ for iteration in range(i):
     ##############################################################
     # 3. AlphaFold to predict the structure of the binder alone
     ##############################################################
-    print(f"3. Loading AlphaFold2...")
+    print(f"3. Running AlphaFold2 for {num_seq} seqs...")
 
     # Preview binder_target_pairs
     counter = 0
@@ -294,9 +294,9 @@ for iteration in range(i):
             output_file = os.path.join(outdir, f"4_{name}_binder_i{iteration + 1}_{counter+1}.pdb")
             with open(output_file, "w") as f:
                 f.write(first_structure)
-            print(f"Saved best AlphaFold2 structure to {output_file}")
+            # print(f"Saved best structure to {output_file}")
         else:
-            print("No structure predictions found in alphafold2_response!")
+            print("WARNING: no structure predictions found!")
         # response_codes[counter] = rc
         # results[counter] = alphafold2_response
         end_time = time.time()

@@ -12,11 +12,11 @@
 
 get_target_pdb() {
     # Arguments: input file, output file, chain, start residue position, end residue position
-    local input_file="$1"
-    local output_file="$2"
-    local chain="$3"
-    local start_pos="$4"
-    local end_pos="$5"
+    input_file="$1"
+    output_file="$2"
+    chain="$3"
+    start_pos="$4"
+    end_pos="$5"
 
     # Create the output file and write the "MODEL 1" header (space-delimited)
     printf "MODEL        1\n" > "$output_file"
@@ -47,7 +47,8 @@ get_target_pdb() {
     printf "END\n" >> "$output_file"
 
     # Print the result
-    echo "Results written to $output_file"
+    echo " "
+    echo "Target seq PDB: $output_file"
 }
 
 # get_target_pdb() {

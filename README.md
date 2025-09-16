@@ -157,12 +157,12 @@ For each of the 8 target sequences (**Table 1**), compute their 3D structure (.P
 ```bash
     # Export API key
     export NGC_CLI_API_KEY=<enter-key>
-    REPO_DIR="/home/ubuntu/protein-binder-design"
 
     # target site A85
     start_pos=60
     end_pos=90
     hotspot_res=A80
+    contigs="A60-90/0 15-25"
 
     start_pos=80
     end_pos=110
@@ -188,32 +188,51 @@ For each of the 8 target sequences (**Table 1**), compute their 3D structure (.P
 
     # target site A8
     start_pos=1
-    end_pos=30
-    hotspot_res=3
+    end_pos=31
+    hotspot_res=4
 
     start_pos=2
     end_pos=32
     hotspot_res=12
 
-    raw_pdb="${REPO_DIR}/input/pdb2e7a.pdb" # input <- modify!
-    target_pdb="${REPO_DIR}/input/target_${chain}${start_pos}_${end_pos}.pdb" # output
-    contigs="A${start_pos}-${end_pos}/0 15-25" # expected length of peptide = 15-25aa
+    # Set variables
     chain="A"
     diffusion=50
     temp=0.3 
     i=5
     num_seq=2
+    raw_pdb="${REPO_DIR}/input/pdb2e7a.pdb" # input <- modify!
 
+    # No need to edit
+    contigs="A${start_pos}-${end_pos}/0 15-25" # expected length of peptide = 15-25aa
+    target_pdb="${REPO_DIR}/input/target_${chain}${start_pos}_${end_pos}.pdb" # output
+    REPO_DIR="/home/ubuntu/protein-binder-design"
+```
+
+Run prediction models sequentially, followed by calculating binding free energy using [PRODIGY](https://github.com/haddocking/prodigy):
+
+```bash
+    # clean up scripts before running
+    sed -i 's/\r$//' "${REPO_DIR}/scripts/get_target_pdb.sh" # optional (to remove any hidden spaces from Windows)
+    sed -i 's/\r$//' "${REPO_DIR}/scripts/calc_prodigy.sh" # clean up script
+    sed -i 's/^[ \t]*//;s/[ \t]*$//' "${REPO_DIR}/scripts/calc_prodigy.sh" # clean up script
+```
+
+```bash
     # 1. Extract target structure PDB (input for step #3)
-    chmod +x "${REPO_DIR}/scripts/get_target_pdb.sh"
+    source "${REPO_DIR}/scripts/get_target_pdb.sh" # load function
     get_target_pdb ${raw_pdb} ${target_pdb} ${chain} ${start_pos} ${end_pos}
 
     # 2. Extract the target amino acid sequence (input for step #3)
     target_sequence=$(bash ${REPO_DIR}/scripts/get_target_seq.sh ${target_pdb})
-    echo "Input target seq: $target_sequence"
+    echo "Target seq: $target_sequence"
 
     # 3. Finally, run 3 models sequentially
-    python3.11 "${REPO_DIR}/scripts/4_protein_binder_design.py" --num_seq ${num_seq} --diffusion ${diffusion} --temp ${temp} --target_sequence ${target_sequence} --contigs ${contigs} --i ${i} --hotspot_res ${hotspot_res} --target_pdb ${target_pdb}
+    python3.11 "${REPO_DIR}/scripts/4_protein_binder_design.py" --num_seq "${num_seq}" --diffusion ${diffusion} --temp ${temp} --target_sequence "${target_sequence}" --contigs "${contigs}" --i "${i}" --hotspot_res ${hotspot_res} --target_pdb "${target_pdb}"
+
+    # 4. Calculate binding free energy using PRODIGY
+    bash "${REPO_DIR}/scripts/calc_prodigy.sh" ${chain} ${start_pos} ${end_pos} ${diffusion} ${temp} ${num_seq} ${i}
+
 ```
 
 ### Workflow output
@@ -258,60 +277,12 @@ While results are being generated (**Fig 3**), ensure you download them into `$D
 
 **Fig 3**. Example of the output directory on the cloud VM.
 
+PRODIGY output in terminal:
+![PRODIGY](docs/prodigy.png)
+
 > [!NOTE]
 > Once you're done running the scrips above, you may shutdown the NVIDIA VM so it doesn't keep charging money.
 
-## 6. Calculate free energy/binding affinity
-
-See [PRODIGY github](https://github.com/haddocking/prodigy)
-
-```bash
-    REPO_DIR="/home/ubuntu/protein-binder-design"
-
-    chain="A"
-    start_pos=60
-    end_pos=90
-    cycle="target"
-    diffusion="50"
-    temp="0.15" 
-    num_seq=2
-    i=5
-
-    for iteration in $(seq 1 $i); do
-        name="${diffusion}diff_${temp}temp"
-        for num in $(seq 1 $num_seq); do
-            target_pdb="${REPO_DIR}/input/target_${chain}${start_pos}_${end_pos}.pdb" # Original PDB input file
-            binder_pdb="${REPO_DIR}/${name}/4_target_${chain}${start_pos}_${end_pos}_${name}_binder_i${iteration}_${num}.pdb"
-            DIR_OUT="${REPO_DIR}/${name}"
-
-            # Check if $target_pdb and $binder_pdb exist
-            if [ ! -f "$target_pdb" ]; then
-                echo "Target PDB not found: $target_pdb"
-                continue
-            fi
-            if [ ! -f "$binder_pdb" ]; then
-                echo "Binder PDB not found: $binder_pdb"
-                continue 
-            fi
-
-            # 1. Build binder-target PDB complex
-            python3.11 "${REPO_DIR}/scripts/conversion.py" "$target_pdb" "$binder_pdb" "$diffusion" "$temp" "$DIR_OUT"
-
-            # 2. Run PRODIGY to predict binding affinity (kcal.mol-1)
-            multi_model_file="${DIR_OUT}/5_target_${chain}${start_pos}_${end_pos}_${name}_binder_i${iteration}_${num}.pdb"
-
-            # Run PRODIGY and extract binding affinity
-            output_file="${multi_model_file%.pdb}.txt"
-            prodigy_output=$(prodigy "$multi_model_file" -np 4)
-            binding_affinity=$(echo "$prodigy_output" | grep "Predicted binding affinity" | awk '{print $6}')
-            echo "$binding_affinity" > "$output_file"
-            echo "Predicted binding affinity ($binding_affinity kcal.mol-1)"
-        done
-    done
-```
-
-PRODIGY output in terminal:
-![PRODIGY](docs/prodigy.png)
 
 ## 7. Visualization and validation of binder-target (local)
 
