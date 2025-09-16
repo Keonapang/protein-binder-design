@@ -165,12 +165,12 @@ For each of the 8 target sequences (**Table 1**), compute their 3D structure (.P
     raw_pdb="${REPO_DIR}/input/pdb2e7a.pdb" # input <- modify!
     target_pdb="${REPO_DIR}/input/target_${chain}${start_pos}_${end_pos}.pdb" # output
 
-    contigs="A1-30/0 15-25" # RFDiffusion input; sets the expected length of peptide to be between 15-20aa
-    diffusion=50 # RFDiffusion input; number of diffusion_steps (recommended range: 20-60)
-    temp=0.15 # (range:0-1) controls diversity of designs. Higher values will lead to more diversity.
-    i=5 # number of RFDiffusion iterations for each target sequence
-    num_seq=2 # num_seq_per_target | how many seqs to generate for a given structure from RFDiffusion
-    hotspot_res=A20 # array (default: null)
+    contigs="A1-30/0 15-25" # expected length of peptide = 15-25aa
+    diffusion=50
+    temp=0.15 
+    i=5
+    num_seq=2
+    hotspot_res=A20
 
     # 1. Extract target structure PDB (input for step #3)
     chmod +x "${REPO_DIR}/scripts/get_target_pdb.sh"
