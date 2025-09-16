@@ -143,7 +143,15 @@ For each of the 8 target sequences (**Table 1**), compute their 3D structure (.P
 ## 5. Run RFDiffusion, ProteinMPNN and AlphaFold2-Multimer
 
 - **RFDiffusion**: takes in the target protein PDB structure, outputs a designed peptide binder PDB. Note: every output is a glycine, and no sidechains are output. Read more [HERE](https://github.com/RosettaCommons/RFdiffusion?tab=readme-ov-file#understanding-the-output-files).
+    - `contigs`: range of amino acid positions, and expected length of peptide (i.e."A1-30/0 15-25")
+    - `diffusion`: number of diffusion_steps (default: 50)
+    - `i`: number of RFDiffusion iterations for each target sequence
+
 - **ProteinPMNN**: takes in the prediction from RFDiffusion, and outputs the amino acid sequence (.fasta)
+    - `num_seq`: how many seqs to generate for a given structure from RFDiffusion
+    - `hotspot_res`: A20 # array (i.e. "A20")
+    - `temp`: sample temperature controls the diversity of designed peptides. Higher values will lead to more diversity (range:0-1)
+
 - **AlphaFold2-Multimer**: takes in a pair of amino acid sequences (peptide chain from ProteinMPNN plus the original target protein sequence used as input to this workflow), and outputs a list of predicted 'combined' structures in PDB format. For a single binder-target pair, AlphaFold-Multimer will generate exactly 5 predicted structures per pair, each with slightly different structures due to stochasticity and model ensemble techniques.
 
 ```bash
