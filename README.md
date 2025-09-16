@@ -159,18 +159,50 @@ For each of the 8 target sequences (**Table 1**), compute their 3D structure (.P
     export NGC_CLI_API_KEY=<enter-key>
     REPO_DIR="/home/ubuntu/protein-binder-design"
 
+    # target site A85
     start_pos=60
     end_pos=90
-    chain="A"
+    hotspot_res=A80
+
+    start_pos=80
+    end_pos=110
+    hotspot_res=A90
+
+    # target site A108
+    start_pos=83
+    end_pos=113
+    hotspot_res=A103
+
+    start_pos=103
+    end_pos=133
+    hotspot_res=A113
+
+    # target site A145
+    start_pos=120
+    end_pos=150
+    hotspot_res=A140
+
+    start_pos=140
+    end_pos=170
+    hotspot_res=A150
+
+    # target site A8
+    start_pos=1
+    end_pos=30
+    hotspot_res=3
+
+    start_pos=2
+    end_pos=32
+    hotspot_res=12
+
     raw_pdb="${REPO_DIR}/input/pdb2e7a.pdb" # input <- modify!
     target_pdb="${REPO_DIR}/input/target_${chain}${start_pos}_${end_pos}.pdb" # output
-
-    contigs="A60-90/0 15-25" # expected length of peptide = 15-25aa
+    contigs="A${start_pos}-${end_pos}/0 15-25" # expected length of peptide = 15-25aa
+    chain="A"
     diffusion=50
-    temp=0.15 
+    temp=0.3 
     i=5
     num_seq=2
-    hotspot_res=A80
 
     # 1. Extract target structure PDB (input for step #3)
     chmod +x "${REPO_DIR}/scripts/get_target_pdb.sh"
