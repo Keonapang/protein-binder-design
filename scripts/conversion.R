@@ -15,19 +15,25 @@
 # suppressMessages(library(tidyr))
 
 args <- commandArgs(trailingOnly = TRUE)
-cycle <- args[1]
-target_file <- args[2]
-binder_file <- args[3]
-diffusion <- args[4]
-temp <- args[5]
-DIR_OUT <- args[6]
+target_file <- args[1]
+binder_file <- args[2]
+diffusion <- args[3]
+temp <- args[4]
+DIR_OUT <- args[5]
 
 new_chain <- "B"
-cat("==================== Cycle:", cycle, "======================\n")
+cycle <- tools::file_path_sans_ext(basename(target_file))
+
+# Add the prefix "5_" to the extracted filename
+file_name <- basename(binder_file)   # Extracts the file name from the full path
+file_part <- sub("^[^_]*_", "", file_name)  # Removes everything before and including the first "_"
+outname <- paste0("5_", file_part)
+
+cat("==================== ", cycle, "======================\n")
 
 # OUTPUT FILE 
 if (!dir.exists(DIR_OUT)) {dir.create(DIR_OUT, recursive = TRUE)}
-outfile <- paste0(DIR_OUT, "/cycle", cycle, "_", diffusion, "diff_", temp, "temp.pdb")
+outfile <- paste0(DIR_OUT, "/", outname)
 
 # Search for the specific file
 # matching_file <- list.files(

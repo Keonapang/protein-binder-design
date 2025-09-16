@@ -64,7 +64,7 @@ root = "/home/ubuntu/protein-binder-design"
 os.makedirs(root, exist_ok=True)
 
 # Set output directory
-outdir = f"{root}/{diffusion}diff_{temp}temp_{num_seq}seq"
+outdir = f"{root}/{diffusion}diff_{temp}temp"
 os.makedirs(outdir, exist_ok=True)
 if os.path.exists(outdir):
     print(f"{outdir} already exists. Overwriting...")
@@ -274,15 +274,11 @@ for iteration in range(i):
     counter = 0
     response_codes = [0 for i in binder_target_pairs]
     results = [None for i in binder_target_pairs]
-    pairs_to_process = num_seq
 
     for binder_target_pair in binder_target_pairs:
         current_time = time.time()
         predicted_binder = binder_target_pair[0]
-        print(f"Designed binder ({counter+1} of {len(binder_target_pairs)}): {predicted_binder}")
-        counter += 1
-        if counter >= pairs_to_process:
-            break
+        print(f"\nDesigned binder ({counter+1} of {len(binder_target_pairs)}): {predicted_binder}")
         alphafold2_query = {
             "sequence" : predicted_binder,
             "algorithm" : "mmseqs2",
@@ -290,8 +286,7 @@ for iteration in range(i):
         rc, alphafold2_response = query_nim(
             payload=alphafold2_query,
             nim_endpoint=NIM_ENDPOINTS.ALPHAFOLD2.value,
-            nim_port=NIM_PORTS.ALPHAFOLD2_PORT.value,
-            echo=True
+            nim_port=NIM_PORTS.ALPHAFOLD2_PORT.value
         )
         alphafold2_response[0][0:160]
         if alphafold2_response and len(alphafold2_response) > 0:
@@ -304,14 +299,12 @@ for iteration in range(i):
             print("No structure predictions found in alphafold2_response!")
         # response_codes[counter] = rc
         # results[counter] = alphafold2_response
-        counter += 1
-        if counter >= pairs_to_process:
-            break
         end_time = time.time()
         elapsed_minutes = (end_time - current_time) / 60
-        print(f"AlphaFold2 took {elapsed_minutes:.2f} mins")
-
-    # Save the first structure prediction to a .pdb file
+        print(f"Time: {elapsed_minutes:.2f} mins")
+        counter += 1
+        if counter >= num_seq:
+            break
 
 print(f"Results saved in : {outdir}")
 end_time = time.time()
@@ -331,8 +324,6 @@ print(f"Total time: {elapsed_minutes:.2f} mins")
     # with open(f"{outdir}/3_{name}_proteinmpnn_scores_i{iteration + 1}.txt", "w") as scores_file:
     #     for i, score in enumerate(scores):
     #         scores_file.write(f"Sequence {i+1}: Score = {score}\n")
-    
-    
     
     
     ##############################################################

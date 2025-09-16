@@ -165,12 +165,12 @@ For each of the 8 target sequences (**Table 1**), compute their 3D structure (.P
     raw_pdb="${REPO_DIR}/input/pdb2e7a.pdb" # input <- modify!
     target_pdb="${REPO_DIR}/input/target_${chain}${start_pos}_${end_pos}.pdb" # output
 
-    contigs="A1-30/0 15-25" # expected length of peptide = 15-25aa
+    contigs="A60-90/0 15-25" # expected length of peptide = 15-25aa
     diffusion=50
     temp=0.15 
     i=5
     num_seq=2
-    hotspot_res=A20
+    hotspot_res=A80
 
     # 1. Extract target structure PDB (input for step #3)
     chmod +x "${REPO_DIR}/scripts/get_target_pdb.sh"
@@ -234,33 +234,48 @@ While results are being generated (**Fig 3**), ensure you download them into `$D
 See [PRODIGY github](https://github.com/haddocking/prodigy)
 
 ```bash
-    # Set up R environment
-    sudo apt install r-base-core
-```
+    REPO_DIR="/home/ubuntu/protein-binder-design"
 
-```bash
-    cycle="1A"
-    diffusion="40"
-    temp="0.5" 
-    target_file="/home/ubuntu/protein-binder-design/example/complex/pep1A.pdb"
-    binder_file="/home/ubuntu/protein-binder-design/example/complex/4_AF2_binder_1A_i1.pdb"
-    DIR_OUT="/home/ubuntu/protein-binder-design/example/complex/PRODIGY_output"
+    chain="A"
+    start_pos=60
+    end_pos=90
+    cycle="target"
+    diffusion="50"
+    temp="0.15" 
+    num_seq=2
+    i=5
 
-    root="/home/ubuntu/protein-binder-design/scripts" # # root="/Users/keonapang/Desktop/NVIDIA/Sept12"
-    Rscript "${root}/conversion.R" $cycle $target_file $binder_file $diffusion $temp $DIR_OUT
-```
+    for iteration in $(seq 1 $i); do
+        name="${diffusion}diff_${temp}temp"
+        for num in $(seq 1 $num_seq); do
+            target_pdb="${REPO_DIR}/input/target_${chain}${start_pos}_${end_pos}.pdb" # Original PDB input file
+            binder_pdb="${REPO_DIR}/${name}/4_target_${chain}${start_pos}_${end_pos}_${name}_binder_i${iteration}_${num}.pdb"
+            DIR_OUT="${REPO_DIR}/${name}"
 
-```bash
-    # PRODIGY - to predict binding affinity (kcal.mol-1)
-    multi_model_file="/home/ubuntu/protein-binder-design/example/complex/PRODIGY_output/cycle1A_40diff_0.5temp.pdb"
-    np=3 # number of processors to use 
-    prodigy ${multi_model_file} -np ${np}
+            # Check if $target_pdb and $binder_pdb exist
+            if [ ! -f "$target_pdb" ]; then
+                echo "Target PDB not found: $target_pdb"
+                continue
+            fi
+            if [ ! -f "$binder_pdb" ]; then
+                echo "Binder PDB not found: $binder_pdb"
+                continue 
+            fi
 
-    output_file="${multi_model_file%.pdb}.txt"
-    prodigy_output=$(prodigy "${multi_model_file}" -np ${np})
-    binding_affinity=$(echo "$prodigy_output" | grep "Predicted binding affinity" | awk '{print $6}')
-    echo "$binding_affinity" > "$output_file"
-    echo "Predicted binding affinity ($binding_affinity kcal.mol-1) saved to: $output_file"
+            # 1. Build binder-target PDB complex
+            python3.11 "${REPO_DIR}/scripts/conversion.py" "$target_pdb" "$binder_pdb" "$diffusion" "$temp" "$DIR_OUT"
+
+            # 2. Run PRODIGY to predict binding affinity (kcal.mol-1)
+            multi_model_file="${DIR_OUT}/5_target_${chain}${start_pos}_${end_pos}_${name}_binder_i${iteration}_${num}.pdb"
+
+            # Run PRODIGY and extract binding affinity
+            output_file="${multi_model_file%.pdb}.txt"
+            prodigy_output=$(prodigy "$multi_model_file" -np 4)
+            binding_affinity=$(echo "$prodigy_output" | grep "Predicted binding affinity" | awk '{print $6}')
+            echo "$binding_affinity" > "$output_file"
+            echo "Predicted binding affinity ($binding_affinity kcal.mol-1)"
+        done
+    done
 ```
 
 PRODIGY output in terminal:
