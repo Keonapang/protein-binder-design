@@ -152,7 +152,7 @@ For each of the 8 target sequences (**Table 1**), compute their 3D structure (.P
     - `hotspot_res`: A20 # array (i.e. "A20")
     - `temp`: sample temperature controls the diversity of designed peptides. Higher values will lead to more diversity (range:0-1)
 
-- **AlphaFold2-Multimer**: takes in a pair of amino acid sequences (peptide chain from ProteinMPNN plus the original target protein sequence used as input to this workflow), and outputs a list of predicted 'combined' structures in PDB format. For a single binder-target pair, AlphaFold-Multimer will generate exactly 5 predicted structures per pair, each with slightly different structures due to stochasticity and model ensemble techniques.
+- **AlphaFold2**: takes in a list of peptide binder(s) from ProteinMPNN, and outputs predicted PDB structures in PDB for each binder
 
 ```bash
     # Export API key
