@@ -278,7 +278,7 @@ Example of **Alphafold2-multimer** output:
 
 Ensure you download your results onto local computer.
 
-![results](docs/results.png)
+![results](docs/results_VM.png)
 
 **Fig 3**. Example of output directory, with the input being a single target sequence.
 
