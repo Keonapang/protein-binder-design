@@ -1,0 +1,6 @@
+>input, score=3.4865, global_score=2.8254, fixed_chains=['B'], designed_chains=['A'], model_name=v_48_002, git_hash=unknown, seed=299
+GGGGGGGGGGGGGGGG
+>T=0.3, sample=1, score=1.9069, global_score=2.3006, seq_recovery=0.0000
+SLLLELQKKLAEALAA
+>T=0.3, sample=2, score=2.1704, global_score=2.3853, seq_recovery=0.0000
+DEMIEKLLKERMLREK
