@@ -23,7 +23,7 @@ for iteration in $(seq 1 $i); do
         for num in $(seq 1 $num_seq); do
             target_pdb="${REPO_DIR}/input/${cycle}.pdb" # Original PDB input file
             binder_pdb="${REPO_DIR}/${cycle}/4_${cycle}_${params}_binder_i${iteration}_${num}.pdb"
-            DIR_OUT="${REPO_DIR}/${params}"
+            DIR_OUT="${REPO_DIR}/${cycle}"
 
             # Check if $target_pdb and $binder_pdb exist
             if [ ! -f "$target_pdb" ]; then

@@ -206,7 +206,6 @@ example = ExampleRequestParams(
 ##############################################################
 
 precomputed_pdb = get_reduced_pdb(pdb_path, rcsb_path=None)
-precomputed_pdb
 # pdb_path="/home/ubuntu/protein-binder-design/input/pep1A.pdb"
 # pdb_path="/home/ubuntu/protein-binder-design/input/target_A60_90.pdb"
 
@@ -232,9 +231,8 @@ for iteration in range(i):
         pdb_file.write(rfdiffusion_response["output_pdb"])
     
     # clear python memory 
-    del pdb_file
     del rfdiffusion_query
-    del precomputed_pdb
+    del rfdiffusion_response
     gc.collect()
 ##############################################################
 # 3. ProteinMPNN
@@ -334,7 +332,6 @@ for iteration in range(i):
         del output_file
         del alphafold2_query
         gc.collect()
-
 
 print(f"Results saved in : {outdir}")
 end_time = time.time()
