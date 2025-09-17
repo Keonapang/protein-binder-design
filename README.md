@@ -189,11 +189,11 @@ For each of the 8 target sequences (**Table 1**), compute their 3D structure (.P
     # target site A8
     start_pos=9
     end_pos=39
-    hotspot_res=13
+    hotspot_res=A13
 
-    start_pos=2
-    end_pos=32
-    hotspot_res=12
+    start_pos=8
+    end_pos=38
+    hotspot_res=A11
 
     # Set variables
     chain="A"
@@ -227,8 +227,8 @@ Run prediction models sequentially, followed by calculating binding free energy 
     target_sequence=$(bash ${REPO_DIR}/scripts/get_target_seq.sh ${target_pdb})
     echo "Target seq: $target_sequence"
 
-    # 3. Finally, run 3 models sequentially
-    CUDA_VISIBLE_DEVICES=1 python3.11 "${REPO_DIR}/scripts/4_protein_binder_design.py" --num_seq "${num_seq}" --diffusion ${diffusion} --temp ${temp} --target_sequence "${target_sequence}" --contigs "${contigs}" --i "${i}" --hotspot_res ${hotspot_res} --target_pdb "${target_pdb}"
+    # 3. Finally, run 3 models sequentially (optionally, include CUDA_VISIBLE_DEVICES=1)
+    python3.11 "${REPO_DIR}/scripts/4_protein_binder_design.py" --num_seq "${num_seq}" --diffusion ${diffusion} --temp ${temp} --target_sequence "${target_sequence}" --contigs "${contigs}" --i "${i}" --hotspot_res ${hotspot_res} --target_pdb "${target_pdb}"
 
     # 4. Calculate binding free energy using PRODIGY
     bash "${REPO_DIR}/scripts/calc_prodigy.sh" ${chain} ${start_pos} ${end_pos} ${diffusion} ${temp} ${num_seq} ${i}

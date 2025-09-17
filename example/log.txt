@@ -1,0 +1,96 @@
+================== target_A80_110 ==================
+ 
+ 
+-----------[Iteration 1]-----------
+1. Running RFdiffusion...
+ATOM      1  N   GLY A   1       8.532  31.561  -9.380  1.00  0.00
+ATOM      2  CA  GLY A   1       8.962  30.345  -8.699  1.00  0
+ 
+2.Running ProteinMPNN....
+[['DAALREALARAIARAAALAALLAA', 'ISRISTTHNQPVNLLSAIRSPCQRETPEGAE'], ['SSSLQQALAKLIRDAAMLQKMLAE', 'ISRISTTHNQPVNLLSAIRSPCQRETPEGAE']]
+ 
+3. Loading AlphaFold2...
+ 
+Designed binder (1 of 2): DAALREALARAIARAAALAALLAA
+Saved best AlphaFold2 structure to /home/ubuntu/protein-binder-design/target_A80_110/4_target_A80_110_50diff_0.3temp_binder_i1_1.pdb
+Time: 6.74 mins
+ 
+Designed binder (2 of 2): SSSLQQALAKLIRDAAMLQKMLAE
+Saved best AlphaFold2 structure to /home/ubuntu/protein-binder-design/target_A80_110/4_target_A80_110_50diff_0.3temp_binder_i1_2.pdb
+Time: 6.51 mins
+ 
+-----------[Iteration 2]-----------
+1. Running RFdiffusion...
+ATOM      1  N   GLY A   1       8.031  18.148  19.227  1.00  0.00
+ATOM      2  CA  GLY A   1       6.902  17.226  19.212  1.00  0
+ 
+2.Running ProteinMPNN....
+[['PPVLLRLLRAALAAAELEAAR', 'ISRISTTHNQPVNLLSAIRSPCQRETPEGAE'], ['PPVVEKLLEAALAAQELEKEK', 'ISRISTTHNQPVNLLSAIRSPCQRETPEGAE']]
+ 
+3. Loading AlphaFold2...
+ 
+Designed binder (1 of 2): PPVLLRLLRAALAAAELEAAR
+Saved best AlphaFold2 structure to /home/ubuntu/protein-binder-design/target_A80_110/4_target_A80_110_50diff_0.3temp_binder_i2_1.pdb
+Time: 6.78 mins
+ 
+Designed binder (2 of 2): PPVVEKLLEAALAAQELEKEK
+Saved best AlphaFold2 structure to /home/ubuntu/protein-binder-design/target_A80_110/4_target_A80_110_50diff_0.3temp_binder_i2_2.pdb
+Time: 6.46 mins
+ 
+-----------[Iteration 3]-----------
+1. Running RFdiffusion...
+ATOM      1  N   GLY A   1      -7.524  -4.429   9.015  1.00  0.00
+ATOM      2  CA  GLY A   1      -8.285  -3.801  10.090  1.00  0
+ 
+2.Running ProteinMPNN....
+[['SLLLELQKKLAEALAA', 'ISRISTTHNQPVNLLSAIRSPCQRETPEGAE'], ['DEMIEKLLKERMLREK', 'ISRISTTHNQPVNLLSAIRSPCQRETPEGAE']]
+ 
+3. Loading AlphaFold2...
+ 
+Designed binder (1 of 2): SLLLELQKKLAEALAA
+Saved best AlphaFold2 structure to /home/ubuntu/protein-binder-design/target_A80_110/4_target_A80_110_50diff_0.3temp_binder_i3_1.pdb
+Time: 7.61 mins
+ 
+Designed binder (2 of 2): DEMIEKLLKERMLREK
+Saved best AlphaFold2 structure to /home/ubuntu/protein-binder-design/target_A80_110/4_target_A80_110_50diff_0.3temp_binder_i3_2.pdb
+Time: 6.45 mins
+ 
+-----------[Iteration 4]-----------
+1. Running RFdiffusion...
+ATOM      1  N   GLY A   1       7.482  26.655  -0.526  1.00  0.00
+ATOM      2  CA  GLY A   1       6.081  27.030  -0.378  1.00  0
+ 
+2.Running ProteinMPNN....
+[['SVRVKALELLDLLAALLAQELAAQ', 'ISRISTTHNQPVNLLSAIRSPCQRETPEGAE'], ['TAEVARLALEDIAAALLAALAAAA', 'ISRISTTHNQPVNLLSAIRSPCQRETPEGAE']]
+ 
+3. Loading AlphaFold2...
+ 
+Designed binder (1 of 2): SVRVKALELLDLLAALLAQELAAQ
+Saved best AlphaFold2 structure to /home/ubuntu/protein-binder-design/target_A80_110/4_target_A80_110_50diff_0.3temp_binder_i4_1.pdb
+Time: 6.04 mins
+ 
+Designed binder (2 of 2): TAEVARLALEDIAAALLAALAAAA
+Saved best AlphaFold2 structure to /home/ubuntu/protein-binder-design/target_A80_110/4_target_A80_110_50diff_0.3temp_binder_i4_2.pdb
+Time: 6.20 mins
+ 
+-----------[Iteration 5]-----------
+1. Running RFdiffusion...
+ATOM      1  N   GLY A   1       7.253  13.515  18.690  1.00  0.00
+ATOM      2  CA  GLY A   1       7.212  12.924  17.358  1.00  0
+ 
+2.Running ProteinMPNN....
+[['SKQSILKQLEERLELLRKKLAEA', 'ISRISTTHNQPVNLLSAIRSPCQRETPEGAE'], ['SAALIQRRFDLAAAAAAALAAAE', 'ISRISTTHNQPVNLLSAIRSPCQRETPEGAE']]
+ 
+3. Loading AlphaFold2...
+ 
+Designed binder (1 of 2): SKQSILKQLEERLELLRKKLAEA
+Saved best AlphaFold2 structure to /home/ubuntu/protein-binder-design/target_A80_110/4_target_A80_110_50diff_0.3temp_binder_i5_1.pdb
+Time: 7.10 mins
+ 
+Designed binder (2 of 2): SAALIQRRFDLAAAAAAALAAAE
+Saved best AlphaFold2 structure to /home/ubuntu/protein-binder-design/target_A80_110/4_target_A80_110_50diff_0.3temp_binder_i5_2.pdb
+Time: 6.54 mins
+Results saved in : /home/ubuntu/protein-binder-design/target_A80_110
+
+Total time: 67.40 mins (per one input target sequence)
+Cost: ~6.4 USD (i=5; num_seq=2)
