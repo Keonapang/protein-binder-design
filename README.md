@@ -99,7 +99,6 @@ The example below generates 8 peptide binders for target protein ApoB-100.
     curl localhost:8082/v1/health/ready # RFdiffusion
     curl localhost:8083/v1/health/ready # Protein MPNN
 
-    # View log 
     docker logs -f protein-binder-design-alphafold-1
 ```
 
@@ -122,14 +121,39 @@ The example below generates 8 peptide binders for target protein ApoB-100.
     sed -i 's/^[ \t]*//;s/[ \t]*$//' "${REPO_DIR}/scripts/calc_prodigy.sh"
 ```
 
+Export API key (assume it has already been generated)
+
 ```bash
-    # Export API key (assume it has already been generated)
     export NGC_CLI_API_KEY=<enter-key>
+```
+
+### Ensure you have prepared these two input files
+
+Script takes in two arguments:
+
+**1. Space-delimited `.txt` file (no header)** containing four columns that store: chain identifier (e.g. A), hotspot residue (e.g. 80), start and end residue position (e.g. 60 and 90)
+```bash
+    A 80 60 90
+    A 90 80 110
+    A 103 83 113
+    A 113 103 133
+```
+
+**2. Raw `.PDB` file** of the target protein, most likely downloaded through a protein database. The script ignores all irrelevant in the PDB file except the rows with 'ATOM'. Note that the PDB file doesn't have to begin with amino acid residue 1.
+
+```bash
+HEADER    CYTOKINE                                09-JAN-07   2E7A              
+TITLE     TNF RECEPTOR SUBTYPE ONE-SELECTIVE TNF MUTANT WITH ANTAGONISTIC       
+JRNL       DOI    10.1074/JBC.M707933200                                       
+REMARK   2 RESOLUTION.    1.80 ANGSTROMS.                                       
+REMARK   3     
+ATOM      1  N   PRO A   8      18.727  24.301  31.792  1.00 56.82           N  
+ATOM      2  CA  PRO A   8      17.276  24.324  31.476  1.00 57.03           C  
 ```
 
 ## 5. Run RFDiffusion, ProteinMPNN and AlphaFold2-Multimer
 
-- **RFDiffusion**: takes in the target protein PDB structure, outputs a designed peptide binder PDB. Note: every output is a glycine, and no sidechains are output. Read more [HERE](https://github.com/RosettaCommons/RFdiffusion?tab=readme-ov-file#understanding-the-output-files).
+- **RFDiffusion**: takes in the target protein PDB structure, outputs a designed peptide binder PDB. Note: every output is a glycine, and no sidechains are output. See [Github](https://github.com/RosettaCommons/RFdiffusion?tab=readme-ov-file#understanding-the-output-files).
     - `contigs`: range of amino acid positions, and expected length of peptide (i.e."A1-30/0 15-25")
     - `diffusion`: number of diffusion_steps (default: 50)
     - `i`: number of RFDiffusion iterations for each target sequence
@@ -142,35 +166,44 @@ The example below generates 8 peptide binders for target protein ApoB-100.
 - **AlphaFold2**: takes in a list of peptide binder(s) from ProteinMPNN, and outputs predicted PDB structures in PDB for each binder
 
 ```bash
-    # Define variables
+    # Define repo directory  
     REPO_DIR="/home/ubuntu/protein-binder-design"
+
+    # Define two input files
     raw_pdb="${REPO_DIR}/input/pdb2e7a.pdb" # input <- modify!
+    input_file="${REPO_DIR}/input/target_hotspots.txt"
+
+    # Define script input variables
     chain="A"
     diffusion=50
     temp=0.3 
     i=5
     num_seq=2
-
-    # No need to edit these variables
-    contigs="A${start_pos}-${end_pos}/0 15-25" # expected length of peptide is 15-25aa; e.g. "A60-90/0 15-25"
-    target_pdb="${REPO_DIR}/input/target_${chain}${start_pos}_${end_pos}.pdb" # output
-    target_sequence=$(bash "${REPO_DIR}/scripts/get_target_seq.sh" "${target_pdb}")
+    peptide_length="15-25" # You may set a range (i.e."15-25") or a value ("25")
 
 ```
 
-`get_target_pdb` checks to ensure that start_pos and end_pos are valid given the input PDB file.
-Run 3 prediction models sequentially, followed by aligning the designed binder and original target sequence to create a combined PDB file using BioPython's `Superimposer` module. Lastly, calculate the dissociation constant using [PRODIGY](https://github.com/haddocking/prodigy):
+`get_target_pdb` checks that `start_pos` and `end_pos` are valid given the input PDB file.
+
+Run 3 prediction models sequentially, followed by aligning the designed binder and original target sequence to create a combined PDB file using **BioPython's** `Superimposer` module. Lastly, calculate **dissociation constant (Kd)** using [PRODIGY](https://github.com/haddocking/prodigy):
 
 ```bash
-input_file="${REPO_DIR}/input/target_hotspots.txt"
+# Loop through each line of $input_file
+while IFS=$' ' read -r chain hotspot_res_prefix start_pos end_pos; do # space-delimited
 
-# Loop through each line of the input file
-while IFS=$' ' read -r chain hotspot_res_prefix start_pos end_pos; do
-
+    if [ ! -f "$raw_pdb" ]; then
+        echo "Error: Raw PDB file not found: $raw_pdb"
+        exit 1
+    fi
+    # No need to edit these variables
     hotspot_res="${chain}${hotspot_res_prefix}"
+    contigs="A${start_pos}-${end_pos}/0 ${peptide_length}$" # e.g. "A60-90/0 15-25"
+    target_pdb="${REPO_DIR}/input/target_${chain}${start_pos}_${end_pos}.pdb" # output
+    target_sequence=$(bash "${REPO_DIR}/scripts/get_target_seq.sh" "${target_pdb}")
+
     echo "Processing with chain=$chain, hotspot_res=$hotspot_res, start_pos=$start_pos, end_pos=$end_pos"
 
-    # Step 1: Extract target structure PDB and target seq amino acid
+    # Step 1: Build target structure PDB and extract target seq amino acid
     source "${REPO_DIR}/scripts/get_target_pdb.sh" # Load the get_target_pdb function
     get_target_pdb "${raw_pdb}" "${target_pdb}" "${chain}" "${start_pos}" "${end_pos}"
     
@@ -184,7 +217,7 @@ done < "$input_file"
 
 ```
 
-### Workflow output
+### Workflow outputs
 
 Example of **ProteinPMNN** .fasta output if `num_seq=2`:
 
@@ -259,9 +292,7 @@ Optionally, you could visualize the entire binding complex (multiple peptides bi
     diffusion="50"
     temp="0.5"
     DIR_WORK="/Users/keonapang/Desktop/NVIDIA/Sept12" 
-    root="/location/of/this/script" # root="/Users/keonapang/Desktop/NVIDIA/Sept12"
-
-    Rscript "${root}/conversion_all.R" $cycle $diffusion $temp $DIR_WORK
+    Rscript "./conversion_all.R" $cycle $diffusion $temp $DIR_WORK
 ```
 
 3. Open PyMoL and enter the following code:

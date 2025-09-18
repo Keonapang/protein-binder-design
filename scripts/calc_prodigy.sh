@@ -1,11 +1,13 @@
 #!/bin/bash
-
+######################################################
 # Calculate binding free energy using PRODIGY
-# Inputs: PDB file of the peptide binder and target sequence complex
-# Output: Binding free energy (ΔG) and dissociation constant (Kd)
+# Inputs: Two PDB files of the peptide binder and raw target sequence complex
+# Output: A single combined PDB file with header notes; 
+#       - including predicted peptide sequence,
+#       - free energy (ΔG) and dissociation constant (Kd) etc..
 
-# Usage: ./calc_prodigy.sh ${chain} ${start_pos} ${end_pos} ${diffusion} ${temp} ${num_seq} ${i}
-
+# Usage: calc_prodigy.sh ${chain} ${start_pos} ${end_pos} ${diffusion} ${temp} ${num_seq} ${i}
+######################################################
 chain=$1
 start_pos=$2
 end_pos=$3
