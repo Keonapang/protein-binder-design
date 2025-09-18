@@ -52,27 +52,26 @@ ATOM      2  CA  PRO A   8      17.276  24.324  31.476  1.00 57.03           C
 
 ## 2. Launch a NVIDIA cloud virtual machine (VM)
 
-1. Go to [brev.nvidia](https://brev.nvidia.com/) and click on this [Launchable](https://brev.nvidia.com/launchable/deploy/now?launchableID=env-32aLABBLqme9fNaaSdVL94Bollg). If you would like to create your own, click on Launchables in the menu bar, then `Create Launchables` and follow these settings:
+1. Sign into [brev.nvidia](https://brev.nvidia.com/).
+2. Click on this [Launchable](https://brev.nvidia.com/launchable/deploy?launchableID=env-32hOwzKwjmWbUwZHWYtSoW9vrxO). If you would like to create your own, click on **Launchables** in the menu bar, then `Create Launchables` and follow these settings:
     - Select "I have codes in a git repository" and enter the URL of this repo
     - Select 'VM-mode'
     - Click "Next" until you finally reach **select compute**. We recommended **A100 (80GiB) 2 GPUs x 24 CPUs | 240GiB  (80GiB GPU memory) ($3.96/hr)**
 
 ![NVIDIA VM settings](docs/NVIDIA_VM.png)
 
-2. Click **"Deploy Launchable"** and **"Go to Instance Page"**. Wait ~10 minutes for VM to start
+3. Click **"Deploy Launchable"** and **"Go to Instance Page"**. Wait ~10 minutes for VM to start
+4. Enter the VM, then drag and drop the two input files from **step (2)** into your workspace under `protein-binder-design/input/`
+5. Start a new terminal session by clicking the top-right **"+"** button.
 
-3. Enter the VM, then drag and drop the AlphaFold2 .pdb files from **step (2)** into the VM workspace, under `protein-binder-design/input/`
-
-4. Start a new terminal session by clicking the "+" button at the top right.
-
-5. An **NGC Personal API Key** is required to download and run any NVIDIA NIMs. If this is your first time, start by creating an account on [NGC](https://catalog.ngc.nvidia.com/). Then [generate the key](https://org.ngc.nvidia.com/setup/api-key) and note it down somewhere secure for future use.
+6. An **NGC Personal API Key** is required to download and run any NVIDIA NIMs. If this is your first time, start by creating an account on [NGC](https://catalog.ngc.nvidia.com/). Then [generate the key](https://org.ngc.nvidia.com/setup/api-key) and note it down somewhere secure for future use.
 
 ```bash
     export NGC_CLI_API_KEY=<enter-key> 
     docker login nvcr.io --username='$oauthtoken' --password="${NGC_CLI_API_KEY}"
 ```
 
-6. Build inference models via docker container. Wait 20-30mins for the docker to build.
+7. Build inference models via **docker** container. Wait 20-30mins for the docker to build.
 
 ```bash
     # Install Dependencies
@@ -90,9 +89,9 @@ ATOM      2  CA  PRO A   8      17.276  24.324  31.476  1.00 57.03           C
     docker compose up # runs /deploy/docker-compose.yaml
 ```
 
-7. Open a new terminal, leaving the current terminal open with the launched service.
+8. Open a new terminal, leaving the current terminal open with the launched service.
 
-8. In the new terminal, view running containers with the following codes. Wait until the health check returns `{"status":"ready"}` before proceeding.
+9. In the new terminal, view running containers with the following codes. Wait until the health check returns `{"status":"ready"}` before proceeding.
 
 ```bash
     # 1. Check storage space
@@ -127,14 +126,14 @@ ATOM      2  CA  PRO A   8      17.276  24.324  31.476  1.00 57.03           C
     sed -i 's/^[ \t]*//;s/[ \t]*$//' "${REPO_DIR}/scripts/calc_prodigy.sh"
 ```
 
-Export API key again (assume it has already been generated)
+Export API key again
 
 ```bash
     # export NGC_CLI_API_KEY=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
     export NGC_CLI_API_KEY=<enter-key>
 ```
 
-## 5. Run script 
+## 5. Run script
 
 The command `get_target_pdb` checks that `start_pos` and `end_pos` are valid given the input PDB file. Then the script runs 3 prediction models sequentially, followed by aligning the designed peptide PDB to the original target sequence PDB to create a combined PDB using **BioPython's** `Superimposer` module. Lastly, it calculates the **dissociation constant (Kd)** using [PRODIGY](https://github.com/haddocking/prodigy):
 
