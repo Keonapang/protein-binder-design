@@ -78,7 +78,7 @@ if os.path.exists(outdir):
     
 pdb_path = target_pdb
 if not os.path.exists(pdb_path):
-    raise FileNotFoundError(f"Precomputed PDB file {pdb_path} does not exist.")
+    raise FileNotFoundError(f"PDB file not found.\nMissing: {target_pdb}\n")
 
 start_time = time.time()
 ##############################################################

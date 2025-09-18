@@ -29,6 +29,10 @@ cycle="target_${chain}${start_pos}_${end_pos}"
 params="${diffusion}diff_${temp}temp"
 
 target_pdb="${REPO_DIR}/input/${cycle}.pdb" # Original PDB input file
+if [ ! -f "$target_pdb" ]; then
+    echo "Target PDB not found: $target_pdb"
+    exit 1
+fi
 
 if [ "$raw_pdb" == "NA" ]; then
     for iteration in $(seq 1 $i); do
@@ -43,17 +47,13 @@ if [ "$raw_pdb" == "NA" ]; then
             binder_pdb="${REPO_DIR}/${cycle}/4_${cycle}_${params}_binder_i${iteration}_${num}.pdb"
             DIR_OUT="${REPO_DIR}/${cycle}"
 
-            # Check if $target_pdb and $binder_pdb exist
-            if [ ! -f "$target_pdb" ]; then
-                    echo "Target PDB not found: $target_pdb"
-                    continue
-            fi
+            # Check if $binder_pdb exist
             if [ ! -f "$binder_pdb" ]; then
-                    echo "Binder PDB not found: $binder_pdb"
-                    continue 
+                echo "Binder PDB not found: $binder_pdb"
+                continue 
             fi
 
-            # 1. Build binder-target PDB complex
+            # 1. Build binder-target PDB complex, output PDB structure
             # python3.11 "${REPO_DIR}/scripts/conversion.py" "$target_pdb" "$binder_pdb" "$diffusion" "$temp" "$DIR_OUT"
             python3.11 "${REPO_DIR}/scripts/align_complex.py" "$target_pdb" "$binder_pdb" "$diffusion" "$temp" "$DIR_OUT"
 
@@ -114,9 +114,9 @@ if [ "$raw_pdb" == "NA" ]; then
 
 else
 
-    for pdb_file in "$target_pdb" "$raw_pdb"; do
     for iteration in $(seq 1 $i); do
-        for num in $(seq 1 $num_seq); do
+    for num in $(seq 1 $num_seq); do
+        for pdb_file in "$target_pdb" "$raw_pdb"; do
 
             # Get peptide binder sequence from proteinPMNN output
             pmnn_file="${REPO_DIR}/${cycle}/3_${cycle}_${params}_i${iteration}.fasta"
@@ -141,7 +141,7 @@ else
 
             # 2. Run PRODIGY to predict binding affinity (kcal.mol-1)
             multi_model_file="${DIR_OUT}/5_${cycle}_${params}_binder_i${iteration}_${num}.pdb"
-            if [ "$raw_pdb" == "$pdb_file" ]; then
+            if [ "$pdb_file" == "$raw_pdb" ]; then
                 multi_model_file="${DIR_OUT}/5_${cycle}_${params}_binder_i${iteration}_${num}_raw.pdb"
             fi
 
@@ -194,8 +194,35 @@ else
                 echo "# ";
                 cat "$multi_model_file";
             } > "$multi_model_file".tmp && mv "$multi_model_file".tmp "$multi_model_file"
+
+            # Compare results from "$target_pdb" and "$raw_pdb"
+            if [ "$pdb_file" == "$target_pdb" ]; then
+                target_binding_affinity="$binding_affinity"
+                target_diss_constant="$diss_constant"
+            elif [ "$pdb_file" == "$raw_pdb" ]; then
+                raw_binding_affinity="$binding_affinity"
+                raw_diss_constant="$diss_constant"
+            fi
+            done
+
+            # Print comparison results to terminal
+            echo "Iteration: $iteration, Num: $num"
+            echo "--------------------------------------------"
+            echo "Target PDB Results:"
+            echo "    Binding Affinity: ${target_binding_affinity} kcal/mol"
+            echo "    Dissociation Constant: ${target_diss_constant} M"
+            echo "Raw PDB Results:"
+            echo "    Binding Affinity: ${raw_binding_affinity} kcal/mol"
+            echo "    Dissociation Constant: ${raw_diss_constant} M"
+            echo "--------------------------------------------"
+
+            # OPTIONAL: Add conditional analysis (e.g., higher binding affinity)
+            if (( $(echo "$target_binding_affinity < $raw_binding_affinity" | bc -l) )); then
+                echo "Target PDB has a stronger binding affinity."
+            else
+                echo "Raw PDB has a stronger binding affinity."
+            fi
         done
-    done
     done
 fi
 

@@ -122,6 +122,11 @@ The example below generates 8 peptide binders for target protein ApoB-100.
     sed -i 's/^[ \t]*//;s/[ \t]*$//' "${REPO_DIR}/scripts/calc_prodigy.sh"
 ```
 
+```bash
+    # Export API key (assume it has already been generated)
+    export NGC_CLI_API_KEY=<enter-key>
+```
+
 ## 5. Run RFDiffusion, ProteinMPNN and AlphaFold2-Multimer
 
 - **RFDiffusion**: takes in the target protein PDB structure, outputs a designed peptide binder PDB. Note: every output is a glycine, and no sidechains are output. Read more [HERE](https://github.com/RosettaCommons/RFdiffusion?tab=readme-ov-file#understanding-the-output-files).
@@ -137,27 +142,26 @@ The example below generates 8 peptide binders for target protein ApoB-100.
 - **AlphaFold2**: takes in a list of peptide binder(s) from ProteinMPNN, and outputs predicted PDB structures in PDB for each binder
 
 ```bash
-    # Export API key
-    export NGC_CLI_API_KEY=<enter-key>
-
-    # Set variables
+    # Define variables
+    REPO_DIR="/home/ubuntu/protein-binder-design"
+    raw_pdb="${REPO_DIR}/input/pdb2e7a.pdb" # input <- modify!
     chain="A"
     diffusion=50
     temp=0.3 
     i=5
     num_seq=2
-    raw_pdb="${REPO_DIR}/input/pdb2e7a.pdb" # input <- modify!
 
-    # No need to edit
+    # No need to edit these variables
     contigs="A${start_pos}-${end_pos}/0 15-25" # expected length of peptide is 15-25aa; e.g. "A60-90/0 15-25"
     target_pdb="${REPO_DIR}/input/target_${chain}${start_pos}_${end_pos}.pdb" # output
-    REPO_DIR="/home/ubuntu/protein-binder-design"
+    target_sequence=$(bash "${REPO_DIR}/scripts/get_target_seq.sh" "${target_pdb}")
+
 ```
 
+`get_target_pdb` checks to ensure that start_pos and end_pos are valid given the input PDB file.
 Run 3 prediction models sequentially, followed by aligning the designed binder and original target sequence to create a combined PDB file using BioPython's `Superimposer` module. Lastly, calculate the dissociation constant using [PRODIGY](https://github.com/haddocking/prodigy):
 
 ```bash
-
 input_file="${REPO_DIR}/input/target_hotspots.txt"
 
 # Loop through each line of the input file
@@ -165,18 +169,15 @@ while IFS=$' ' read -r chain hotspot_res_prefix start_pos end_pos; do
 
     hotspot_res="${chain}${hotspot_res_prefix}"
     echo "Processing with chain=$chain, hotspot_res=$hotspot_res, start_pos=$start_pos, end_pos=$end_pos"
-done < "$input_file"
+
     # Step 1: Extract target structure PDB and target seq amino acid
     source "${REPO_DIR}/scripts/get_target_pdb.sh" # Load the get_target_pdb function
     get_target_pdb "${raw_pdb}" "${target_pdb}" "${chain}" "${start_pos}" "${end_pos}"
-
-    # Step 2: Extract the target amino acid sequence
-    target_sequence=$(bash "${REPO_DIR}/scripts/get_target_seq.sh" "${target_pdb}")
-
-    # Step 3: Run the protein binder design script
+    
+    # Step 2: Run the protein binder design script
     python3.11 "${REPO_DIR}/scripts/4_protein_binder_design.py" --num_seq "${num_seq}" --diffusion ${diffusion} --temp ${temp} --target_sequence "${target_sequence}" --contigs "${contigs}" --i "${i}" --hotspot_res ${hotspot_res} --target_pdb "${target_pdb}"
 
-    # Step 4: Calculate binding free energy using PRODIGY - adding the $raw_pdb is optional
+    # Step 3: Calculate binding free energy - adding the $raw_pdb argument is optional
     bash "${REPO_DIR}/scripts/calc_prodigy.sh" "${chain}" "${start_pos}" "${end_pos}" "${diffusion}" "${temp}" "${num_seq}" "${i}" "${target_sequence}" "${raw_pdb}"
 
 done < "$input_file"
