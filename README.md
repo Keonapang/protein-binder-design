@@ -9,13 +9,13 @@ Two input files are required: (1) a `.pdb` structure of the target protein, and 
 - at least **1500 GB** of fast NVMe SSD space
 - at least **24 CPU** cores
 - at least **128 GB RAM**
-- 3 or more NVIDIA L40s, A100, or H100 GPUs
 
 ### Hardware requirements
 
-    - **RFdiffusion** runs on 1 x GPU, ≥12 GiB GPU memory, 15GB free SSD drive space
-    - **ProteinMPNN** runs on 1 x GPU, ≥3 GiB GPU memory, 10GB free SSD drive space
-    - **AlphaFold2** runs on 1 x GPU, ≥32 GiB GPU memory, 1300GB free SSD drive space
+3 or more NVIDIA L40s, A100, or H100 GPUs
+- **RFdiffusion** runs on 1 x GPU, ≥12 GiB GPU memory, 15GB free SSD drive space
+- **ProteinMPNN** runs on 1 x GPU, ≥3 GiB GPU memory, 10GB free SSD drive space
+- **AlphaFold2** runs on 1 x GPU, ≥32 GiB GPU memory, 1300GB free SSD drive space
 
 ### Software Pre-requisites
 
