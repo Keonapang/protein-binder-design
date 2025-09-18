@@ -2,9 +2,9 @@
 
 This workflow is designed for _in silico_ protein binder design by generating binder sequences and predicted structures for the binder and target.
 
-Two input files are required: (1) a `.pdb` structure of the target protein, and (2) a `.txt` containing selected target binding hotspots and start/stop positions. 
+Two input files are required: (1) a `.pdb` structure of the target protein, and (2) a `.txt` containing selected target binding hotspots and start/stop positions.
 
-In the workflow, **RFDiffusion** will first generate the protein backbones for binder design. Subsequently, **ProteinMPNN** predicts the amino acid sequence of this peptide binder, and then **AlphaFold2** outputs the peptide PDB structure. Finally, this generated peptide structure is validated (step #4) on [PRODIGY](https://rascar.science.uu.nl/prodigy/). Optionally, you may visualize the final binding complex using Rosetta [FlexPepDoc](https://r2.graylab.jhu.edu/auth/login?next=%2Fapps%2Fsubmit%2Fflexpepdock) or PyMOL.
+**RFDiffusion** will first generate the protein backbones for binder design. Subsequently, **ProteinMPNN** predicts the amino acid sequence of this peptide binder, and then **AlphaFold2** outputs the peptide PDB structure. Finally, the aligned binder-target complex is validated (step #4) on [PRODIGY](https://rascar.science.uu.nl/prodigy/). Optionally, you may visualize the complex using Rosetta [FlexPepDoc](https://r2.graylab.jhu.edu/auth/login?next=%2Fapps%2Fsubmit%2Fflexpepdock) or PyMOL.
 
 ### System Requirements
 
