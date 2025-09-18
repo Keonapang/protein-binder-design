@@ -95,7 +95,6 @@ For each of the 8 target sequences (**Table 1**), compute their 3D structure (.P
     sudo apt install python3.11
 
     # The NIM cache allows you to download models and store previously-downloaded models on your local/server disk,
-    # so that you don’t need to download them again later when you run the NIM again. 
     mkdir -p ~/.cache/nim
     chmod -R 777 ~/.cache/nim    
     export HOST_NIM_CACHE=~/.cache/nim
@@ -116,20 +115,14 @@ For each of the 8 target sequences (**Table 1**), compute their 3D structure (.P
     # 2. Check which dockers are currently active/on stand-by
     docker container ls
     docker ps 
-    # Example:
-        # CONTAINER ID   IMAGE                             COMMAND                   CREATED         STATUS         PORTS                                                             NAMES
-        # 8ac6ad7cbb27   nvcr.io/nim/ipd/rfdiffusion:2.0   "/bin/sh -c 'exec \"$…"   2 minutes ago   Up 2 minutes   0.0.0.0:8082->8000/tcp, [::]:8082->8000/tcp                       protein-binder-design-rfdiffusion-1
-        # 87cf41c4e7c6   nvcr.io/nim/ipd/proteinmpnn:1.0   "/bin/sh -c 'exec \"$…"   2 minutes ago   Up 2 minutes   6006/tcp, 8888/tcp, 0.0.0.0:8083->8000/tcp, [::]:8083->8000/tcp   protein-binder-design-proteinmpnn-1
 
     # 3. Health check  # shoud be {"status":"ready"}
     curl localhost:8081/v1/health/ready # AlphaFold2
     curl localhost:8082/v1/health/ready # RFdiffusion
     curl localhost:8083/v1/health/ready # Protein MPNN
-    # curl localhost:8084/v1/health/ready # AlphaFold2-multimer
 
-    # View log (these models take a long time)
+    # View log 
     docker logs -f protein-binder-design-alphafold-1
-    # docker logs -f protein-binder-design-alphafold-multimer-1
 ```
 
 ## 4. Download command-line tool for validation later on
@@ -162,7 +155,6 @@ For each of the 8 target sequences (**Table 1**), compute their 3D structure (.P
     start_pos=60
     end_pos=90
     hotspot_res=A80
-    contigs="A60-90/0 15-25"
 
     start_pos=80
     end_pos=110
@@ -183,7 +175,7 @@ For each of the 8 target sequences (**Table 1**), compute their 3D structure (.P
     hotspot_res=A140
 
     start_pos=127
-    end_pos=157 # <- last residue ends at position A157
+    end_pos=157 # <- caution: last residue ends at position A157
     hotspot_res=A150
 
     # target site A8
@@ -204,39 +196,50 @@ For each of the 8 target sequences (**Table 1**), compute their 3D structure (.P
     raw_pdb="${REPO_DIR}/input/pdb2e7a.pdb" # input <- modify!
 
     # No need to edit
-    contigs="A${start_pos}-${end_pos}/0 15-25" # expected length of peptide = 15-25aa
+    contigs="A${start_pos}-${end_pos}/0 15-25" # expected length of peptide is 15-25aa; e.g. "A60-90/0 15-25"
     target_pdb="${REPO_DIR}/input/target_${chain}${start_pos}_${end_pos}.pdb" # output
     REPO_DIR="/home/ubuntu/protein-binder-design"
+```
+
+Do some quick clean up and installation:
+
+```bash
+    # clean up scripts before running
+    sed -i 's/\r$//' "${REPO_DIR}/scripts/get_target_pdb.sh" # optional (to remove any hidden spaces from Windows)
+    sed -i 's/\r$//' "${REPO_DIR}/scripts/calc_prodigy.sh" 
+    sed -i 's/\r$//' "${REPO_DIR}/input/target_hotspots.txt" 
+    sed -i 's/^[ \t]*//;s/[ \t]*$//' "${REPO_DIR}/scripts/calc_prodigy.sh" # clean up script
+
+    #install
+    python3.11 -m pip install torch
 ```
 
 Run prediction models sequentially, followed by calculating binding free energy using [PRODIGY](https://github.com/haddocking/prodigy):
 
 ```bash
-    # clean up scripts before running
-    sed -i 's/\r$//' "${REPO_DIR}/scripts/get_target_pdb.sh" # optional (to remove any hidden spaces from Windows)
-    sed -i 's/\r$//' "${REPO_DIR}/scripts/calc_prodigy.sh" # clean up script
-    sed -i 's/^[ \t]*//;s/[ \t]*$//' "${REPO_DIR}/scripts/calc_prodigy.sh" # clean up script
-```
 
-```bash
-    # 1. Extract target structure PDB (input for step #3)
-    source "${REPO_DIR}/scripts/get_target_pdb.sh" # load function
-    get_target_pdb ${raw_pdb} ${target_pdb} ${chain} ${start_pos} ${end_pos}
+input_file="${REPO_DIR}/input/target_hotspots.txt"
 
-    # 2. Extract the target amino acid sequence (input for step #3)
-    target_sequence=$(bash ${REPO_DIR}/scripts/get_target_seq.sh ${target_pdb})
-    echo "Target seq: $target_sequence"
+# Loop through each line of the input file
+while IFS=$' ' read -r chain hotspot_res_prefix start_pos end_pos; do
 
-    # 3. Finally, run 3 models sequentially (optionally, include CUDA_VISIBLE_DEVICES=1)
+    hotspot_res="${chain}${hotspot_res_prefix}"
+    echo "Processing with chain=$chain, hotspot_res=$hotspot_res, start_pos=$start_pos, end_pos=$end_pos"
+
+    # Step 1: Extract target structure PDB and target seq amino acid
+    source "${REPO_DIR}/scripts/get_target_pdb.sh" # Load the get_target_pdb function
+    get_target_pdb "${raw_pdb}" "${target_pdb}" "${chain}" "${start_pos}" "${end_pos}"
+
+    # Step 2: Extract the target amino acid sequence
+    target_sequence=$(bash "${REPO_DIR}/scripts/get_target_seq.sh" "${target_pdb}")
+
+    # Step 3: Run the protein binder design script
     python3.11 "${REPO_DIR}/scripts/4_protein_binder_design.py" --num_seq "${num_seq}" --diffusion ${diffusion} --temp ${temp} --target_sequence "${target_sequence}" --contigs "${contigs}" --i "${i}" --hotspot_res ${hotspot_res} --target_pdb "${target_pdb}"
 
-    # 4. Calculate binding free energy using PRODIGY
-    bash "${REPO_DIR}/scripts/calc_prodigy.sh" ${chain} ${start_pos} ${end_pos} ${diffusion} ${temp} ${num_seq} ${i}
+    # Step 4: Calculate binding free energy using PRODIGY - adding the $raw_pdb is optional
+    bash "${REPO_DIR}/scripts/calc_prodigy.sh" "${chain}" "${start_pos}" "${end_pos}" "${diffusion}" "${temp}" "${num_seq}" "${i}" "${target_sequence}" "${raw_pdb}"
 
-    # 5. Keep only the best peptide structure, based on results from step #4.
-    # After a single run, 5 RFdiffusion candidates + 2 proteinPMNN seqs per candidate are generated - thats 10 predicted binder designs. How many to keep?
-    # right now, script outputs and keeps all 10 results
-    # remove the other structure files?
+done < "$input_file"
 
 ```
 
@@ -249,30 +252,6 @@ Example of **ProteinPMNN** output if `num_seq=2`:
     [
         ['RIAELLAQLLKELLE','SQVLFSGQGCPSTHVLLTHTISRISTTHNQP'], # binder design 1
         ['AIEEALARLLLEQLL', 'SQVLFSGQGCPSTHVLLTHTISRISTTHNQP'] # binder design 2
-    ]
-```
-
-Example of **Alphafold2** output:
-
-- predicted binder structure (5 predictions --> automatically outputs best one)
-    - see `example/AF2_output/4_AF2_binder_1A i1.pdb` (peptide for target sequence 1A, i=1)
-
-Example of **Alphafold2-multimer** output:
-
-- `binder_target_results` (list of tuples) contains:
-    - 5 PDB predictions for the given peptide-target pair. See `example/AF2_output/4_AF2_complex_1A_i1.pdb`
-    - plDDT1 for the 5 predictions. See `example/AF2_output/4_AF2_pLDDT_1.txt`
-
-```bash
-    binder_target_results = [
-        (
-            ("binder_seq_2", "target_seq_2"),  # Binder-target pair with lowest pLDDT
-            [pdb1, pdb2, pdb3, pdb4, pdb5],    # List of 5 PDB predictions
-            75.0),                             # Lowest pLDDT
-        (
-            ("binder_seq_1", "target_seq_1"),  # Binder-target pair with higher pLDDT
-            [pdb1, pdb2, pdb3, pdb4, pdb5],    
-            85.0)                              # Higher pLDDT
     ]
 ```
 
