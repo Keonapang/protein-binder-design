@@ -1,7 +1,16 @@
 from Bio.PDB import PDBParser, PDBIO, Superimposer, Select
 import os
 import sys
-# python modify_pdb_chain.py <target_file> <binder_file> <diffusion> <temp> <DIR_OUT>
+######################################################################
+# Use BioPython's Superimposer module to align the peptide binder 
+# onto the target protein and create a combined PDB file
+
+# Saves the combined structure as combined.pdb, with:
+#       - Chain A for the target protein.
+#       - Chain B for the peptide binder.
+
+# Usage: python modify_pdb_chain.py <target_file> <binder_file> <diffusion> <temp> <DIR_OUT>
+######################################################################
 
 # Parse command-line arguments
 if len(sys.argv) != 6:

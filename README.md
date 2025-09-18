@@ -173,10 +173,10 @@ Run clean up and installation:
     sed -i 's/\r$//' "${REPO_DIR}/scripts/get_target_pdb.sh" # optional (to remove any hidden spaces from Windows)
     sed -i 's/\r$//' "${REPO_DIR}/scripts/calc_prodigy.sh" 
     sed -i 's/\r$//' "${REPO_DIR}/input/target_hotspots.txt" 
-    sed -i 's/^[ \t]*//;s/[ \t]*$//' "${REPO_DIR}/scripts/calc_prodigy.sh" # clean up script
+    sed -i 's/^[ \t]*//;s/[ \t]*$//' "${REPO_DIR}/scripts/calc_prodigy.sh"
 ```
 
-Run prediction models sequentially, followed by calculating binding free energy using [PRODIGY](https://github.com/haddocking/prodigy):
+Run 3 prediction models sequentially, followed by aligning the designed binder and original target sequence to create a combined PDB file using BioPython's `Superimposer` module. Lastly, calculate the dissociation constant using [PRODIGY](https://github.com/haddocking/prodigy):
 
 ```bash
 
