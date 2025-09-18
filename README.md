@@ -29,7 +29,7 @@ The example below generates 8 peptide binders for target protein ApoB-100.
 
 This script takes in two arguments:
 
-**1. Raw `.PDB` file** of the target protein, most likely downloaded through a protein database. The script will ignore all irrelevant rows in the PDB file except the 'ATOM' rows. *Note: the file doesn't have to begin with amino acid residue 1*. See [/input/pdb2e7a.pdb](/input/pdb2e7a.pdb).
+**1. Raw `.PDB` file** of the target protein, most likely downloaded through a protein database. The script will ignore all irrelevant rows in the PDB file except the 'ATOM' rows. *Note: the file doesn't have to begin with amino acid residue 1*. See [/input/pdb2e7a.pdb](https://github.com/Keonapang/protein-binder-design/blob/main/input/pdb2e7a.pdb).
 
 ```bash
 HEADER    CYTOKINE                                09-JAN-07   2E7A              
@@ -41,7 +41,7 @@ ATOM      1  N   PRO A   8      18.727  24.301  31.792  1.00 56.82           N
 ATOM      2  CA  PRO A   8      17.276  24.324  31.476  1.00 57.03           C  
 ```
 
-**2. Space-delimited `.txt` file (no header)** containing four columns that store: chain identifier (e.g. A), hotspot residue (e.g. 80), start and end residue position (e.g. 60 and 90). See [/input/target_hotspots.txt](/input/target_hotspots.txt)
+**2. Space-delimited `.txt` file (no header)** containing four columns that store: chain identifier (e.g. A), hotspot residue (e.g. 80), start and end residue position (e.g. 60 and 90). See [/input/target_hotspots.txt](https://github.com/Keonapang/protein-binder-design/blob/main/input/target_hotspots.txt)
 
 ```bash
     A 80 60 90
