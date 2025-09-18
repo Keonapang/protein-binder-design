@@ -50,8 +50,6 @@ ATOM      2  CA  PRO A   8      17.276  24.324  31.476  1.00 57.03           C
     A 113 103 133
 ```
 
-![ApoB](docs/ApoB_3D_seq.png) **Example**. 3D rendering of selected target binding sites on ApoB 
-
 ## 2. Launch a NVIDIA cloud virtual machine (VM)
 
 1. Go to [brev.nvidia](https://brev.nvidia.com/) and click on this [Launchable](https://brev.nvidia.com/launchable/deploy/now?launchableID=env-32aLABBLqme9fNaaSdVL94Bollg). If you would like to create your own, click on Launchables in the menu bar, then `Create Launchables` and follow these settings:
@@ -116,7 +114,7 @@ ATOM      2  CA  PRO A   8      17.276  24.324  31.476  1.00 57.03           C
 ## 3. Download command-line tools
 
 ```bash
-    pip install prodigy-prot pdb-tools torch Bio
+    pip install prodigy-prot torch Bio
     python3.11 -m pip install biopython pdb-tools
 ```
 
@@ -139,7 +137,7 @@ Export API key again (assume it has already been generated)
 
 ## 5. Run script 
 
-This will run 3 prediction models sequentially, followed by aligning the designed peptide PDB to the original target sequence PDB to create a combined PDB using **BioPython's** `Superimposer` module. Lastly, it calculates the **dissociation constant (Kd)** using [PRODIGY](https://github.com/haddocking/prodigy):
+The command `get_target_pdb` checks that `start_pos` and `end_pos` are valid given the input PDB file. Then the script runs 3 prediction models sequentially, followed by aligning the designed peptide PDB to the original target sequence PDB to create a combined PDB using **BioPython's** `Superimposer` module. Lastly, it calculates the **dissociation constant (Kd)** using [PRODIGY](https://github.com/haddocking/prodigy):
 
 - **RFDiffusion**: takes in target protein PDB, outputs a peptide binder PDB. Note: every output is a glycine, see [Github](https://github.com/RosettaCommons/RFdiffusion?tab=readme-ov-file#understanding-the-output-files) for more info.
     - `contigs`: range of amino acid positions, and expected length of peptide (i.e."A1-30/0 15-25")
@@ -169,19 +167,13 @@ This will run 3 prediction models sequentially, followed by aligning the designe
     temp=0.3 
     i=5
     num_seq=2
-    peptide_length="15-25" # You may set a range (i.e."15-25") or a value ("25")
-
+    peptide_length="15-25" # set a range (i.e."15-25") or a value ("25")
 ```
-
-`get_target_pdb` checks that `start_pos` and `end_pos` are valid given the input PDB file.
 
 ```bash
 # Loop through each line of $input_file
 while IFS=$' ' read -r chain hotspot_res_prefix start_pos end_pos; do # space-delimited
 
-    if [ ! -f "$raw_pdb" ]; then
-        echo "Error: Raw PDB file not found: $raw_pdb"
-    fi
     # No need to edit these variables
     hotspot_res="${chain}${hotspot_res_prefix}"
     contigs="A${start_pos}-${end_pos}/0 ${peptide_length}$" # e.g. "A60-90/0 15-25"
