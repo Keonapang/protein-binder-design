@@ -24,22 +24,33 @@ The example below generates 8 peptide binders for target protein ApoB-100.
 
 - Python 3.11+
 
-## 1. Manually select binding sites on target protein
 
-![Fig 1. 3D model of ApoB-100 on SWISS-MODEL](docs/ApoB_3D.png) **Fig 1**. 3D model of ApoB-100 (target) on SWISS-MODEL
+### Input file pre-requisites
 
-1. Get on the [SWISS-MODEL](https://swissmodel.expasy.org/) repository and search for your target protein to view the interactive 3D model. In this example, we used [ApoB-100](https://swissmodel.expasy.org/repository/uniprot/P04114?template=9eag.1.A&range=38-4563) (**Fig 1**).
-2. Define your 'binding window' size, which affects how long your generated peptide binder will be. In this example, we designed 8 binding windows of **40aa** in length.
-3. Manually select the sequences for these 8 binding sites, using the 3D interactive model to help orient you. In this example, we chose 4 peptides in the first target region of ApoB (residues A91–357; **cycle 1**) and 4 peptides in a second target region (residues A390–642; **cycle 2**). The full *ApoB-100* protein backbone consists of 4,563 amino acids (**Fig 2**).
+The workflow takes in two arguments:
 
-![Fig 2. Manually identify the binding sites](docs/ApoB_3D_seq.png) **Fig 2**. Manually identify the 8 target binding sites
+**1. Raw `.PDB` file** of the target protein, most likely downloaded through a protein database. The script ignores all irrelevant in the PDB file except the rows with 'ATOM'. Note that the PDB file doesn't have to begin with amino acid residue 1.
 
-**Table 1**. 2 target sequences of length 40 amino acids.
+```bash
+HEADER    CYTOKINE                                09-JAN-07   2E7A              
+TITLE     TNF RECEPTOR SUBTYPE ONE-SELECTIVE TNF MUTANT WITH ANTAGONISTIC       
+JRNL       DOI    10.1074/JBC.M707933200                                       
+REMARK   2 RESOLUTION.    1.80 ANGSTROMS.                                       
+REMARK   3     
+ATOM      1  N   PRO A   8      18.727  24.301  31.792  1.00 56.82           N  
+ATOM      2  CA  PRO A   8      17.276  24.324  31.476  1.00 57.03           C  
+```
 
-| Cycle         | ApoB-100 target sequence          | Amino Acid Position |
-|---------------|---------------------------------------------|---------------------|
-| 1A      | LKTSQCTLKEVYGFNPEGKALLKKTKNSEEFAAAMSRYEL    | A91-130            |
-| 1B      | EEAKQVLFLDTVYGNCSTHFTVKTRKGNVATEISTERDLG    | A170-209           |
+**2. Space-delimited `.txt` file (no header)** containing four columns that store: chain identifier (e.g. A), hotspot residue (e.g. 80), start and end residue position (e.g. 60 and 90)
+
+```bash
+    A 80 60 90
+    A 90 80 110
+    A 103 83 113
+    A 113 103 133
+```
+
+![ApoB](docs/ApoB_3D_seq.png) **Fig 2**. 3D rendering of selected target binding sites on ApoB 
 
 ## 2. Launch a NVIDIA cloud virtual machine (VM)
 
@@ -125,30 +136,6 @@ Export API key (assume it has already been generated)
 
 ```bash
     export NGC_CLI_API_KEY=<enter-key>
-```
-
-### Ensure you have prepared these two input files
-
-Script takes in two arguments:
-
-**1. Space-delimited `.txt` file (no header)** containing four columns that store: chain identifier (e.g. A), hotspot residue (e.g. 80), start and end residue position (e.g. 60 and 90)
-```bash
-    A 80 60 90
-    A 90 80 110
-    A 103 83 113
-    A 113 103 133
-```
-
-**2. Raw `.PDB` file** of the target protein, most likely downloaded through a protein database. The script ignores all irrelevant in the PDB file except the rows with 'ATOM'. Note that the PDB file doesn't have to begin with amino acid residue 1.
-
-```bash
-HEADER    CYTOKINE                                09-JAN-07   2E7A              
-TITLE     TNF RECEPTOR SUBTYPE ONE-SELECTIVE TNF MUTANT WITH ANTAGONISTIC       
-JRNL       DOI    10.1074/JBC.M707933200                                       
-REMARK   2 RESOLUTION.    1.80 ANGSTROMS.                                       
-REMARK   3     
-ATOM      1  N   PRO A   8      18.727  24.301  31.792  1.00 56.82           N  
-ATOM      2  CA  PRO A   8      17.276  24.324  31.476  1.00 57.03           C  
 ```
 
 ## 5. Run RFDiffusion, ProteinMPNN and AlphaFold2-Multimer
