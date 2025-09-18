@@ -116,10 +116,8 @@ ATOM      2  CA  PRO A   8      17.276  24.324  31.476  1.00 57.03           C
 ## 3. Download command-line tools
 
 ```bash
-    pip install prodigy-prot # PRODIGY - binding affinity prediction
-    pip install biopython
-    pip install pdb-tools
-    python3.11 -m pip install torch
+    pip install prodigy-prot pdb-tools torch Bio
+    python3.11 -m pip install biopython pdb-tools
 ```
 
 ## 4. Run clean up and installation
@@ -132,9 +130,10 @@ ATOM      2  CA  PRO A   8      17.276  24.324  31.476  1.00 57.03           C
     sed -i 's/^[ \t]*//;s/[ \t]*$//' "${REPO_DIR}/scripts/calc_prodigy.sh"
 ```
 
-Export API key (assume it has already been generated)
+Export API key again (assume it has already been generated)
 
 ```bash
+    # export NGC_CLI_API_KEY=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
     export NGC_CLI_API_KEY=<enter-key>
 ```
 
@@ -156,7 +155,7 @@ This will run 3 prediction models sequentially, followed by aligning the designe
 
 ```bash
     # Define repo directory  
-    REPO_DIR="/home/ubuntu/protein-binder-design"
+    REPO_DIR="/home/shadeform/protein-binder-design"
 
     # Two input files
     raw_pdb="${REPO_DIR}/input/pdb2e7a.pdb" # input <- modify!
@@ -182,25 +181,23 @@ while IFS=$' ' read -r chain hotspot_res_prefix start_pos end_pos; do # space-de
 
     if [ ! -f "$raw_pdb" ]; then
         echo "Error: Raw PDB file not found: $raw_pdb"
-        exit 1
     fi
     # No need to edit these variables
     hotspot_res="${chain}${hotspot_res_prefix}"
     contigs="A${start_pos}-${end_pos}/0 ${peptide_length}$" # e.g. "A60-90/0 15-25"
-    target_pdb="${REPO_DIR}/input/target_${chain}${start_pos}_${end_pos}.pdb" # output
-    target_sequence=$(bash "${REPO_DIR}/scripts/get_target_seq.sh" "${target_pdb}")
-
-    echo "Processing with chain=$chain, hotspot_res=$hotspot_res, start_pos=$start_pos, end_pos=$end_pos"
+    echo "Processing chain=$chain, hotspot_res=$hotspot_res, start_pos=$start_pos, end_pos=$end_pos"
 
     # Step 1: Build target structure PDB and extract target seq amino acid
     source "${REPO_DIR}/scripts/get_target_pdb.sh" # Load the get_target_pdb function
     get_target_pdb "${raw_pdb}" "${target_pdb}" "${chain}" "${start_pos}" "${end_pos}"
+    target_pdb="${REPO_DIR}/input/target_${chain}${start_pos}_${end_pos}.pdb" # output
+    target_sequence=$(bash "${REPO_DIR}/scripts/get_target_seq.sh" "${target_pdb}")
     
     # Step 2: Run the protein binder design script
     python3.11 "${REPO_DIR}/scripts/4_protein_binder_design.py" --num_seq "${num_seq}" --diffusion ${diffusion} --temp ${temp} --target_sequence "${target_sequence}" --contigs "${contigs}" --i "${i}" --hotspot_res ${hotspot_res} --target_pdb "${target_pdb}"
 
     # Step 3: Calculate binding free energy - adding the $raw_pdb argument is optional
-    bash "${REPO_DIR}/scripts/calc_prodigy.sh" "${chain}" "${start_pos}" "${end_pos}" "${diffusion}" "${temp}" "${num_seq}" "${i}" "${target_sequence}" "${raw_pdb}"
+    bash "${REPO_DIR}/scripts/calc_prodigy.sh" "${chain}" "${start_pos}" "${end_pos}" "${diffusion}" "${temp}" "${num_seq}" "${i}" "${target_sequence}" "${REPO_DIR}" "${raw_pdb}"
 
 done < "$input_file"
 
@@ -221,7 +218,36 @@ Example of **ProteinPMNN** .fasta output if `num_seq=2`:
 Example of **final aligned binder-target PDB**:
 
 ```bash
-
+# Final PDB complex of target protein and designed peptide binder
+# Date: 2025-09-18
+# Target sequence: ISRISTTHNQPVNLLSAIRSPCQRETPEGAE
+# Parameters: 
+#     target_pdb=/home/shadeform/protein-binder-design/input/pdb2e7a.pdb
+#     binder_pdb=/home/shadeform/protein-binder-design/target_A60_90/4_target_A60_90_50diff_0.3temp_binder_i5_2.pdb
+#     diffusion=50
+#     temp=0.3
+#     iteration=5 RFDiffusion candidates
+#     num=2 seqs from ProteinMPNN per candidate
+# 
+# Predicted peptide binder from ProteinPMNN:
+# >T=0.3, sample=2, score=1.6251, global_score=2.0374, seq_recovery=0.0000
+# LTAEELAKLLAAAAAALALLALL
+# PRODIGY results: 
+#     Predicted binding affinity (kcal.mol-1): -24.3
+#     Predicted dissociation constant (M) at 25.0˚C: 1.6e-18
+#     No. of intermolecular contacts: 283
+#     No. of charged-charged contacts: 8.0
+#     No. of charged-polar contacts: 10.0
+#     No. of charged-apolar contacts: 40.0
+#     No. of polar-polar contacts: 21.0
+#     No. of apolar-polar contacts: 81.0
+#     No. of apolar-apolar contacts: 123.0
+#     Percentage of apolar NIS residues: residues:
+#     Percentage of charged NIS residues: residues:
+# ATOM      1  N   PRO A   8      18.727  24.301  31.792  1.00 56.82           N  
+# ATOM      2  CA  PRO A   8      17.276  24.324  31.476  1.00 57.03           C  
+# ATOM      3  C   PRO A   8      16.970  25.033  30.160  1.00 59.51           C  
+# ATOM      4  O   PRO A   8      17.158  26.246  30.040  1.00 60.32           O  
 
 ```
 

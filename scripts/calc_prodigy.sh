@@ -16,16 +16,17 @@ temp=$5
 num_seq=$6
 i=$7
 target_sequence=$8
-raw_pdb=${9:-NA} # # Check if the 9th argument is provided; if not, default to "NA"
+REPO_DIR=$9
+raw_pdb=${10:-NA} # # Check if the 10th argument is provided; if not, default to "NA"
 
-# Check if at least 8 arguments are provided
-if [[ $# -lt 8 ]]; then
+# Check if at least 9 arguments are provided
+if [[ $# -lt 9 ]]; then
     echo "At least 8 arguments are required."
     echo "Usage: $0 <chain> <start_pos> <end_pos> <diffusion> <temp> <num_seq> <i> <target_sequence> [raw_pdb]"
-    exit 1
+    continue
 fi
 
-REPO_DIR="/home/ubuntu/protein-binder-design"
+# REPO_DIR="/home/ubuntu/protein-binder-design"
 
 cycle="target_${chain}${start_pos}_${end_pos}"
 params="${diffusion}diff_${temp}temp"
@@ -33,7 +34,7 @@ params="${diffusion}diff_${temp}temp"
 target_pdb="${REPO_DIR}/input/${cycle}.pdb" # Original PDB input file
 if [ ! -f "$target_pdb" ]; then
     echo "Target PDB not found: $target_pdb"
-    exit 1
+    continue
 fi
 
 if [ "$raw_pdb" == "NA" ]; then
@@ -55,18 +56,14 @@ if [ "$raw_pdb" == "NA" ]; then
                 continue 
             fi
 
-            # 1. Build binder-target PDB complex, output PDB structure
+            # 1. Build binder-target PDB complex, output PDB structure 
             # python3.11 "${REPO_DIR}/scripts/conversion.py" "$target_pdb" "$binder_pdb" "$diffusion" "$temp" "$DIR_OUT"
             python3.11 "${REPO_DIR}/scripts/align_complex.py" "$target_pdb" "$binder_pdb" "$diffusion" "$temp" "$DIR_OUT"
 
             # 2. Run PRODIGY to predict binding affinity (kcal.mol-1)
             multi_model_file="${DIR_OUT}/5_${cycle}_${params}_binder_i${iteration}_${num}.pdb"
 
-            output_file="${multi_model_file%.pdb}.txt"
             prodigy_output=$(prodigy "$multi_model_file" -np 4)
-            binding_affinity=$(echo "$prodigy_output" | grep "Predicted binding affinity" | awk '{print $6}')
-            echo "$binding_affinity" > "$output_file"
-            echo "Predicted binding affinity ($binding_affinity kcal.mol-1)"
 
             # Extract all the necessary values from the output
             binding_affinity=$(echo "$prodigy_output" | grep "Predicted binding affinity" | awk '{print $6}')
@@ -80,6 +77,8 @@ if [ "$raw_pdb" == "NA" ]; then
             num_apolar_apolar=$(echo "$prodigy_output" | grep "No. of apolar-apolar contacts" | awk '{print $6}')
             percent_apolar_nis=$(echo "$prodigy_output" | grep "Percentage of apolar NIS residues" | awk '{print $6}')
             percent_charged_nis=$(echo "$prodigy_output" | grep "Percentage of charged NIS residues" | awk '{print $6}')
+            echo "Predicted binding affinity ($binding_affinity kcal.mol-1)"
+            echo "Predicted dissociation constant ($diss_constant Kb at 25.0˚C)"
 
             # 3. Update PDB with comments
             {
@@ -111,6 +110,8 @@ if [ "$raw_pdb" == "NA" ]; then
                 echo "# ";
                 cat "$multi_model_file";
             } > "$multi_model_file".tmp && mv "$multi_model_file".tmp "$multi_model_file"
+            rm "$multi_model_file".tmp
+
         done
     done
 
@@ -143,15 +144,14 @@ else
 
             # 2. Run PRODIGY to predict binding affinity (kcal.mol-1)
             multi_model_file="${DIR_OUT}/5_${cycle}_${params}_binder_i${iteration}_${num}.pdb"
+            multi_model_file2="${DIR_OUT}/5_${cycle}_${params}_binder_i${iteration}_${num}_raw.pdb"
             if [ "$pdb_file" == "$raw_pdb" ]; then
-                multi_model_file="${DIR_OUT}/5_${cycle}_${params}_binder_i${iteration}_${num}_raw.pdb"
+                outfile="$multi_model_file2"
+            else
+                outfile="$multi_model_file"
             fi
-
-            output_file="${multi_model_file%.pdb}.txt"
-            prodigy_output=$(prodigy "$multi_model_file" -np 4)
+            prodigy_output=$(prodigy "$outfile" -np 4)
             binding_affinity=$(echo "$prodigy_output" | grep "Predicted binding affinity" | awk '{print $6}')
-            echo "$binding_affinity" > "$output_file"
-            echo "Predicted binding affinity ($binding_affinity kcal.mol-1)"
 
             # Extract all the necessary values from the output
             binding_affinity=$(echo "$prodigy_output" | grep "Predicted binding affinity" | awk '{print $6}')
@@ -165,6 +165,8 @@ else
             num_apolar_apolar=$(echo "$prodigy_output" | grep "No. of apolar-apolar contacts" | awk '{print $6}')
             percent_apolar_nis=$(echo "$prodigy_output" | grep "Percentage of apolar NIS residues" | awk '{print $6}')
             percent_charged_nis=$(echo "$prodigy_output" | grep "Percentage of charged NIS residues" | awk '{print $6}')
+            echo "Predicted binding affinity ($binding_affinity kcal.mol-1)"
+            echo "Predicted dissociation constant ($diss_constant Kb at 25.0˚C)"
 
             # 3. Update PDB with comments
             {
@@ -195,7 +197,9 @@ else
                 echo "#     Percentage of charged NIS residues: ${percent_charged_nis}";
                 echo "# ";
                 cat "$multi_model_file";
-            } > "$multi_model_file".tmp && mv "$multi_model_file".tmp "$multi_model_file"
+            } > "$multi_model_file".tmp && mv "$multi_model_file".tmp "$outfile"
+
+            rm "$multi_model_file".tmp
 
             # Compare results from "$target_pdb" and "$raw_pdb"
             if [ "$pdb_file" == "$target_pdb" ]; then
@@ -205,7 +209,6 @@ else
                 raw_binding_affinity="$binding_affinity"
                 raw_diss_constant="$diss_constant"
             fi
-            done
 
             # Print comparison results to terminal
             echo "Iteration: $iteration, Num: $num"
@@ -225,6 +228,7 @@ else
                 echo "Raw PDB has a stronger binding affinity."
             fi
         done
+    done
     done
 fi
 

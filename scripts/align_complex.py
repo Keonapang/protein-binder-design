@@ -5,7 +5,7 @@ import sys
 # Use BioPython's Superimposer module to align the peptide binder 
 # onto the target protein and create a combined PDB file
 
-# Saves the combined structure as combined.pdb, with:
+# Outputs the combined structure as combined.pdb, with:
 #       - Chain A for the target protein.
 #       - Chain B for the peptide binder.
 
@@ -31,6 +31,7 @@ file_name = os.path.basename(binder_pdb)  # Extract the file name from the full 
 file_part = "_".join(file_name.split("_")[1:])  # Remove everything before and including the first "_"
 outname = f"5_{file_part}"
 
+# define output file name
 if not os.path.exists(DIR_OUT):
     os.makedirs(DIR_OUT)
 output_pdb = os.path.join(DIR_OUT, outname)
@@ -51,21 +52,28 @@ binder_structure = parser.get_structure("binder", binder_pdb)
 target_model = target_structure[0]
 binder_model = binder_structure[0]
 
-# Align binder to target (using CA atoms of the first chain)
-target_atoms = []
-binder_atoms = []
+# Select chains (assume chain A for both structures)
+target_chain = target_model["A"]  # Replace "A" with the correct chain ID for the target
+binder_chain = binder_model["A"]  # Replace "A" with the correct chain ID for the binder
 
-for target_chain, binder_chain in zip(target_model, binder_model):
-    # Only use residue alpha carbons (CA) to align
-    target_atoms += [atom for atom in target_chain.get_atoms() if atom.get_id() == "CA"]
-    binder_atoms += [atom for atom in binder_chain.get_atoms() if atom.get_id() == "CA"]
+# Select CA atoms for alignment
+target_atoms = [atom for atom in target_chain.get_atoms() if atom.get_id() == "CA"]
+binder_atoms = [atom for atom in binder_chain.get_atoms() if atom.get_id() == "CA"]
+
+# Debug: Print number of CA atoms selected
+print(f"Number of CA atoms in target: {len(target_atoms)}")
+print(f"Number of CA atoms in binder: {len(binder_atoms)}")
+
+# Ensure the atom lists are of the same size by using only the overlapping residues
+if len(target_atoms) != len(binder_atoms):
+    min_len = min(len(target_atoms), len(binder_atoms))
+    target_atoms = target_atoms[:min_len]
+    binder_atoms = binder_atoms[:min_len]
 
 # Perform the alignment
 super_imposer = Superimposer()
-super_imposer.set_atoms(target_atoms, binder_atoms)
-
-# Apply the transformation to the binder structure
-super_imposer.apply(binder_model.get_atoms())
+super_imposer.set_atoms(target_atoms, binder_atoms)  # Align binder to target
+super_imposer.apply(binder_model.get_atoms())  # Apply transformation to the binder
 
 # Save the combined structure
 class ChainSelect(Select):
@@ -77,13 +85,51 @@ class ChainSelect(Select):
 
 io = PDBIO()
 io.set_structure(target_structure)
-io.save(output_pdb, select=ChainSelect("A"))  # Save target chain as chain A
+io.save("target_only.pdb", select=ChainSelect("A"))  # Save target chain as chain A
 
-binder_chain = list(binder_model.get_chains())[0]
-binder_chain.id = "B"  # Change binder chain to B
-target_structure[0].add(binder_chain)  # Add binder chain to target structure
+# Rename binder chain to B and add it to the target structure
+binder_chain.id = "B"
+target_structure[0].add(binder_chain)
 
+# Save the combined structure
 io.set_structure(target_structure)
 io.save(output_pdb)
+print(f"\nCombined PDB file saved as: {output_pdb}")
 
-print(f"\nCombined PDB file: {output_pdb}\n")
+# ############################################################################
+# # Align binder to target (using CA atoms of the first chain)
+# target_atoms = []
+# binder_atoms = []
+
+# for target_chain, binder_chain in zip(target_model, binder_model):
+#     # Only use residue alpha carbons (CA) to align
+#     target_atoms += [atom for atom in target_chain.get_atoms() if atom.get_id() == "CA"]
+#     binder_atoms += [atom for atom in binder_chain.get_atoms() if atom.get_id() == "CA"]
+
+# # Perform the alignment
+# super_imposer = Superimposer()
+# super_imposer.set_atoms(target_atoms, binder_atoms)
+
+# # Apply the transformation to the binder structure
+# super_imposer.apply(binder_model.get_atoms())
+
+# # Save the combined structure
+# class ChainSelect(Select):
+#     def __init__(self, chain_id):
+#         self.chain_id = chain_id
+
+#     def accept_chain(self, chain):
+#         return chain.id == self.chain_id
+
+# io = PDBIO()
+# io.set_structure(target_structure)
+# io.save(output_pdb, select=ChainSelect("A"))  # Save target chain as chain A
+
+# binder_chain = list(binder_model.get_chains())[0]
+# binder_chain.id = "B"  # Change binder chain to B
+# target_structure[0].add(binder_chain)  # Add binder chain to target structure
+
+# io.set_structure(target_structure)
+# io.save(output_pdb)
+
+# print(f"\nCombined PDB file: {output_pdb}\n")
