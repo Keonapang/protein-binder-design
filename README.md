@@ -29,7 +29,7 @@ The example below generates 8 peptide binders for target protein ApoB-100.
 
 This script takes in two arguments:
 
-**1. Raw `.PDB` file** of the target protein, most likely downloaded through a protein database. The script will ignore all irrelevant rows in the PDB file except the 'ATOM' rows. *Note: the file doesn't have to begin with amino acid residue 1*.
+**1. Raw `.PDB` file** of the target protein, most likely downloaded through a protein database. The script will ignore all irrelevant rows in the PDB file except the 'ATOM' rows. *Note: the file doesn't have to begin with amino acid residue 1*. See [/input/pdb2e7a.pdb](/input/pdb2e7a.pdb).
 
 ```bash
 HEADER    CYTOKINE                                09-JAN-07   2E7A              
@@ -41,7 +41,7 @@ ATOM      1  N   PRO A   8      18.727  24.301  31.792  1.00 56.82           N
 ATOM      2  CA  PRO A   8      17.276  24.324  31.476  1.00 57.03           C  
 ```
 
-**2. Space-delimited `.txt` file (no header)** containing four columns that store: chain identifier (e.g. A), hotspot residue (e.g. 80), start and end residue position (e.g. 60 and 90)
+**2. Space-delimited `.txt` file (no header)** containing four columns that store: chain identifier (e.g. A), hotspot residue (e.g. 80), start and end residue position (e.g. 60 and 90). See [/input/target_hotspots.txt](/input/target_hotspots.txt)
 
 ```bash
     A 80 60 90
@@ -58,7 +58,6 @@ ATOM      2  CA  PRO A   8      17.276  24.324  31.476  1.00 57.03           C
     - Click "Next" until you finally reach **select compute**. We recommended **A100 (80GiB) 2 GPUs x 24 CPUs | 240GiB  (80GiB GPU memory) ($3.96/hr)**
 
 ![NVIDIA VM settings](docs/NVIDIA_VM.png)
-
 
 2. Click **"Deploy Launchable"** and **"Go to Instance Page"**. Wait ~10 minutes for VM to start
 
@@ -156,8 +155,8 @@ The command `get_target_pdb` checks that `start_pos` and `end_pos` are valid giv
     REPO_DIR="/home/shadeform/protein-binder-design"
 
     # Two input files
-    raw_pdb="${REPO_DIR}/input/pdb2e7a.pdb" # input <- modify!
-    input_file="${REPO_DIR}/input/target_hotspots.txt"
+    raw_pdb="${REPO_DIR}/input/pdb2e7a.pdb"             # target protein
+    input_file="${REPO_DIR}/input/target_hotspots.txt"  # contains: chain, hotspot residue, start/end pos 
 ```
 
 ```bash
