@@ -25,11 +25,11 @@ The example below generates 8 peptide binders for target protein ApoB-100.
 - Python 3.11+
 
 
-### Input file pre-requisites
+## 1. Ensure you have prepared two input files
 
-The workflow takes in two arguments:
+This script takes in two arguments:
 
-**1. Raw `.PDB` file** of the target protein, most likely downloaded through a protein database. The script ignores all irrelevant in the PDB file except the rows with 'ATOM'. Note that the PDB file doesn't have to begin with amino acid residue 1.
+**1. Raw `.PDB` file** of the target protein, most likely downloaded through a protein database. The script will ignore all irrelevant rows in the PDB file except the 'ATOM' rows. *Note: the file doesn't have to begin with amino acid residue 1*.
 
 ```bash
 HEADER    CYTOKINE                                09-JAN-07   2E7A              
@@ -138,28 +138,32 @@ Export API key (assume it has already been generated)
     export NGC_CLI_API_KEY=<enter-key>
 ```
 
-## 5. Run RFDiffusion, ProteinMPNN and AlphaFold2-Multimer
+## 5. Run script 
 
-- **RFDiffusion**: takes in the target protein PDB structure, outputs a designed peptide binder PDB. Note: every output is a glycine, and no sidechains are output. See [Github](https://github.com/RosettaCommons/RFdiffusion?tab=readme-ov-file#understanding-the-output-files).
+This will run 3 prediction models sequentially, followed by aligning the designed peptide PDB to the original target sequence PDB to create a combined PDB using **BioPython's** `Superimposer` module. Lastly, it calculates the **dissociation constant (Kd)** using [PRODIGY](https://github.com/haddocking/prodigy):
+
+- **RFDiffusion**: takes in target protein PDB, outputs a peptide binder PDB. Note: every output is a glycine, see [Github](https://github.com/RosettaCommons/RFdiffusion?tab=readme-ov-file#understanding-the-output-files) for more info.
     - `contigs`: range of amino acid positions, and expected length of peptide (i.e."A1-30/0 15-25")
     - `diffusion`: number of diffusion_steps (default: 50)
     - `i`: number of RFDiffusion iterations for each target sequence
 
-- **ProteinPMNN**: takes in the prediction from RFDiffusion, and outputs the amino acid sequence (.fasta)
+- **ProteinPMNN**: takes in the output from RFDiffusion, and outputs a .fasta file storing a list of their predicted amino acid sequences
     - `num_seq`: how many seqs to generate for a given structure from RFDiffusion
     - `hotspot_res`: A20 # array (i.e. "A20")
     - `temp`: sample temperature controls the diversity of designed peptides. Higher values will lead to more diversity (range:0-1)
 
-- **AlphaFold2**: takes in a list of peptide binder(s) from ProteinMPNN, and outputs predicted PDB structures in PDB for each binder
+- **AlphaFold2**: takes in a list of peptide amino acid sequence(s) from ProteinMPNN, and predicts each of their PDB structures
 
 ```bash
     # Define repo directory  
     REPO_DIR="/home/ubuntu/protein-binder-design"
 
-    # Define two input files
+    # Two input files
     raw_pdb="${REPO_DIR}/input/pdb2e7a.pdb" # input <- modify!
     input_file="${REPO_DIR}/input/target_hotspots.txt"
+```
 
+```bash
     # Define script input variables
     chain="A"
     diffusion=50
@@ -171,8 +175,6 @@ Export API key (assume it has already been generated)
 ```
 
 `get_target_pdb` checks that `start_pos` and `end_pos` are valid given the input PDB file.
-
-Run 3 prediction models sequentially, followed by aligning the designed binder and original target sequence to create a combined PDB file using **BioPython's** `Superimposer` module. Lastly, calculate **dissociation constant (Kd)** using [PRODIGY](https://github.com/haddocking/prodigy):
 
 ```bash
 # Loop through each line of $input_file
