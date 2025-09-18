@@ -54,7 +54,8 @@ if [ "$raw_pdb" == "NA" ]; then
             fi
 
             # 1. Build binder-target PDB complex
-            python3.11 "${REPO_DIR}/scripts/conversion.py" "$target_pdb" "$binder_pdb" "$diffusion" "$temp" "$DIR_OUT"
+            # python3.11 "${REPO_DIR}/scripts/conversion.py" "$target_pdb" "$binder_pdb" "$diffusion" "$temp" "$DIR_OUT"
+            python3.11 "${REPO_DIR}/scripts/align_complex.py" "$target_pdb" "$binder_pdb" "$diffusion" "$temp" "$DIR_OUT"
 
             # 2. Run PRODIGY to predict binding affinity (kcal.mol-1)
             multi_model_file="${DIR_OUT}/5_${cycle}_${params}_binder_i${iteration}_${num}.pdb"

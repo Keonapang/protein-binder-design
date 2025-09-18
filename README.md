@@ -125,12 +125,13 @@ For each of the 8 target sequences (**Table 1**), compute their 3D structure (.P
     docker logs -f protein-binder-design-alphafold-1
 ```
 
-## 4. Download command-line tool for validation later on
+## 4. Download command-line tools
 
 ```bash
-    # PRODIGY - binding affinity prediction
-    pip install prodigy-prot
-    prodigy -h # check usage
+    pip install prodigy-prot # PRODIGY - binding affinity prediction
+    pip install biopython
+    pip install pdb-tools
+    python3.11 -m pip install torch
 ```
 
 ## 5. Run RFDiffusion, ProteinMPNN and AlphaFold2-Multimer
@@ -151,42 +152,6 @@ For each of the 8 target sequences (**Table 1**), compute their 3D structure (.P
     # Export API key
     export NGC_CLI_API_KEY=<enter-key>
 
-    # target site A85
-    start_pos=60
-    end_pos=90
-    hotspot_res=A80
-
-    start_pos=80
-    end_pos=110
-    hotspot_res=A90
-
-    # target site A108
-    start_pos=83
-    end_pos=113
-    hotspot_res=A103
-
-    start_pos=103
-    end_pos=133
-    hotspot_res=A113
-
-    # target site A145
-    start_pos=120
-    end_pos=150
-    hotspot_res=A140
-
-    start_pos=127
-    end_pos=157 # <- caution: last residue ends at position A157
-    hotspot_res=A150
-
-    # target site A8
-    start_pos=9
-    end_pos=39
-    hotspot_res=A13
-
-    start_pos=8
-    end_pos=38
-    hotspot_res=A11
-
     # Set variables
     chain="A"
     diffusion=50
@@ -201,7 +166,7 @@ For each of the 8 target sequences (**Table 1**), compute their 3D structure (.P
     REPO_DIR="/home/ubuntu/protein-binder-design"
 ```
 
-Do some quick clean up and installation:
+Run clean up and installation:
 
 ```bash
     # clean up scripts before running
@@ -209,9 +174,6 @@ Do some quick clean up and installation:
     sed -i 's/\r$//' "${REPO_DIR}/scripts/calc_prodigy.sh" 
     sed -i 's/\r$//' "${REPO_DIR}/input/target_hotspots.txt" 
     sed -i 's/^[ \t]*//;s/[ \t]*$//' "${REPO_DIR}/scripts/calc_prodigy.sh" # clean up script
-
-    #install
-    python3.11 -m pip install torch
 ```
 
 Run prediction models sequentially, followed by calculating binding free energy using [PRODIGY](https://github.com/haddocking/prodigy):
@@ -245,7 +207,7 @@ done < "$input_file"
 
 ### Workflow output
 
-Example of **ProteinPMNN** output if `num_seq=2`:
+Example of **ProteinPMNN** .fasta output if `num_seq=2`:
 
 ```bash
     # binder_target_pairs
@@ -253,6 +215,13 @@ Example of **ProteinPMNN** output if `num_seq=2`:
         ['RIAELLAQLLKELLE','SQVLFSGQGCPSTHVLLTHTISRISTTHNQP'], # binder design 1
         ['AIEEALARLLLEQLL', 'SQVLFSGQGCPSTHVLLTHTISRISTTHNQP'] # binder design 2
     ]
+```
+
+Example of final aligned binder-target PDB output:
+
+```bash
+
+
 ```
 
 Ensure you download your results onto local computer.
