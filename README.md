@@ -50,7 +50,7 @@ ATOM      2  CA  PRO A   8      17.276  24.324  31.476  1.00 57.03           C
     A 113 103 133
 ```
 
-![ApoB](docs/ApoB_3D_seq.png) **Fig 2**. 3D rendering of selected target binding sites on ApoB 
+![ApoB](docs/ApoB_3D_seq.png) **Example**. 3D rendering of selected target binding sites on ApoB 
 
 ## 2. Launch a NVIDIA cloud virtual machine (VM)
 
@@ -218,20 +218,15 @@ Example of **ProteinPMNN** .fasta output if `num_seq=2`:
     ]
 ```
 
-Example of final aligned binder-target PDB output:
+Example of **final aligned binder-target PDB**:
 
 ```bash
 
 
 ```
 
-Ensure you download your results onto local computer.
+Example of **PRODIGY** output in the terminal:
 
-![results](docs/results_VM.png)
-
-**Fig 3**. Example of output directory, with the input being a single target sequence.
-
-PRODIGY output in terminal:
 ![PRODIGY](docs/prodigy.png)
 
 > [!NOTE]
@@ -263,7 +258,7 @@ You could also use FlexPepDoc to visualize the 3D structures in `$DIR_WORK/prodi
 3. Specify **Docking partner** as "A_B".
 
 ![flexpepdoc](docs/flexpepdoc1.png)
-**Fig 4**. Example of FlexPepDoc visualization.
+**Fig 1**. Example of FlexPepDoc visualization.
 
 ### (c) PyMol
 
@@ -315,13 +310,13 @@ Optionally, you could visualize the entire binding complex (multiple peptides bi
     save /Users/keonapang/Desktop/NVIDIA/scaffold_peptides_1ABCD_new.pdb, combined
 ```
 
-![Fig 5.](docs/pymol2.png) **Fig 5**. Example of the 3D peptide-target binding complex rendering on PyMOL.
+![Fig 2.](docs/pymol2.png) **Fig 2**. Example of the 3D peptide-target binding complex rendering on PyMOL.
 
 ## The end
 
 In summary, we started off with manually selecting binding sites on a target region (**cycle 1**) of the protein via SWISS-MODEL. Finally, we output 4 non-overlapping, unique peptide binders for this region.
 
-![Fig 6](docs/Fig1_visualization.png) **Fig 6**. First 4 peptides (1A, 1B, 1C, 1D) binding to ApoB, visualized on PyMOL (left) and SWISS-MODEL (right).
+![Fig 6](docs/Fig1_visualization.png) **Fig 3**. First 4 peptides (1A, 1B, 1C, 1D) binding to ApoB, visualized on PyMOL (left) and SWISS-MODEL (right).
 
 
 ## Version updates
