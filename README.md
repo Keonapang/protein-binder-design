@@ -34,36 +34,14 @@ The example below generates 8 peptide binders for target protein ApoB-100.
 
 ![Fig 2. Manually identify the binding sites](docs/ApoB_3D_seq.png) **Fig 2**. Manually identify the 8 target binding sites
 
-**Table 1**. 8 target sequences of length 40 amino acids.
+**Table 1**. 2 target sequences of length 40 amino acids.
 
 | Cycle         | ApoB-100 target sequence          | Amino Acid Position |
 |---------------|---------------------------------------------|---------------------|
 | 1A      | LKTSQCTLKEVYGFNPEGKALLKKTKNSEEFAAAMSRYEL    | A91-130            |
 | 1B      | EEAKQVLFLDTVYGNCSTHFTVKTRKGNVATEISTERDLG    | A170-209           |
-| 1C      | VAEAICKEQHLFLPFSYKNKYGMVAQVTQTLKLEDTPKIN    | A255-294           |
-| 1D      | PKQAEAVLKTLQELKKLTISEQNIQRANLFNKLVTELRGL    | A318-357           |
-| 2A      | CSTHILQWLKRVHANPLLIDVVTYLVALIPEPSAQQLREI    | A390-429           |
-| 2B      | GTQELLDIANYLMEQIQDDCTGDEDYTYLILRVIGNMGQT    | A459-498           |
-| 2C      | LRKMEPKDKDQEVLLQTFLDDASPGDKRLAAYLMLMRSPS    | A531-570           |
-| 2D      | EQVKNFVASHIANILNSEELDIQDLKKLVKEALKESQLPT    | A587-626           |
 
-## 2. AlphaFold2 Colab (free)
-
-For each of the 8 target sequences (**Table 1**), compute their 3D structure (.PDB) on [AlphaFold2 colab](https://colab.research.google.com/github/sokrypton/ColabFold/blob/main/AlphaFold2.ipynb#scrollTo=R_AH6JSXaeb2). On this colab notebook, perform the following steps for each sequence:
-
-1. Input sequence under `query_sequence`.
-2. Hit `Runtime` > `Run all` and wait ~ 5mins.
-3. Download .zip results, unpack it and find the file with this suffix `...rank_001_alphafold2_ptm_model_1_seed_000.pdb` (*This is because AlphaFold2 automatically generates 5 slightly different structures, with the first-ranked being the one with highest confidence based on [pLDDT](https://www.ebi.ac.uk/training/online/courses/alphafold/inputs-and-outputs/evaluating-alphafolds-predicted-structures-using-confidence-scores/plddt-understanding-local-confidence/)*).
-4. Rename the first-ranked model file to `pep${cycle}.pdb`. For example, if `cycle="1A"`, then this would be `input/pep1A.pdb`.
-5. Store this model in a new directory and assign it's path to `$DIR_WORK`.
-
-```bash
-    DIR_WORK="/your/local/working/directory" # DIR_WORK="/Users/keonapang/Desktop/NVIDIA/Sept12"
-    mkdir -p $DIR_WORK
-    cd $DIR_WORK # contains RFDiffusion and ProteinPMNN results
-```
-
-## 3. Launch a NVIDIA cloud virtual machine (VM)
+## 2. Launch a NVIDIA cloud virtual machine (VM)
 
 1. Go to [brev.nvidia](https://brev.nvidia.com/) and click on this [Launchable](https://brev.nvidia.com/launchable/deploy/now?launchableID=env-32aLABBLqme9fNaaSdVL94Bollg). If you would like to create your own, click on Launchables in the menu bar, then `Create Launchables` and follow these settings:
     - Select "I have codes in a git repository" and enter the URL of this repo
@@ -125,13 +103,23 @@ For each of the 8 target sequences (**Table 1**), compute their 3D structure (.P
     docker logs -f protein-binder-design-alphafold-1
 ```
 
-## 4. Download command-line tools
+## 3. Download command-line tools
 
 ```bash
     pip install prodigy-prot # PRODIGY - binding affinity prediction
     pip install biopython
     pip install pdb-tools
     python3.11 -m pip install torch
+```
+
+## 4. Run clean up and installation
+
+```bash
+    # clean up scripts before running
+    sed -i 's/\r$//' "${REPO_DIR}/scripts/get_target_pdb.sh" # optional (to remove any hidden spaces from Windows)
+    sed -i 's/\r$//' "${REPO_DIR}/scripts/calc_prodigy.sh" 
+    sed -i 's/\r$//' "${REPO_DIR}/input/target_hotspots.txt" 
+    sed -i 's/^[ \t]*//;s/[ \t]*$//' "${REPO_DIR}/scripts/calc_prodigy.sh"
 ```
 
 ## 5. Run RFDiffusion, ProteinMPNN and AlphaFold2-Multimer
@@ -166,16 +154,6 @@ For each of the 8 target sequences (**Table 1**), compute their 3D structure (.P
     REPO_DIR="/home/ubuntu/protein-binder-design"
 ```
 
-Run clean up and installation:
-
-```bash
-    # clean up scripts before running
-    sed -i 's/\r$//' "${REPO_DIR}/scripts/get_target_pdb.sh" # optional (to remove any hidden spaces from Windows)
-    sed -i 's/\r$//' "${REPO_DIR}/scripts/calc_prodigy.sh" 
-    sed -i 's/\r$//' "${REPO_DIR}/input/target_hotspots.txt" 
-    sed -i 's/^[ \t]*//;s/[ \t]*$//' "${REPO_DIR}/scripts/calc_prodigy.sh"
-```
-
 Run 3 prediction models sequentially, followed by aligning the designed binder and original target sequence to create a combined PDB file using BioPython's `Superimposer` module. Lastly, calculate the dissociation constant using [PRODIGY](https://github.com/haddocking/prodigy):
 
 ```bash
@@ -187,7 +165,7 @@ while IFS=$' ' read -r chain hotspot_res_prefix start_pos end_pos; do
 
     hotspot_res="${chain}${hotspot_res_prefix}"
     echo "Processing with chain=$chain, hotspot_res=$hotspot_res, start_pos=$start_pos, end_pos=$end_pos"
-
+done < "$input_file"
     # Step 1: Extract target structure PDB and target seq amino acid
     source "${REPO_DIR}/scripts/get_target_pdb.sh" # Load the get_target_pdb function
     get_target_pdb "${raw_pdb}" "${target_pdb}" "${chain}" "${start_pos}" "${end_pos}"
