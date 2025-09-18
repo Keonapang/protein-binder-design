@@ -1,24 +1,21 @@
 # Adaption of NVIDIA BioNeMo: Protein Binder Design
 
-This workflow is designed for _in silico_ protein binder design by generating binder sequences and predicted structures for the binder and target. Unlike the original NVIDIA pipeline, this approach **does not** require running Alphafold2 on cloud GPU. 
+This workflow is designed for _in silico_ protein binder design by generating binder sequences and predicted structures for the binder and target.
 
-Instead, you will first pre-compute the target protein structure on [AlphaFold2 colab](https://colab.research.google.com/github/sokrypton/ColabFold/blob/main/AlphaFold2.ipynb#scrollTo=R_AH6JSXaeb2) (model #1), and save it as a `.PDB` file. This becomes the input for **RFDiffusion** (model #2), which generates the protein backbones for binder design. Subsequently, **ProteinMPNN** (model #3) will back-generate the amino acid sequence of this protein binder. Finally, this generated peptide structure is validated (step #4) on [PRODIGY](https://rascar.science.uu.nl/prodigy/) (Gibbs Free Energy) and Rosetta [FlexPepDoc](https://r2.graylab.jhu.edu/auth/login?next=%2Fapps%2Fsubmit%2Fflexpepdock). 
-
-The example below generates 8 peptide binders for target protein ApoB-100.
+Two input files are required: (1) a `.pdb` structure of the target protein, and (2) a `.txt` containing selected target binding hotspots and start/stop positions. **RFDiffusion** generates the protein backbones for binder design. Subsequently, **ProteinMPNN** will back-generate the amino acid sequence of this peptide binder, followed by **AlphaFold2** predicting the PDB structure of the designed peptide binder. Finally, this generated peptide structure is validated (step #4) on [PRODIGY](https://rascar.science.uu.nl/prodigy/). Optionally, you may visualize the final binding complex using Rosetta [FlexPepDoc](https://r2.graylab.jhu.edu/auth/login?next=%2Fapps%2Fsubmit%2Fflexpepdock) or PyMOL.
 
 ### System Requirements
 
-- at least **240 GB** of fast NVMe SSD space *(assuming you're not running AlphaFold2. If so, you will need at least 2TB)*
+- at least **1500 GB** of fast NVMe SSD space
 - at least **24 CPU** cores
-- at least **64 GB RAM**
-- 2 or more NVIDIA L40s, A100, or H100 GPUs
+- at least **128 GB RAM**
+- 3 or more NVIDIA L40s, A100, or H100 GPUs
 
 ### Hardware requirements
 
-- Total: 2 x GPU, 47 GiB GPU memory, 1.3TB GB SSD drive space, 60GiB RAM,24 CPU
-
     - **RFdiffusion** runs on 1 x GPU, ≥12 GiB GPU memory, 15GB free SSD drive space
     - **ProteinMPNN** runs on 1 x GPU, ≥3 GiB GPU memory, 10GB free SSD drive space
+    - **AlphaFold2** runs on 1 x GPU, ≥32 GiB GPU memory, 1300GB free SSD drive space
 
 ### Software Pre-requisites
 
