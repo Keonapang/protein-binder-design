@@ -78,7 +78,7 @@ ATOM      2  CA  PRO A   8      17.276  24.324  31.476  1.00 57.03           C
     sudo apt-get install -y docker-compose # docker compose version 2+
     sudo apt install python3.11
 
-    # The NIM cache allows you to download models and store previously-downloaded models on your local/server disk,
+    #  NIM cache allows you to download models and store previously-downloaded models on your local/server disk
     mkdir -p ~/.cache/nim
     chmod -R 777 ~/.cache/nim    
     export HOST_NIM_CACHE=~/.cache/nim
@@ -108,11 +108,234 @@ ATOM      2  CA  PRO A   8      17.276  24.324  31.476  1.00 57.03           C
     docker logs -f protein-binder-design-alphafold-1
 ```
 
-## 3. Download command-line tools
+
+## 2. Install conda
+
+Download and activate `conda`:
 
 ```bash
-    pip install prodigy-prot torch Bio
-    python3.11 -m pip install biopython pdb-tools
+# Install conda
+wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+bash Miniconda3-latest-Linux-x86_64.sh # installed to /home/shadeform/miniconda3
+
+# Assign path to conda
+echo 'export PATH="$HOME/miniconda3/bin:$PATH"' >> ~/.bashrc
+source ~/.bashrc # conda --version
+
+# Allow override permissions
+conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/main
+conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/r
+```
+
+## 3. Install pre-requisites
+
+```bash
+# Install python, if container doesn't come built with it
+sudo apt install python3.11 
+
+# Install essentials
+sudo apt update
+```
+
+**Set up `openmm` and `pdbfier` to align backbones (requires python 3.13):**
+
+```bash
+cd ~
+git clone https://github.com/openmm/pdbfixer
+cd pdbfixer
+python setup.py install
+
+# use Conda to install pdbfixer and openmm (writes to python3.13)
+conda create -n pdbfixer_env python=3.13 -y
+conda activate pdbfixer_env
+conda install -c conda-forge pdbfixer
+conda install -c conda-forge openmm
+python3.13 -m pip install numpy prodigy-prot torch Bio biopython pdb-tools
+
+```
+
+**Set up environment to run `gromacs` for free energy calculation**
+
+**Build via conda:**
+The Conda package typically defaults to OpenC for GPU compatibility, not CUDA.
+OpenCL is not as well-optimized for NVIDIA GPUs.
+Use if the system uses an AMD or Intel GPU, or you don’t need GPU acceleration.
+
+```bash
+# Download of GROMACS via Conda (5-10mins), however this doesn't enable GPU support
+cd ~
+conda create -n mmpbsa python=3.11 -y
+conda activate mmpbsa
+conda install -c conda-forge libgcc-ng mpi mpi4py compilers gcc_linux-64 gxx_linux-64
+conda install -c conda-forge libmpich-dev libopenmpi-dev libopenmpi-dev openmpi-bin -y 
+conda install -c conda-forge ocl-icd-system
+conda install -c conda-forge clinfo
+conda install -c conda-forge intel-compute-runtime
+conda install -c conda-forge pocl oclgrind
+conda install -c conda-forge gromacs -y  # not ideal!!
+```
+
+**Build GROMACS from source with cmake:**
+Download and build the latest stable or development version of GROMACS directly from the source.
+Can compile GROMACS with options that are optimized for your specific CPU (e.g., AVX2, AVX512) and GPU (e.g., CUDA).
+
+```bash
+#######################################################
+# Ensure GROMACS is compiled with CUDA support and 
+# links correctly to the NVIDIA drivers and libraries. 
+#######################################################
+conda create -n gromacs_gpu python=3.11 -y
+conda activate gromacs_gpu
+conda install -c conda-forge cudatoolkit=12.8
+
+# Install latest cmake (importnat)
+sudo apt update
+sudo apt install snapd -y
+sudo snap install cmake --classic
+export PATH=/snap/bin:$PATH
+cmake --version # cmake version 4.1.2
+echo 'export PATH=/snap/bin:$PATH' >> ~/.bashrc
+source ~/.bashrc
+
+conda install -c conda-forge cudatoolkit # version 11.8 installed
+export PATH=$CONDA_PREFIX/bin:$PATH
+export CUDACXX=$CONDA_PREFIX/bin/nvcc
+export LD_LIBRARY_PATH=$CONDA_PREFIX/lib:$LD_LIBRARY_PATH
+
+conda install -c conda-forge cmake gcc_linux-64 gxx_linux-64 fftw
+conda install -c conda-forge openmpi
+sudo apt install openmpi-bin openmpi-common libopenmpi-dev
+mpicc --version
+mpicxx --version
+
+export PATH=$CONDA_PREFIX/bin:$PATH
+export LD_LIBRARY_PATH=$CONDA_PREFIX/lib:$LD_LIBRARY_PATH
+export PATH=/usr/bin:$PATH
+
+# Download and Extract GROMACS from source
+cd ~
+wget ftp://ftp.gromacs.org/gromacs/gromacs-2025.3.tar.gz
+tar xfz gromacs-2025.3.tar.gz
+cd 
+
+# Build GROMACS with CUDA Support
+mkdir build
+cd build
+sudo apt install libopenblas-dev liblapack-dev
+sudo apt install libblas-dev liblapack-dev
+sudo apt install nvidia-cuda-toolkit
+sudo apt install openmpi-bin libopenmpi-dev
+export CUDACXX=/usr/local/cuda/bin/nvcc
+cmake .. \
+    -DGMX_BUILD_OWN_FFTW=OFF \
+    -DGMX_MPI=ON \
+    -DGMX_GPU=CUDA \
+    -DCUDA_TOOLKIT_ROOT_DIR=$CONDA_PREFIX \
+    -DGMX_CUDA_TARGET_COMPUTE="80" \
+    -DCMAKE_INSTALL_PREFIX=$HOME/gromacs \
+    -DCMAKE_C_COMPILER=/usr/bin/mpicc \
+    -DCMAKE_CXX_COMPILER=/usr/bin/mpicxx \
+    -DCMAKE_CUDA_COMPILER=$CUDACXX \
+    -DFFTWF_LIBRARY=$HOME/fftw/lib/libfftw3f.so \
+    -DFFTWF_INCLUDE_DIR=$HOME/fftw/include
+
+
+# mpicxx --version
+# gcc (Ubuntu 11.4.0-1ubuntu1~22.04.2) 11.4.0
+# Copyright (C) 2021 Free Software Foundation, Inc.
+# This is free software; see the source for copying conditions.  There is NO
+# warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
+# g++ (Ubuntu 11.4.0-1ubuntu1~22.04.2) 11.4.0
+# Copyright (C) 2021 Free Software Foundation, Inc.
+# This is free software; see the source for copying conditions.  There is NO
+# warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
+
+####################################################################
+# Download GROMACS and build manually (https://manual.gromacs.org/)
+# Everything is installed system-wide under /usr/local
+# requires cmake 4.1 and also CUDA 12.1
+####################################################################
+sudo apt update
+sudo apt install -y build-essential cmake gcc g++ libfftw3-dev libopenmpi-dev openmpi-bin
+
+# # If CUDA is not pre-built, install it (v12.1 or higher)
+# nvcc --version 
+
+# wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/cuda-ubuntu2204.pin
+# sudo mv cuda-ubuntu2204.pin /etc/apt/preferences.d/cuda-repository-pin-600
+# wget https://developer.download.nvidia.com/compute/cuda/12.1.0/local_installers/cuda-repo-ubuntu2204-12-1-local_12.1.0-530.30.02-1_amd64.deb
+# sudo dpkg -i cuda-repo-ubuntu2204-12-1-local_12.1.0-530.30.02-1_amd64.deb
+# sudo cp /var/cuda-repo-ubuntu2204-12-1-local/cuda-*-keyring.gpg /usr/share/keyrings/
+# sudo apt-get update
+# sudo apt-get -y install cuda
+# sudo apt update
+# sudo apt install -y cuda
+# echo 'export PATH=/usr/local/cuda/bin:$PATH' >> ~/.bashrc
+# echo 'export LD_LIBRARY_PATH=/usr/local/cuda/lib64:$LD_LIBRARY_PATH' >> ~/.bashrc
+# source ~/.bashrc
+
+# Install latest cmake (importnat)
+sudo apt update
+sudo apt install snapd -y
+sudo snap install cmake --classic
+export PATH=/snap/bin:$PATH
+cmake --version
+
+# Download and Extract GROMACS from source
+cd ~
+wget ftp://ftp.gromacs.org/gromacs/gromacs-2025.3.tar.gz
+tar xfz gromacs-2025.3.tar.gz
+cd gromacs-2025.3
+
+nano ~/.bashrc
+export PATH=/usr/bin:$PATH
+export LD_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH
+export PATH=/snap/bin:$PATH
+source ~/.bashrc
+
+conda install -c conda-forge cudatoolkit=11.8y
+conda install -c conda-forge openmpi
+sudo apt install openmpi-bin openmpi-common libopenmpi-dev
+mpicc --version
+mpicxx --version
+
+# Build GROMACS with CUDA Support
+mkdir build
+cd build
+sudo apt install libopenblas-dev liblapack-dev
+cmake .. \
+    -DGMX_BUILD_OWN_FFTW=ON \
+    -DGMX_GPU=CUDA \
+    -DGMX_OPENMP=ON \
+    -DREGRESSIONTEST_DOWNLOAD=ON \
+    -DCUDA_ARCHITECTURES=ALL
+make -j$(nproc)
+make check
+sudo make install
+source /usr/local/gromacs/bin/GMXRC
+gmx --version
+gmx mdrun -deviceinfo # check compatability 
+
+# Download nvpl
+wget https://developer.download.nvidia.com/compute/nvpl/25.5/local_installers/nvpl-local-repo-ubuntu2404-25.5_1.0-1_arm64.deb
+sudo dpkg -i nvpl-local-repo-ubuntu2404-25.5_1.0-1_arm64.deb
+sudo cp /var/nvpl-local-repo-ubuntu2404-25.5/nvpl-*-keyring.gpg /usr/share/keyrings/
+sudo apt-get update
+sudo apt-get -y install nvpl
+
+# Update GCC and G++ to match versions
+sudo apt install g++-12
+sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-12 12
+sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-12 12
+
+python -m pip install gmx-MMPBSA # (doesn't work for python3.11)
+
+# check GPU acceleration
+nvidia-smi
+gmx mdrun -deviceinfo
+gmx mdrun -gpu_id 0 -nsteps 1000 -v
 ```
 
 ## 4. Run clean up and installation
@@ -134,14 +357,14 @@ Export API key again
 
 ## 5. Run script
 
-The command `get_target_pdb` checks that `start_pos` and `end_pos` are valid given the input PDB file. Then the script runs 3 prediction models sequentially, followed by aligning the designed peptide PDB to the original target sequence PDB to create a combined PDB using **BioPython's** `Superimposer` module. Lastly, it calculates the **dissociation constant (Kd)** using [PRODIGY](https://github.com/haddocking/prodigy):
+The command `get_target_pdb` checks that `start_pos` and `end_pos` are valid given the input PDB file. this script runs 3 prediction models sequentially, followed by aligning the designed peptide PDB to the original target PDB to create a combined PDB using BioPython's `Superimposer` module. Lastly, it calculates the **dissociation constant (Kd)** using [PRODIGY](https://github.com/haddocking/prodigy):
 
 - **RFDiffusion**: takes in target protein PDB, outputs a peptide binder PDB. Note: every output is a glycine, see [Github](https://github.com/RosettaCommons/RFdiffusion?tab=readme-ov-file#understanding-the-output-files) for more info.
     - `contigs`: range of amino acid positions, and expected length of peptide (i.e."A1-30/0 15-25")
     - `diffusion`: number of diffusion_steps (default: 50)
     - `i`: number of RFDiffusion iterations for each target sequence
 
-- **ProteinPMNN**: takes in the output from RFDiffusion, and outputs a .fasta file storing a list of their predicted amino acid sequences
+- **ProteinPMNN**: takes in the peptide PDB, and outputs a .fasta file storing a list of their predicted amino acid sequences
     - `num_seq`: how many seqs to generate for a given structure from RFDiffusion
     - `hotspot_res`: A20 # array (i.e. "A20")
     - `temp`: sample temperature controls the diversity of designed peptides. Higher values will lead to more diversity (range:0-1)
@@ -149,44 +372,58 @@ The command `get_target_pdb` checks that `start_pos` and `end_pos` are valid giv
 - **AlphaFold2**: takes in a list of peptide amino acid sequence(s) from ProteinMPNN, and predicts each of their PDB structures
 
 ```bash
-    # Define repo directory  
-    REPO_DIR="/home/shadeform/protein-binder-design"
+# Define repo directory  
+REPO_DIR="/home/shadeform/protein-binder-design"
 
-    # Two input files
-    raw_pdb="${REPO_DIR}/input/pdb2e7a.pdb"             # target protein
-    input_file="${REPO_DIR}/input/target_hotspots.txt"  # contains: chain, hotspot residue, start/end pos 
+# Two input files
+raw_pdb="${REPO_DIR}/input/pdb2e7a.pdb"             # target protein
+input_file="${REPO_DIR}/input/target_hotspots.txt"  # chain, hotspot residue, start/end pos 
 ```
 
 ```bash
-    # Define script input variables
-    chain="A"
-    diffusion=50
-    temp=0.3 
-    i=5
-    num_seq=2
-    peptide_length="15-25" # set a range (i.e."15-25") or a value ("25")
+# Define script input variables
+chain="A"
+diffusion=50
+temp=0.3 
+i=5
+num_seq=2
+peptide_length="15-25" # set a range (i.e."15-25") or a value ("25")
+
 ```
 
 ```bash
+
 # Loop through each line of $input_file
 while IFS=$' ' read -r chain hotspot_res_prefix start_pos end_pos; do # space-delimited
 
-    # No need to edit these variables
+    # Variables (do not modify)
     hotspot_res="${chain}${hotspot_res_prefix}"
     contigs="A${start_pos}-${end_pos}/0 ${peptide_length}$" # e.g. "A60-90/0 15-25"
+    name="target_${chain}${start_pos}_${end_pos}"
+    params="${diffusion}diff_${temp}temp"
     echo "Processing chain=$chain, hotspot_res=$hotspot_res, start_pos=$start_pos, end_pos=$end_pos"
 
     # Step 1: Build target structure PDB and extract target seq amino acid
     source "${REPO_DIR}/scripts/get_target_pdb.sh" # Load the get_target_pdb function
     get_target_pdb "${raw_pdb}" "${target_pdb}" "${chain}" "${start_pos}" "${end_pos}"
-    target_pdb="${REPO_DIR}/input/target_${chain}${start_pos}_${end_pos}.pdb" # output
+    target_pdb="${REPO_DIR}/input/${name}.pdb" # output
     target_sequence=$(bash "${REPO_DIR}/scripts/get_target_seq.sh" "${target_pdb}")
     
     # Step 2: Run the protein binder design script
-    python3.11 "${REPO_DIR}/scripts/4_protein_binder_design.py" --num_seq "${num_seq}" --diffusion ${diffusion} --temp ${temp} --target_sequence "${target_sequence}" --contigs "${contigs}" --i "${i}" --hotspot_res ${hotspot_res} --target_pdb "${target_pdb}"
+    python3.11 "${REPO_DIR}/scripts/3_protein_binder_design.py" --num_seq "${num_seq}" --diffusion ${diffusion} --temp ${temp} --target_sequence "${target_sequence}" --contigs "${contigs}" --i "${i}" --hotspot_res ${hotspot_res} --target_pdb "${target_pdb}"
 
-    # Step 3: Calculate binding free energy - adding the $raw_pdb argument is optional
-    bash "${REPO_DIR}/scripts/calc_prodigy.sh" "${chain}" "${start_pos}" "${end_pos}" "${diffusion}" "${temp}" "${num_seq}" "${i}" "${target_sequence}" "${REPO_DIR}" "${raw_pdb}"
+    # Step 3: Generate merged binding alignment for peptide and target protein, and then optimize alignment 
+    # time: ~2mins per structure
+    python3.13 ${REPO_DIR}/scripts/4_merge_seq_to_backbone.py "${REPO_DIR}" A ${i} ${num_seq} ${name} ${params} --solvent
+
+    # Step 4: Main binding free energy calculation  
+    # time: 
+    chmod +x "${REPO_DIR}/scripts/6_run_mmpbsa.sh"
+    cd ${REPO_DIR}/scripts # directory containing /mdp
+    bash "${REPO_DIR}/scripts/6_run_mmpbsa.sh" ${REPO_DIR} ${name} ${params} ${i} ${num_seq}
+
+    # Step 5 alternative: PRODIGY
+    bash "${REPO_DIR}/scripts/calc_prodigy.sh" "${chain}" "${start_pos}" "${end_pos}" "${diffusion}" "${temp}" "${i}" "${num_seq}" "${target_sequence}" "${REPO_DIR}" "${raw_pdb}" "${input_file}"
 
 done < "$input_file"
 
@@ -247,7 +484,6 @@ Example of **PRODIGY** output in the terminal:
 > [!NOTE]
 > Once you're done running the scrips above, you may shutdown the NVIDIA VM so it doesn't keep charging money.
 
-
 ## 7. Visualization and validation of binder-target (local)
 
 Before you proceed, ensure that all your predicted peptide binder structures are now stored in local directory `$DIR_WORK`.
@@ -286,7 +522,6 @@ Optionally, you could visualize the entire binding complex (multiple peptides bi
 2. Use this script to generate a **multi-PDB file**, which takes in the large PDB from step (1) and PDB files of peptide binders. An example of the output can be found in `example/pymol_pdb/cycle1_50diff_0.5temp_complex.pdb`.
 
 ```bash
-    # In this example, I wish to visualize peptides 1A and 1B binding to ApoB-100
     cycle="1" 
     diffusion="50"
     temp="0.5"

@@ -1,0 +1,28 @@
+######################################################
+# Calculate binding free energy using GROMACS + g_mmpbsa
+
+&general
+sysname           = pep_prot
+startframe        = 1
+endframe          = -1          # use all frames in input traj
+interval          = 1           # analyze every frame in md_strided.xtc
+entropy           = 0           # set 1 if you want quasi-harmonic (slow/noisy)
+/
+&pb
+istrng            = 0.15        # ionic strength (M)
+indi              = 2.0         # protein interior dielectric
+exdi              = 80.0        # solvent dielectric
+scale              = 2.0        # grid scale for PB
+fillratio         = 4.0
+cavity_surften    = 0.00542
+cavity_offset     = 0.92
+/
+&sasa
+probe_radius      = 1.4
+surften           = 0.0072
+surfoffset        = 0.0
+/
+&decomp
+idecomp           = 1           # per-residue decomposition (optional)
+dec_verbose       = 0
+/

@@ -6,152 +6,65 @@
 #       - including predicted peptide sequence,
 #       - free energy (ΔG) and dissociation constant (Kd) etc..
 
-# Usage: calc_prodigy.sh ${chain} ${start_pos} ${end_pos} ${diffusion} ${temp} ${num_seq} ${i}
+# Usage: calc_prodigy.sh ${chain} ${start_pos} ${end_pos} ${diffusion} ${temp} ${i} ${num_seq} ${target_sequence} ${REPO_DIR} ${raw_pdb} $input_file
 ######################################################
 chain=$1
 start_pos=$2
 end_pos=$3
 diffusion=$4
 temp=$5
-num_seq=$6
-i=$7
+i=$6
+num_seq=$7
 target_sequence=$8
 REPO_DIR=$9
-raw_pdb=${10:-NA} # # Check if the 10th argument is provided; if not, default to "NA"
+target_pdb=${10}
+input_file=$11
 
-# Check if at least 9 arguments are provided
-if [[ $# -lt 9 ]]; then
-    echo "At least 8 arguments are required."
-    echo "Usage: $0 <chain> <start_pos> <end_pos> <diffusion> <temp> <num_seq> <i> <target_sequence> [raw_pdb]"
+# At least 11 arguments are provided
+if [[ $# -lt 11 ]]; then
+    echo "At least 11 arguments are required."
+    echo "Usage: $0 {name} {params} {i} {num_seq} {target_sequence} {REPO_DIR} {target_pdb} {input_file}"
     continue
 fi
+
+name="target_${chain}${start_pos}_${end_pos}"
+params="${diffusion}diff_${temp}temp"
+echo $name
+
+echo ""
+echo "####################################################"
+echo "Running PRODIGY to calculate dissociation constant"
+echo "####################################################"
+echo "REPO_DIR: $REPO_DIR"
+echo ""
 
 # REPO_DIR="/home/ubuntu/protein-binder-design"
 
-cycle="target_${chain}${start_pos}_${end_pos}"
-params="${diffusion}diff_${temp}temp"
 
-target_pdb="${REPO_DIR}/input/${cycle}.pdb" # Original PDB input file
-if [ ! -f "$target_pdb" ]; then
-    echo "Target PDB not found: $target_pdb"
-    continue
-fi
-
-if [ "$raw_pdb" == "NA" ]; then
-    for iteration in $(seq 1 $i); do
-        for num in $(seq 1 $num_seq); do
-
-            # Get peptide binder sequence from proteinPMNN output
-            pmnn_file="${REPO_DIR}/${cycle}/3_${cycle}_${params}_i${iteration}.fasta"
-            start_line=$((num * 2 + 1))
-            end_line=$((num * 2 + 2))
-            pmnn_result=$(sed -n "${start_line},${end_line}p" "$pmnn_file")
-
-            binder_pdb="${REPO_DIR}/${cycle}/4_${cycle}_${params}_binder_i${iteration}_${num}.pdb"
-            DIR_OUT="${REPO_DIR}/${cycle}"
-
-            # Check if $binder_pdb exist
-            if [ ! -f "$binder_pdb" ]; then
-                echo "Binder PDB not found: $binder_pdb"
-                continue 
-            fi
-
-            # 1. Build binder-target PDB complex, output PDB structure 
-            # python3.11 "${REPO_DIR}/scripts/conversion.py" "$target_pdb" "$binder_pdb" "$diffusion" "$temp" "$DIR_OUT"
-            python3.11 "${REPO_DIR}/scripts/align_complex.py" "$target_pdb" "$binder_pdb" "$diffusion" "$temp" "$DIR_OUT"
-
-            # 2. Run PRODIGY to predict binding affinity (kcal.mol-1)
-            multi_model_file="${DIR_OUT}/5_${cycle}_${params}_binder_i${iteration}_${num}.pdb"
-
-            prodigy_output=$(prodigy "$multi_model_file" -np 4)
-
-            # Extract all the necessary values from the output
-            binding_affinity=$(echo "$prodigy_output" | grep "Predicted binding affinity" | awk '{print $6}')
-            diss_constant=$(echo "$prodigy_output" | grep "Predicted dissociation constant" | awk '{print $8}')
-            num_contacts=$(echo "$prodigy_output" | grep "No. of intermolecular contacts" | awk '{print $6}')
-            num_charged_charged=$(echo "$prodigy_output" | grep "No. of charged-charged contacts" | awk '{print $6}')
-            num_charged_polar=$(echo "$prodigy_output" | grep "No. of charged-polar contacts" | awk '{print $6}')
-            num_charged_apolar=$(echo "$prodigy_output" | grep "No. of charged-apolar contacts" | awk '{print $6}')
-            num_polar_polar=$(echo "$prodigy_output" | grep "No. of polar-polar contacts" | awk '{print $6}')
-            num_apolar_polar=$(echo "$prodigy_output" | grep "No. of apolar-polar contacts" | awk '{print $6}')
-            num_apolar_apolar=$(echo "$prodigy_output" | grep "No. of apolar-apolar contacts" | awk '{print $6}')
-            percent_apolar_nis=$(echo "$prodigy_output" | grep "Percentage of apolar NIS residues" | awk '{print $6}')
-            percent_charged_nis=$(echo "$prodigy_output" | grep "Percentage of charged NIS residues" | awk '{print $6}')
-            echo "Predicted binding affinity ($binding_affinity kcal.mol-1)"
-            echo "Predicted dissociation constant ($diss_constant Kb at 25.0˚C)"
-
-            # 3. Update PDB with comments
-            {
-                echo "# Final PDB complex of target protein and designed peptide binder";
-                echo "# Date: $(date +%Y-%m-%d)";
-                echo "# Target sequence: ${target_sequence}";
-                echo "# Parameters: ";
-                echo "#     target_pdb=${target_pdb}";
-                echo "#     binder_pdb=${binder_pdb}";
-                echo "#     diffusion=${diffusion}";
-                echo "#     temp=${temp}";
-                echo "#     iteration=${iteration} RFDiffusion candidates";
-                echo "#     num=${num} seqs from ProteinMPNN per candidate";
-                echo "# ";
-                echo "# Predicted peptide binder from ProteinPMNN:";
-                echo "# ${pmnn_result}";
-                echo "# PRODIGY results: ";
-                echo "#     Predicted binding affinity (kcal.mol-1): ${binding_affinity}";
-                echo "#     Predicted dissociation constant (M) at 25.0˚C: ${diss_constant}";
-                echo "#     No. of intermolecular contacts: ${num_contacts}";
-                echo "#     No. of charged-charged contacts: ${num_charged_charged}";
-                echo "#     No. of charged-polar contacts: ${num_charged_polar}";
-                echo "#     No. of charged-apolar contacts: ${num_charged_apolar}";
-                echo "#     No. of polar-polar contacts: ${num_polar_polar}";
-                echo "#     No. of apolar-polar contacts: ${num_apolar_polar}";
-                echo "#     No. of apolar-apolar contacts: ${num_apolar_apolar}";
-                echo "#     Percentage of apolar NIS residues: ${percent_apolar_nis}";
-                echo "#     Percentage of charged NIS residues: ${percent_charged_nis}";
-                echo "# ";
-                cat "$multi_model_file";
-            } > "$multi_model_file".tmp && mv "$multi_model_file".tmp "$multi_model_file"
-            rm "$multi_model_file".tmp
-
-        done
-    done
-
-else
-
-    for iteration in $(seq 1 $i); do
+for iteration in $(seq 1 $i); do
     for num in $(seq 1 $num_seq); do
-        for pdb_file in "$target_pdb" "$raw_pdb"; do
+        aligned_pdb=${REPO_DIR}/${name}/5_${name}_${params}_i${i}_${num}_complex.pdb
+        echo "Input: ${name}/5_${name}_${params}_i${i}_${num}_complex.pdb"
+        echo ""
+        if [ ! -f "$aligned_pdb" ]; then
+            echo "MISSING: $aligned_pdb"
+            echo ""
+            continue
+        fi
+
+        if grep -q "Final PDB complex of target protein and designed peptide binder" "$aligned_pdb"; then
+            echo "ERROR: The aligned PDB file contains headers already!!"
+            continue
+        fi
 
             # Get peptide binder sequence from proteinPMNN output
-            pmnn_file="${REPO_DIR}/${cycle}/3_${cycle}_${params}_i${iteration}.fasta"
+            pmnn_file="${REPO_DIR}/${name}/3_${name}_${params}_i${iteration}.fasta"
             start_line=$((num * 2 + 1))
             end_line=$((num * 2 + 2))
             pmnn_result=$(sed -n "${start_line},${end_line}p" "$pmnn_file")
 
-            binder_pdb="${REPO_DIR}/${cycle}/4_${cycle}_${params}_binder_i${iteration}_${num}.pdb"
-            DIR_OUT="${REPO_DIR}/${cycle}"
-
-            if [ ! -f "$pdb_file" ]; then
-                    echo "Target PDB not found: $pdb_file"
-                    continue
-            fi
-            if [ ! -f "$binder_pdb" ]; then
-                    echo "Binder PDB not found: $binder_pdb"
-                    continue 
-            fi
-
-            # 1. Build binder-target PDB complex
-            python3.11 "${REPO_DIR}/scripts/conversion.py" "$pdb_file" "$binder_pdb" "$diffusion" "$temp" "$DIR_OUT"
-
             # 2. Run PRODIGY to predict binding affinity (kcal.mol-1)
-            multi_model_file="${DIR_OUT}/5_${cycle}_${params}_binder_i${iteration}_${num}.pdb"
-            multi_model_file2="${DIR_OUT}/5_${cycle}_${params}_binder_i${iteration}_${num}_raw.pdb"
-            if [ "$pdb_file" == "$raw_pdb" ]; then
-                outfile="$multi_model_file2"
-            else
-                outfile="$multi_model_file"
-            fi
-            prodigy_output=$(prodigy "$outfile" -np 4)
-            binding_affinity=$(echo "$prodigy_output" | grep "Predicted binding affinity" | awk '{print $6}')
+            prodigy_output=$(prodigy "$aligned_pdb" -np 4 --contact_list)
 
             # Extract all the necessary values from the output
             binding_affinity=$(echo "$prodigy_output" | grep "Predicted binding affinity" | awk '{print $6}')
@@ -163,72 +76,43 @@ else
             num_polar_polar=$(echo "$prodigy_output" | grep "No. of polar-polar contacts" | awk '{print $6}')
             num_apolar_polar=$(echo "$prodigy_output" | grep "No. of apolar-polar contacts" | awk '{print $6}')
             num_apolar_apolar=$(echo "$prodigy_output" | grep "No. of apolar-apolar contacts" | awk '{print $6}')
-            percent_apolar_nis=$(echo "$prodigy_output" | grep "Percentage of apolar NIS residues" | awk '{print $6}')
-            percent_charged_nis=$(echo "$prodigy_output" | grep "Percentage of charged NIS residues" | awk '{print $6}')
-            echo "Predicted binding affinity ($binding_affinity kcal.mol-1)"
-            echo "Predicted dissociation constant ($diss_constant Kb at 25.0˚C)"
+            percent_apolar_nis=$(echo "$prodigy_output" | grep "Percentage of apolar NIS residues" | awk '{print $7}')
+            percent_charged_nis=$(echo "$prodigy_output" | grep "Percentage of charged NIS residues" | awk '{print $7}')
+            echo "Binding affinity ($binding_affinity kcal.mol-1)"
+            echo "Dissociation constant ($diss_constant Kb at 25.0˚C)"
 
             # 3. Update PDB with comments
             {
                 echo "# Final PDB complex of target protein and designed peptide binder";
                 echo "# Date: $(date +%Y-%m-%d)";
                 echo "# Target sequence: ${target_sequence}";
-                echo "# Parameters: ";
-                echo "#     target_pdb=${pdb_file}";
-                echo "#     binder_pdb=${binder_pdb}";
-                echo "#     diffusion=${diffusion}";
-                echo "#     temp=${temp}";
-                echo "#     iteration=${iteration} RFDiffusion candidates";
-                echo "#     num=${num} seqs from ProteinMPNN per candidate";
                 echo "# ";
-                echo "# Predicted peptide binder from ProteinPMNN:";
-                echo "# ${pmnn_result}";
-                echo "# PRODIGY results: ";
-                echo "#     Predicted binding affinity (kcal.mol-1): ${binding_affinity}";
-                echo "#     Predicted dissociation constant (M) at 25.0˚C: ${diss_constant}";
-                echo "#     No. of intermolecular contacts: ${num_contacts}";
-                echo "#     No. of charged-charged contacts: ${num_charged_charged}";
-                echo "#     No. of charged-polar contacts: ${num_charged_polar}";
-                echo "#     No. of charged-apolar contacts: ${num_charged_apolar}";
-                echo "#     No. of polar-polar contacts: ${num_polar_polar}";
-                echo "#     No. of apolar-polar contacts: ${num_apolar_polar}";
-                echo "#     No. of apolar-apolar contacts: ${num_apolar_apolar}";
-                echo "#     Percentage of apolar NIS residues: ${percent_apolar_nis}";
-                echo "#     Percentage of charged NIS residues: ${percent_charged_nis}";
+                echo "# ========= Parameters ========= ";
+                echo "# target_pdb: ${target_pdb}";
+                echo "# input target coordinates: ${input_file}";
+                echo "# diffusion=${diffusion}";
+                echo "# temp=${temp}";
+                echo "# i=${i} total RFDiffusion candidates";
+                echo "# num=${num_seq} ProteinMPNN seqs per RFDiffusion candidate";
                 echo "# ";
-                cat "$multi_model_file";
-            } > "$multi_model_file".tmp && mv "$multi_model_file".tmp "$outfile"
-
-            rm "$multi_model_file".tmp
-
-            # Compare results from "$target_pdb" and "$raw_pdb"
-            if [ "$pdb_file" == "$target_pdb" ]; then
-                target_binding_affinity="$binding_affinity"
-                target_diss_constant="$diss_constant"
-            elif [ "$pdb_file" == "$raw_pdb" ]; then
-                raw_binding_affinity="$binding_affinity"
-                raw_diss_constant="$diss_constant"
-            fi
-
-            # Print comparison results to terminal
-            echo "Iteration: $iteration, Num: $num"
-            echo "--------------------------------------------"
-            echo "Target PDB Results:"
-            echo "    Binding Affinity: ${target_binding_affinity} kcal/mol"
-            echo "    Dissociation Constant: ${target_diss_constant} M"
-            echo "Raw PDB Results:"
-            echo "    Binding Affinity: ${raw_binding_affinity} kcal/mol"
-            echo "    Dissociation Constant: ${raw_diss_constant} M"
-            echo "--------------------------------------------"
-
-            # OPTIONAL: Add conditional analysis (e.g., higher binding affinity)
-            if (( $(echo "$target_binding_affinity < $raw_binding_affinity" | bc -l) )); then
-                echo "Target PDB has a stronger binding affinity."
-            else
-                echo "Raw PDB has a stronger binding affinity."
-            fi
+                echo "# ========= ProteinPMNN binder prediction =========";
+                echo "$pmnn_result" | sed 's/^/# /';   # Add a "#" in front of every line in pmnn_result
+                echo "# ";
+                echo "# ========= PRODIGY results ========= ";
+                echo "# Binding affinity (kcal.mol-1): ${binding_affinity}";
+                echo "# Dissociation constant (Kb) at 25.0˚C: ${diss_constant}";
+                echo "# No. of intermolecular contacts: ${num_contacts}";
+                echo "# No. of charged-charged contacts: ${num_charged_charged}";
+                echo "# No. of charged-polar contacts: ${num_charged_polar}";
+                echo "# No. of charged-apolar contacts: ${num_charged_apolar}";
+                echo "# No. of polar-polar contacts: ${num_polar_polar}";
+                echo "# No. of apolar-polar contacts: ${num_apolar_polar}";
+                echo "# No. of apolar-apolar contacts: ${num_apolar_apolar}";
+                echo "# Percentage of apolar NIS residues: ${percent_apolar_nis}";
+                echo "# Percentage of charged NIS residues: ${percent_charged_nis}";
+                echo "# ";
+                cat "$aligned_pdb";
+            } > "$aligned_pdb".tmp && mv "$aligned_pdb".tmp "$aligned_pdb"
         done
-    done
-    done
-fi
+done
 

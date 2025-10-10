@@ -12,6 +12,7 @@ binder_file = sys.argv[2]
 diffusion = sys.argv[3]
 temp = sys.argv[4]
 DIR_OUT = sys.argv[5]
+raw = sys.argv[6] # not used
 
 new_chain = "B"
 cycle = os.path.splitext(os.path.basename(target_file))[0]
@@ -20,13 +21,18 @@ cycle = os.path.splitext(os.path.basename(target_file))[0]
 file_name = os.path.basename(binder_file)  # Extract the file name from the full path
 file_part = "_".join(file_name.split("_")[1:])  # Remove everything before and including the first "_"
 outname = f"5_{file_part}"
+if raw == "yes":
+    outname = outname.replace(".pdb", "_raw.pdb")  # Add "_raw" before the ".pdb"
+    outfile = os.path.join(DIR_OUT, outname)
+else:
+    outfile = os.path.join(DIR_OUT, outname)
+print(f"\noutfile:", outfile)
 
 print("==================== ", cycle, "======================")
 
 # OUTPUT FILE
 if not os.path.exists(DIR_OUT):
     os.makedirs(DIR_OUT)
-outfile = os.path.join(DIR_OUT, outname)
 
 print("target protein PDB: ", target_file)
 
