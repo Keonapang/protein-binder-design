@@ -29,6 +29,7 @@ parser.add_argument("--i", type=int, required=True, default=1,help="iterations")
 parser.add_argument("--hotspot_res", nargs='+', required=True, help="Hotspot residues (e.g., A67 A80)")
 parser.add_argument("--target_pdb", type=str, required=True, help="Path to precomputed PDB file of target protein")
 parser.add_argument("--cycle", type=str,help="Cycle/peptide name (e.g., '1', '1A', '1B', or '2')")
+parser.add_argument("--root", type=str)
 args = parser.parse_args()
 
 # Assign input arguments to variables
@@ -41,6 +42,7 @@ contigs = args.contigs
 i = args.i
 hotspot_res = args.hotspot_res
 target_pdb = args.target_pdb
+root = args.root
 
 # target_pdb = "/home/ubuntu/protein-binder-design/input/target_A60_90.pdb" # precomputed on AlphaFold2 colab
 # cycle = "1A"
@@ -60,7 +62,7 @@ print(f"Number of seqs to generate per target: {num_seq}"
       f"\nHotspot residues: {hotspot_res}\n"
 )
 # Set input directory 
-root = "/home/ubuntu/protein-binder-design"
+# root = "/home/ubuntu/protein-binder-design"
 os.makedirs(root, exist_ok=True)
 
 # Set input variables and path
@@ -73,8 +75,7 @@ name = f"{cycle}_{diffusion}diff_{temp}temp"
 # outdir = f"{root}/{diffusion}diff_{temp}temp"
 outdir = f"{root}/{cycle}"
 os.makedirs(outdir, exist_ok=True)
-if os.path.exists(outdir):
-    print(f"{outdir} already exists. Overwriting...")
+print(f"Output dir: {outdir}")
     
 pdb_path = target_pdb
 if not os.path.exists(pdb_path):
@@ -103,13 +104,13 @@ NIM_HOST_URL_BASE = "http://localhost"
 NIM_HOST_URL_BASE = "http://localhost"
 
 class NIM_PORTS(Enum):
-    ALPHAFOLD2_PORT = 8081
+    # ALPHAFOLD2_PORT = 8081
     RFDIFFUSION_PORT = 8082
     PROTEINMPNN_PORT = 8083
     # AF2_MULTIMER_PORT = 8084
 
 class NIM_ENDPOINTS(StrEnum):
-    ALPHAFOLD2 = "protein-structure/alphafold2/predict-structure-from-sequence"
+    # ALPHAFOLD2 = "protein-structure/alphafold2/predict-structure-from-sequence"
     RFDIFFUSION =  "biology/ipd/rfdiffusion/generate"
     PROTEINMPNN =  "biology/ipd/proteinmpnn/predict"
     # AF2_MULTIMER = "protein-structure/alphafold2/multimer/predict-structure-from-sequences"
@@ -183,8 +184,8 @@ status = check_nim_readiness(NIM_PORTS.PROTEINMPNN_PORT.value)
 print(f"ProteinMPNN ready: {status}")
 # status = check_nim_readiness(NIM_PORTS.AF2_MULTIMER_PORT.value)
 # print(f"AlphaFold-Multimer ready: {status}")
-status = check_nim_readiness(NIM_PORTS.ALPHAFOLD2_PORT.value)
-print(f"AlphaFold2 ready: {status}")
+# status = check_nim_readiness(NIM_PORTS.ALPHAFOLD2_PORT.value)
+# print(f"AlphaFold2 ready: {status}")
 
 ##############################################################
 # Query code 
@@ -207,8 +208,6 @@ example = ExampleRequestParams(
 ##############################################################
 
 precomputed_pdb = get_reduced_pdb(pdb_path, rcsb_path=None)
-# pdb_path="/home/ubuntu/protein-binder-design/input/pep1A.pdb"
-# pdb_path="/home/ubuntu/protein-binder-design/input/target_A60_90.pdb"
 
 # iterate through i iterations
 for iteration in range(i):

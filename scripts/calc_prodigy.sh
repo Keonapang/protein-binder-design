@@ -1,118 +1,156 @@
-#!/bin/bash
-######################################################
-# Calculate binding free energy using PRODIGY
-# Inputs: Two PDB files of the peptide binder and raw target sequence complex
-# Output: A single combined PDB file with header notes; 
-#       - including predicted peptide sequence,
-#       - free energy (ΔG) and dissociation constant (Kd) etc..
+#!/usr/bin/env bash
+# Command-line tool for PRODIGY
 
-# Usage: calc_prodigy.sh ${chain} ${start_pos} ${end_pos} ${diffusion} ${temp} ${i} ${num_seq} ${target_sequence} ${REPO_DIR} ${raw_pdb} $input_file
-######################################################
-chain=$1
-start_pos=$2
-end_pos=$3
-diffusion=$4
-temp=$5
-i=$6
-num_seq=$7
-target_sequence=$8
-REPO_DIR=$9
-target_pdb=${10}
-input_file=$11
+# chmod +x /home/ubuntu/protein-binder-design/scripts/get_target_pdb.sh
+# get_target_pdb ${input_file} ${output_file} ${chain} ${start_pos} ${end_pos}
 
-# At least 11 arguments are provided
-if [[ $# -lt 11 ]]; then
-    echo "At least 11 arguments are required."
-    echo "Usage: $0 {name} {params} {i} {num_seq} {target_sequence} {REPO_DIR} {target_pdb} {input_file}"
-    continue
+input_file="$1"
+output_file="$2"
+chain="$3"
+start_pos="$4"
+end_pos="$5"
+
+echo "input_file: ${input_file}"
+echo "output_file: ${output_file}"
+echo "chain: ${chain}"
+echo "start_pos: ${start_pos}"
+echo "end_pos: ${end_pos}"
+
+start_pos=603
+end_pos=642
+chain="A"
+input_file="/home/shadeform/protein-binder-design/input/apob.pdb"
+output_file="/home/shadeform/protein-binder-design/input/target_${chain}${start_pos}_${end_pos}.pdb"
+
+# Check if start and end positions exist in the PDB file
+valid_positions=$(awk -v chain="$chain" -v start="$start_pos" -v end="$end_pos" '
+    $1 == "ATOM" && $5 == chain && ($6 == start || $6 == end) { print $6 }
+' "$input_file" | sort -nu)
+
+# Check if start and end positions are valid
+if ! echo "$valid_positions" | grep -q "$start_pos"; then
+    echo "Error: Start position $start_pos not found in column 6 for chain $chain in $input_file."
 fi
 
-name="target_${chain}${start_pos}_${end_pos}"
-params="${diffusion}diff_${temp}temp"
-echo $name
+if ! echo "$valid_positions" | grep -q "$end_pos"; then
+    echo "Error: End position $end_pos not found in column 6 for chain $chain in $input_file."
+fi
 
-echo ""
-echo "####################################################"
-echo "Running PRODIGY to calculate dissociation constant"
-echo "####################################################"
-echo "REPO_DIR: $REPO_DIR"
-echo ""
+# Create the output file and write the "MODEL 1" header (space-delimited)
+printf "MODEL        1\n" > "$output_file"
+# Process the input PDB file
+awk -v chain="$chain" -v start="$start_pos" -v end="$end_pos" '
+BEGIN {
+        atom_counter = 1;  # Counter for atom indices
+    }
+    # Only process rows starting with "ATOM" and matching the specified chain
+    $1 == "ATOM" && $5 == chain {
+        if ($6 >= start && $6 <= end) {
+            # Save the current row details for later use
+            last_row = $0;
+            last_atom_number = atom_counter;
+            last_residue = $4;  # Residue name
+            last_residue_number = $6;  # Residue number
 
-# REPO_DIR="/home/ubuntu/protein-binder-design"
+            # Print each ATOM line with proper space-delimited formatting
+            printf "ATOM  %5d %-4s %-3s %1s%4d    %8.3f%8.3f%8.3f  %5.2f %5.2f           %s\n",
+                atom_counter, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12;
+            atom_counter++;
+        }
+    }
+    END {
+        # Print the TER line with the last residue details
+        printf "TER   %5d      %3s %1s%4d\n", last_atom_number + 1, last_residue, chain, last_residue_number;
+}
+' "$input_file" >> "$output_file"
 
+# Add the "ENDMDL" and "END" lines (space-delimited)
+printf "ENDMDL\n" >> "$output_file"
+printf "END\n" >> "$output_file"
+echo " "
+echo "Target seq PDB: $output_file"
 
-for iteration in $(seq 1 $i); do
-    for num in $(seq 1 $num_seq); do
-        aligned_pdb=${REPO_DIR}/${name}/5_${name}_${params}_i${i}_${num}_complex.pdb
-        echo "Input: ${name}/5_${name}_${params}_i${i}_${num}_complex.pdb"
-        echo ""
-        if [ ! -f "$aligned_pdb" ]; then
-            echo "MISSING: $aligned_pdb"
-            echo ""
-            continue
-        fi
+# get_target_pdb() {
+#     # Arguments: input file, output file, chain, start residue position, end residue position
+#     input_file="$1"
+#     output_file="$2"
+#     chain="$3"
+#     start_pos="$4"
+#     end_pos="$5"
 
-        if grep -q "Final PDB complex of target protein and designed peptide binder" "$aligned_pdb"; then
-            echo "ERROR: The aligned PDB file contains headers already!!"
-            continue
-        fi
+#     # Create the output file and write the "MODEL 1" header (space-delimited)
+#     printf "MODEL        1\n" > "$output_file"
 
-            # Get peptide binder sequence from proteinPMNN output
-            pmnn_file="${REPO_DIR}/${name}/3_${name}_${params}_i${iteration}.fasta"
-            start_line=$((num * 2 + 1))
-            end_line=$((num * 2 + 2))
-            pmnn_result=$(sed -n "${start_line},${end_line}p" "$pmnn_file")
+#     # Process the input PDB file
+#     awk -v chain="$chain" -v start="$start_pos" -v end="$end_pos" '
+#     BEGIN {
+#         atom_counter = 1;  # Counter for atom indices
+#     }
+#     # Only process rows starting with "ATOM" and matching the specified chain
+#     $1 == "ATOM" && $5 == chain {
+#         if ($6 >= start && $6 <= end) {
+#             # Save the current row details for later use
+#             last_row = $0;
+#             last_atom_number = atom_counter;
+#             last_residue = $4;  # Residue name
+#             last_residue_number = $6;  # Residue number
 
-            # 2. Run PRODIGY to predict binding affinity (kcal.mol-1)
-            prodigy_output=$(prodigy "$aligned_pdb" -np 4 --contact_list)
+#             # Print each ATOM line with proper space-delimited formatting
+#             printf "ATOM  %5d %-4s %-3s %1s%4d    %8.3f%8.3f%8.3f  %5.2f %5.2f           %s\n",
+#                 atom_counter, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12;
+#             atom_counter++;
+#         }
+#     }
+#     END {
+#         # Print the TER line with the last residue details
+#         printf "TER   %5d      %3s %1s%4d\n", last_atom_number + 1, last_residue, chain, last_residue_number;
+#     }
+#     ' "$input_file" >> "$output_file"
 
-            # Extract all the necessary values from the output
-            binding_affinity=$(echo "$prodigy_output" | grep "Predicted binding affinity" | awk '{print $6}')
-            diss_constant=$(echo "$prodigy_output" | grep "Predicted dissociation constant" | awk '{print $8}')
-            num_contacts=$(echo "$prodigy_output" | grep "No. of intermolecular contacts" | awk '{print $6}')
-            num_charged_charged=$(echo "$prodigy_output" | grep "No. of charged-charged contacts" | awk '{print $6}')
-            num_charged_polar=$(echo "$prodigy_output" | grep "No. of charged-polar contacts" | awk '{print $6}')
-            num_charged_apolar=$(echo "$prodigy_output" | grep "No. of charged-apolar contacts" | awk '{print $6}')
-            num_polar_polar=$(echo "$prodigy_output" | grep "No. of polar-polar contacts" | awk '{print $6}')
-            num_apolar_polar=$(echo "$prodigy_output" | grep "No. of apolar-polar contacts" | awk '{print $6}')
-            num_apolar_apolar=$(echo "$prodigy_output" | grep "No. of apolar-apolar contacts" | awk '{print $6}')
-            percent_apolar_nis=$(echo "$prodigy_output" | grep "Percentage of apolar NIS residues" | awk '{print $7}')
-            percent_charged_nis=$(echo "$prodigy_output" | grep "Percentage of charged NIS residues" | awk '{print $7}')
-            echo "Binding affinity ($binding_affinity kcal.mol-1)"
-            echo "Dissociation constant ($diss_constant Kb at 25.0˚C)"
+#     # Add the "ENDMDL" and "END" lines (space-delimited)
+#     printf "ENDMDL\n" >> "$output_file"
+#     printf "END\n" >> "$output_file"
 
-            # 3. Update PDB with comments
-            {
-                echo "# Final PDB complex of target protein and designed peptide binder";
-                echo "# Date: $(date +%Y-%m-%d)";
-                echo "# Target sequence: ${target_sequence}";
-                echo "# ";
-                echo "# ========= Parameters ========= ";
-                echo "# target_pdb: ${target_pdb}";
-                echo "# input target coordinates: ${input_file}";
-                echo "# diffusion=${diffusion}";
-                echo "# temp=${temp}";
-                echo "# i=${i} total RFDiffusion candidates";
-                echo "# num=${num_seq} ProteinMPNN seqs per RFDiffusion candidate";
-                echo "# ";
-                echo "# ========= ProteinPMNN binder prediction =========";
-                echo "$pmnn_result" | sed 's/^/# /';   # Add a "#" in front of every line in pmnn_result
-                echo "# ";
-                echo "# ========= PRODIGY results ========= ";
-                echo "# Binding affinity (kcal.mol-1): ${binding_affinity}";
-                echo "# Dissociation constant (Kb) at 25.0˚C: ${diss_constant}";
-                echo "# No. of intermolecular contacts: ${num_contacts}";
-                echo "# No. of charged-charged contacts: ${num_charged_charged}";
-                echo "# No. of charged-polar contacts: ${num_charged_polar}";
-                echo "# No. of charged-apolar contacts: ${num_charged_apolar}";
-                echo "# No. of polar-polar contacts: ${num_polar_polar}";
-                echo "# No. of apolar-polar contacts: ${num_apolar_polar}";
-                echo "# No. of apolar-apolar contacts: ${num_apolar_apolar}";
-                echo "# Percentage of apolar NIS residues: ${percent_apolar_nis}";
-                echo "# Percentage of charged NIS residues: ${percent_charged_nis}";
-                echo "# ";
-                cat "$aligned_pdb";
-            } > "$aligned_pdb".tmp && mv "$aligned_pdb".tmp "$aligned_pdb"
-        done
-done
+#     echo " "
+#     echo "Target seq PDB: $output_file"
+# }
 
+# get_target_pdb() {
+#     # Arguments: input file, output file, chain, start residue position, end residue position
+#     input_file="$1"
+#     output_file="$2"
+#     chain="$3"
+#     start_pos="$4"
+#     end_pos="$5"
+
+#     # Create the output file and write the "MODEL 1" header (space-delimited)
+#     printf "MODEL        1\n" > "$output_file"
+
+#     # Process the input PDB file
+#     awk -v chain="$chain" -v start="$start_pos" -v end="$end_pos" '
+#     BEGIN {
+#         atom_counter = 1;  # Counter for atom indices
+#     }
+#     # Only process rows starting with "ATOM" and matching the specified chain
+#     $1 == "ATOM" && $5 == chain {
+#         if ($6 >= start && $6 <= end) {
+#             # Print each ATOM line with proper space-delimited formatting
+#             printf "ATOM  %5d %-4s %-3s %1s%4d    %8.3f%8.3f%8.3f  %5.2f %5.2f           %s\n",
+#                 atom_counter, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12;
+#             atom_counter++;
+#         }
+#     }
+#     ' "$input_file" >> "$output_file"
+
+#     # Add the "TER" line (space-delimited)
+#     last_atom=$(awk '/^ATOM/ {last_atom = $2} END {print last_atom}' "$output_file")  # Get last atom number
+#     last_res=$(awk '/^ATOM/ {last_res = $6} END {print last_res}' "$output_file")    # Get last residue number
+#     printf "TER   %5d      %3s %1s%4d\n" "$((last_atom + 1))" "PRO" "$chain" "$last_res" >> "$output_file"
+
+#     # Add the "ENDMDL" and "END" lines (space-delimited)
+#     printf "ENDMDL\n" >> "$output_file"
+#     printf "END\n" >> "$output_file"
+
+#     echo " "
+#     echo "Target seq PDB: $output_file"
+# }
