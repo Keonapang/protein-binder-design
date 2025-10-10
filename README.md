@@ -437,19 +437,99 @@ done < "$input_file"
 
 while IFS=$'\t' read -r chain hotspot_res_prefix start_pos end_pos; do # space-delimited
 
+    # Variables (do not modify)
+    hotspot_res="${chain}${hotspot_res_prefix}"
+    contigs="A${start_pos}-${end_pos}/0 ${peptide_length}" # e.g. "A60-90/0 15-25"
+    name="target_${chain}${start_pos}_${end_pos}"
+    params="${diffusion}diff_${temp}temp"
+    echo "Processing chain=${chain}, hotspot_res=${hotspot_res}, start_pos=${start_pos}, end_pos=${end_pos}"
+    echo "name=${name},    params=${params},    contigs=${contigs}"
+    echo ""
+
+    # Step 3: Generate merged binding alignment for peptide and target protein, and then optimize alignment 
+    # time: ~2mins per structure
+    python3.13 ${REPO_DIR}/scripts/4_merge_seq_to_backbone.py "${REPO_DIR}" A ${i} ${num_seq} ${name} ${params} --solvent
+
     # Step 4: Main binding free energy calculation  
-    chmod +x "${REPO_DIR}/scripts/6_run_mmpbsa.sh"
-    cd ${REPO_DIR}/scripts # directory containing /mdp
     bash "${REPO_DIR}/scripts/6_run_mmpbsa.sh" ${REPO_DIR} ${name} ${params} ${i} ${num_seq}
 
     # Step 5 alternative: PRODIGY
-    bash "${REPO_DIR}/scripts/calc_prodigy.sh" "${chain}" "${start_pos}" "${end_pos}" "${diffusion}" "${temp}" "${i}" "${num_seq}" "${target_sequence}" "${REPO_DIR}" "${raw_pdb}" "${input_file}"
+    bash "${REPO_DIR}/scripts/5_run_prodigy.sh" "${chain}" "${start_pos}" "${end_pos}" "${diffusion}" "${temp}" "${i}" "${num_seq}" "${target_sequence}" "${REPO_DIR}" "${raw_pdb}" "${input_file}"
 
 done < "$input_file"
 
 ```
 
+### Parallel processing option
+
+```bash
+sed -n '1,8p' "$input_file" | while IFS=$'\t' read -r chain hotspot_res_prefix start_pos end_pos; do
+    {
+        # Variables (do not modify)
+        hotspot_res="${chain}${hotspot_res_prefix}"
+        contigs="A${start_pos}-${end_pos}/0 ${peptide_length}" # e.g. "A60-90/0 15-25"
+        name="target_${chain}${start_pos}_${end_pos}"
+        params="${diffusion}diff_${temp}temp"
+        echo "Processing chain=${chain}, hotspot_res=${hotspot_res}, start_pos=${start_pos}, end_pos=${end_pos}"
+        echo "name=${name},    params=${params},    contigs=${contigs}"
+        echo ""
+
+        # Step 3: Generate merged binding alignment for peptide and target protein, and then optimize alignment 
+        python3.13 "${REPO_DIR}/scripts/4_merge_seq_to_backbone.py" "${REPO_DIR}" A ${i} ${num_seq} ${name} ${params} --solvent
+        chmod +x "${REPO_DIR}/scripts/6_run_mmpbsa.sh"
+        bash "${REPO_DIR}/scripts/calc_prodigy.sh" "${chain}" "${start_pos}" "${end_pos}" "${diffusion}" "${temp}" "${i}" "${num_seq}" "${target_sequence}" "${REPO_DIR}" "${raw_pdb}" "${input_file}"
+    } &
+done
+
+# Wait for all background jobs to finish
+wait
+```
+
 ### Workflow outputs
+
+Example of **final aligned binder-target PDB**:
+
+```bash
+# Final PDB complex of target protein and designed peptide binder
+# Date: 2025-10-08
+# Target sequence: SSQLSRALLSLLLAL
+# RFDiffusion candidate 1, ProteinPMNN predicted sequence 1
+#
+# ========= Input parameters ========= 
+# target_pdb= ./input/pdb2e7a.pdb
+# input coordinates file: ./input/target_hotspots.txt
+# input line num=1
+# chain=A
+# start_pos=60
+# end_pos=90
+# diffusion=50
+# temp=30
+# iteration=5 total RFDiffusion candidates
+# num_seq=2 total ProteinMPNN sequences
+# 
+# ========= ProteinPMNN predicted peptide =========
+# >T=0.3, sample=1, score=1.9195, global_score=2.2284, seq_recovery=0.0000
+# SSQLSRALLSLLLAL
+# 
+# ========= PRODIGY results ========= 
+# Binding affinity (kcal.mol-1): -7.6 
+# Dissociation constant (Kb) at 25.0˚C: 2.8e-06
+# No. of intermolecular contacts: 11
+# No. of charged-charged contacts: 0.0
+# No. of charged-polar contacts: 0.0
+# No. of charged-apolar contacts: 3.0
+# No. of polar-polar contacts: 0.0
+# No. of apolar-polar contacts: 2.0
+# No. of apolar-apolar contacts: 6.0
+# Percentage of apolar NIS residues: 45.65
+# Percentage of charged NIS residues: 4.35
+#
+# ATOM      1  N   PRO A   8      18.727  24.301  31.792  1.00 56.82           N  
+# ATOM      2  CA  PRO A   8      17.276  24.324  31.476  1.00 57.03           C  
+# ATOM      3  C   PRO A   8      16.970  25.033  30.160  1.00 59.51           C  
+# ATOM      4  O   PRO A   8      17.158  26.246  30.040  1.00 60.32           O  
+
+```
 
 Example of **ProteinPMNN** .fasta output if `num_seq=2`:
 
@@ -461,41 +541,6 @@ Example of **ProteinPMNN** .fasta output if `num_seq=2`:
     ]
 ```
 
-Example of **final aligned binder-target PDB**:
-
-```bash
-# Final PDB complex of target protein and designed peptide binder
-# Date: 2025-09-18
-# Target sequence: ISRISTTHNQPVNLLSAIRSPCQRETPEGAE
-# Parameters: 
-#     target_pdb=/home/shadeform/protein-binder-design/input/pdb2e7a.pdb
-#     binder_pdb=/home/shadeform/protein-binder-design/target_A60_90/4_target_A60_90_50diff_0.3temp_binder_i5_2.pdb
-#     diffusion=50
-#     temp=0.3
-#     iteration=5 RFDiffusion candidates
-#     num=2 seqs from ProteinMPNN per candidate
-# 
-# Predicted peptide binder from ProteinPMNN:
-# >T=0.3, sample=2, score=1.6251, global_score=2.0374, seq_recovery=0.0000
-# LTAEELAKLLAAAAAALALLALL
-# PRODIGY results: 
-#     Predicted binding affinity (kcal.mol-1): -24.3
-#     Predicted dissociation constant (M) at 25.0˚C: 1.6e-18
-#     No. of intermolecular contacts: 283
-#     No. of charged-charged contacts: 8.0
-#     No. of charged-polar contacts: 10.0
-#     No. of charged-apolar contacts: 40.0
-#     No. of polar-polar contacts: 21.0
-#     No. of apolar-polar contacts: 81.0
-#     No. of apolar-apolar contacts: 123.0
-#     Percentage of apolar NIS residues: residues:
-#     Percentage of charged NIS residues: residues:
-# ATOM      1  N   PRO A   8      18.727  24.301  31.792  1.00 56.82           N  
-# ATOM      2  CA  PRO A   8      17.276  24.324  31.476  1.00 57.03           C  
-# ATOM      3  C   PRO A   8      16.970  25.033  30.160  1.00 59.51           C  
-# ATOM      4  O   PRO A   8      17.158  26.246  30.040  1.00 60.32           O  
-
-```
 
 Example of **PRODIGY** output in the terminal:
 

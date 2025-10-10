@@ -40,7 +40,6 @@ echo ""
 
 # REPO_DIR="/home/ubuntu/protein-binder-design"
 
-
 for iteration in $(seq 1 $i); do
     for num in $(seq 1 $num_seq); do
         aligned_pdb=${REPO_DIR}/${name}/5_${name}_${params}_i${i}_${num}_complex.pdb
@@ -86,16 +85,17 @@ for iteration in $(seq 1 $i); do
                 echo "# Final PDB complex of target protein and designed peptide binder";
                 echo "# Date: $(date +%Y-%m-%d)";
                 echo "# Target sequence: ${target_sequence}";
+                echo "# RFDiffusion candidate ${iteration}, ProteinPMNN predicted sequence ${num}";
                 echo "# ";
-                echo "# ========= Parameters ========= ";
+                echo "# ========= Input parameters ========= ";
                 echo "# target_pdb: ${target_pdb}";
                 echo "# input target coordinates: ${input_file}";
                 echo "# diffusion=${diffusion}";
                 echo "# temp=${temp}";
-                echo "# i=${i} total RFDiffusion candidates";
-                echo "# num=${num_seq} ProteinMPNN seqs per RFDiffusion candidate";
+                echo "# iteration=${i} total RFDiffusion candidates";
+                echo "# num_seq=${num_seq} total ProteinMPNN sequences";
                 echo "# ";
-                echo "# ========= ProteinPMNN binder prediction =========";
+                echo "# ========= ProteinPMNN predicted peptide =========";
                 echo "$pmnn_result" | sed 's/^/# /';   # Add a "#" in front of every line in pmnn_result
                 echo "# ";
                 echo "# ========= PRODIGY results ========= ";
