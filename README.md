@@ -372,7 +372,7 @@ The command `get_target_pdb` checks that `start_pos` and `end_pos` are valid giv
     - `hotspot_res`: A20 # array (i.e. "A20")
     - `temp`: sample temperature controls the diversity of designed peptides. Higher values will lead to more diversity (range:0-1)
 
-- **AlphaFold2**: takes in a list of peptide amino acid sequence(s) from ProteinMPNN, and predicts each of their PDB structures
+**Define variables**
 
 ```bash
 # Define protein
@@ -398,13 +398,17 @@ peptide_length="15-25" # set a range (i.e."15-25") or a value ("25")
 
 ```
 
-Clean up input file
+**Clean up the format of the input file**
+
 
 ```bash
+# Ensure any space delimited regions are all converted to tab-delimited 
 awk '{$1=$1; gsub(" ", "\t"); print}' "$input_file" > "$input_file.tmp" && mv "$input_file.tmp" "$input_file"
 sed -i 's/\r$//' "$input_file"
 
 ```
+
+**Run through each line of the input file**
 
 ```bash
 
