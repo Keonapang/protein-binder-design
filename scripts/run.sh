@@ -11,6 +11,8 @@
 # output_file="/home/ubuntu/protein-binder-design/input/target_${chain}${start_pos}_${end_pos}.pdb"
 
 
+sudo apt install python3.11 
+sudo apt update
 
 # Install conda
 wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
@@ -25,8 +27,6 @@ conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/ma
 conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/r
 
 # **Set up `openmm` and `pdbfier` to align backbones (requires python 3.13):**
-sudo apt install python3.11 
-sudo apt update
 cd ~
 git clone https://github.com/openmm/pdbfixer
 cd pdbfixer
@@ -34,6 +34,7 @@ python setup.py install
 
 # use Conda to install pdbfixer and openmm (writes to python3.13)
 conda create -n pdbfixer_env python=3.13 -y
+conda init
 conda activate pdbfixer_env
 conda install -c conda-forge pdbfixer
 conda install -c conda-forge openmm
@@ -41,11 +42,10 @@ python3.13 -m pip install numpy prodigy-prot torch Bio biopython pdb-tools
 
 
 # Optional 
-    sed -i 's/\r$//' "${REPO_DIR}/scripts/get_target_pdb.sh" # optional (to remove any hidden spaces from Windows)
-    sed -i 's/\r$//' "${REPO_DIR}/scripts/calc_prodigy.sh" 
-    sed -i 's/\r$//' "${REPO_DIR}/input/target_hotspots.txt" 
-    sed -i 's/^[ \t]*//;s/[ \t]*$//' "${REPO_DIR}/scripts/calc_prodigy.sh"
-
+sed -i 's/\r$//' "${REPO_DIR}/scripts/get_target_pdb.sh" # optional (to remove any hidden spaces from Windows)
+sed -i 's/\r$//' "${REPO_DIR}/scripts/calc_prodigy.sh" 
+sed -i 's/\r$//' "${REPO_DIR}/input/target_hotspots.txt" 
+sed -i 's/^[ \t]*//;s/[ \t]*$//' "${REPO_DIR}/scripts/calc_prodigy.sh"
 chmod +x "${REPO_DIR}/scripts/get_target_pdb.sh"
 ########################################################################################################### 
 
@@ -122,19 +122,23 @@ while IFS=$'\t' read -r chain hotspot_res_prefix start_pos end_pos; do # space-d
 done < "$input_file"
 
 
-while IFS=$' ' read -r chain hotspot_res_prefix start_pos end_pos; do # space-delimited
-
+while IFS=$'\t' read -r chain hotspot_res_prefix start_pos end_pos; do # space-delimited
+    # Variables (do not modify)
+    hotspot_res="${chain}${hotspot_res_prefix}"
+    contigs="A${start_pos}-${end_pos}/0 ${peptide_length}" # e.g. "A60-90/0 15-25"
+    name="target_${chain}${start_pos}_${end_pos}"
+    params="${diffusion}diff_${temp}temp"
+    echo "Processing chain=${chain}, hotspot_res=${hotspot_res}, start_pos=${start_pos}, end_pos=${end_pos}"
+    echo "name=${name},    params=${params},    contigs=${contigs}"
+    echo ""
     # Step 3: Generate merged binding alignment for peptide and target protein, and then optimize alignment 
     # time: ~2mins per structure
     python3.13 ${REPO_DIR}/scripts/4_merge_seq_to_backbone.py "${REPO_DIR}" A ${i} ${num_seq} ${name} ${params} --solvent
 
     # Step 4: Main binding free energy calculation  
-    # time: 
-    chmod +x "${REPO_DIR}/scripts/6_run_mmpbsa.sh"
-    cd ${REPO_DIR}/scripts # directory containing /mdp
-    bash "${REPO_DIR}/scripts/6_run_mmpbsa.sh" ${REPO_DIR} ${name} ${params} ${i} ${num_seq}
+    # bash "${REPO_DIR}/scripts/5_run_mmpbsa.sh" ${REPO_DIR} ${name} ${params} ${i} ${num_seq}
 
-    # Step 5 alternative: PRODIGY
-    bash "${REPO_DIR}/scripts/calc_prodigy.sh" "${chain}" "${start_pos}" "${end_pos}" "${diffusion}" "${temp}" "${i}" "${num_seq}" "${target_sequence}" "${REPO_DIR}" "${raw_pdb}" "${input_file}"
+    # Step 4 alternative: PRODIGY
+    bash "${REPO_DIR}/scripts/5_run_prodigy.sh" "${chain}" "${start_pos}" "${end_pos}" "${diffusion}" "${temp}" "${i}" "${num_seq}" "${target_sequence}" "${REPO_DIR}" "${raw_pdb}" "${input_file}"
 
 done < "$input_file"
