@@ -421,7 +421,6 @@ while IFS=$'\t' read -r chain hotspot_res_prefix start_pos end_pos; do # space-d
     name="target_${chain}${start_pos}_${end_pos}"
     params="${diffusion}diff_${temp}temp"
     echo "Processing chain=${chain}, hotspot_res=${hotspot_res}, start_pos=${start_pos}, end_pos=${end_pos}"
-    echo "name=${name},    params=${params},    contigs=${contigs}"
     echo ""
 
     # Step 1: Build target structure PDB and extract target seq amino acid
@@ -442,16 +441,13 @@ while IFS=$'\t' read -r chain hotspot_res_prefix start_pos end_pos; do # space-d
     contigs="A${start_pos}-${end_pos}/0 ${peptide_length}" # e.g. "A60-90/0 15-25"
     name="target_${chain}${start_pos}_${end_pos}"
     params="${diffusion}diff_${temp}temp"
-    echo "Processing chain=${chain}, hotspot_res=${hotspot_res}, start_pos=${start_pos}, end_pos=${end_pos}"
-    echo "name=${name},    params=${params},    contigs=${contigs}"
-    echo ""
 
     # Step 3: Generate merged binding alignment for peptide and target protein, and then optimize alignment 
-    # time: ~2mins per structure
+    # time: ~2-5mins per structure
     python3.13 ${REPO_DIR}/scripts/4_merge_seq_to_backbone.py "${REPO_DIR}" A ${i} ${num_seq} ${name} ${params} --solvent
 
     # Step 4: Main binding free energy calculation  
-    bash "${REPO_DIR}/scripts/6_run_mmpbsa.sh" ${REPO_DIR} ${name} ${params} ${i} ${num_seq}
+    bash "${REPO_DIR}/scripts/5_run_mmpbsa.sh" ${REPO_DIR} ${name} ${params} ${i} ${num_seq}
 
     # Step 5 alternative: PRODIGY
     bash "${REPO_DIR}/scripts/5_run_prodigy.sh" "${chain}" "${start_pos}" "${end_pos}" "${diffusion}" "${temp}" "${i}" "${num_seq}" "${target_sequence}" "${REPO_DIR}" "${raw_pdb}" "${input_file}"
@@ -460,27 +456,34 @@ done < "$input_file"
 
 ```
 
-### Parallel processing option
+### Parallel processing option (ensure its on CUDA GPU)
 
 ```bash
-sed -n '1,8p' "$input_file" | while IFS=$'\t' read -r chain hotspot_res_prefix start_pos end_pos; do
+# Get the total number of lines in the input file
+total_lines=$(wc -l < "$input_file")
+
+sed -n "1,${total_lines}p" "$input_file" | while IFS=$'\t' read -r chain hotspot_res_prefix start_pos end_pos; do
     {
         # Variables (do not modify)
         hotspot_res="${chain}${hotspot_res_prefix}"
-        contigs="A${start_pos}-${end_pos}/0 ${peptide_length}" # e.g. "A60-90/0 15-25"
+        contigs="A${start_pos}-${end_pos}/0 ${peptide_length}"
         name="target_${chain}${start_pos}_${end_pos}"
         params="${diffusion}diff_${temp}temp"
+
+        # Assign GPUs dynamically (e.g., alternate between GPU 0 and GPU 1)
+        line_index=$((++index % 2))  # Alternate between 0 and 1
+        export CUDA_VISIBLE_DEVICES=$line_index
+
+        echo "Running on GPU ${CUDA_VISIBLE_DEVICES}"
         echo "Processing chain=${chain}, hotspot_res=${hotspot_res}, start_pos=${start_pos}, end_pos=${end_pos}"
         echo "name=${name},    params=${params},    contigs=${contigs}"
         echo ""
 
         # Step 3: Generate merged binding alignment for peptide and target protein, and then optimize alignment 
         python3.13 "${REPO_DIR}/scripts/4_merge_seq_to_backbone.py" "${REPO_DIR}" A ${i} ${num_seq} ${name} ${params} --solvent
-        chmod +x "${REPO_DIR}/scripts/6_run_mmpbsa.sh"
-        bash "${REPO_DIR}/scripts/calc_prodigy.sh" "${chain}" "${start_pos}" "${end_pos}" "${diffusion}" "${temp}" "${i}" "${num_seq}" "${target_sequence}" "${REPO_DIR}" "${raw_pdb}" "${input_file}"
+        bash "${REPO_DIR}/scripts/5_run_prodigy.sh" "${chain}" "${start_pos}" "${end_pos}" "${diffusion}" "${temp}" "${i}" "${num_seq}" "${target_sequence}" "${REPO_DIR}" "${raw_pdb}" "${input_file}"
     } &
 done
-
 # Wait for all background jobs to finish
 wait
 ```

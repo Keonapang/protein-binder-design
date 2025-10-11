@@ -42,8 +42,10 @@ echo ""
 
 for iteration in $(seq 1 $i); do
     for num in $(seq 1 $num_seq); do
-        aligned_pdb=${REPO_DIR}/${name}/5_${name}_${params}_i${i}_${num}_complex.pdb
-        echo "Input: ${name}/5_${name}_${params}_i${i}_${num}_complex.pdb"
+
+        aligned_pdb=${REPO_DIR}/${name}/5_${name}_${params}_i${iteration}_${num}_complex.pdb
+
+        echo "Input: ${name}/5_${name}_${params}_i${iteration}_${num}_complex.pdb"
         echo ""
         if [ ! -f "$aligned_pdb" ]; then
             echo "MISSING: $aligned_pdb"
@@ -51,10 +53,10 @@ for iteration in $(seq 1 $i); do
             continue
         fi
 
-        if grep -q "Final PDB complex of target protein and designed peptide binder" "$aligned_pdb"; then
-            echo "ERROR: The aligned PDB file contains headers already!!"
-            continue
-        fi
+        # if grep -q "Final PDB complex of target protein and designed peptide binder" "$aligned_pdb"; then
+        #     echo "ERROR: The aligned PDB file contains headers already!!"
+        #     continue
+        # fi
 
             # Get peptide binder sequence from proteinPMNN output
             pmnn_file="${REPO_DIR}/${name}/3_${name}_${params}_i${iteration}.fasta"

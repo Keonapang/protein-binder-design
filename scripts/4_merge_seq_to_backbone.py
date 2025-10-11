@@ -47,7 +47,7 @@ iterations = int(iterations)
 if len(sys.argv) < 6:
     print("Usage: python 4_merge_seq_to_backbone.py ${REPO_DIR} B peptide.fasta peptide_merged.pdb iterations num_seq params --solvent")
 
-# Map 1-letter → 3-letter codes
+# Map 1-letter → 3-letter codesd
 aa_map = {
     'A':'ALA','C':'CYS','D':'ASP','E':'GLU','F':'PHE',
     'G':'GLY','H':'HIS','I':'ILE','K':'LYS','L':'LEU',
@@ -61,7 +61,7 @@ os.chdir(REPO_DIR)
 num_structures=iterations * num_seq
 
 print(f"\n########################################")
-print(f"Merging sequences onto backbone")
+print(f"4. Merging sequences onto backbone")
 print(f"########################################\n")
 print("Current directory:", os.getcwd())
 print(f"Total structures to process: {num_structures}")
