@@ -111,7 +111,6 @@ ATOM      2  CA  PRO A   8      17.276  24.324  31.476  1.00 57.03           C
     docker logs -f protein-binder-design-alphafold-1
 ```
 
-
 ## 2. Install conda
 
 Download and activate `conda`:
@@ -135,7 +134,7 @@ conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/r
 ```bash
 # Install python, if container doesn't come built with it
 sudo apt install python3.11 
-
+pip install prodigy-prot torch Bio
 # Install essentials
 sudo apt update
 ```
@@ -396,6 +395,14 @@ i=5
 num_seq=2
 peptide_length="15-25" # set a range (i.e."15-25") or a value ("25")
 
+```
+
+**Clean up the format of raw PDB file**
+Just in case the chain ID and residue number are not properly spaced (larger protein files are more susceptible)
+
+
+```bash
+${REPO_DIR}/scripts/fix_pdb_format.sh $raw_pdb
 ```
 
 **Clean up the format of the input file**
