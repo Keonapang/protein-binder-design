@@ -127,6 +127,8 @@ source ~/.bashrc # conda --version
 # Allow override permissions
 conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/main
 conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/r
+
+# After drunning the above, please open a new window and activate conda 
 ```
 
 ## 3. Install pre-requisites

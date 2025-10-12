@@ -26,6 +26,10 @@ input_file="$1"
 output_file="${input_file}"   # Overwrite original file if fixed
 backup_file="${input_file}_old"  # Backup file if modifications are made
 
+echo "Input file: $input_file"
+echo "Backup file (if modified): $backup_file"
+
+
 # Ensure the script takes exactly one input argument
 if [ "$#" -ne 1 ]; then
   echo "Usage: $0 <input_file>"
@@ -79,8 +83,5 @@ if [ "$fix_status" -eq 2 ]; then
 
   echo "Formatting issues detected and fixed."
   echo "Original file backed up as: $backup_file"
-  echo "Modified file saved as: $output_file"
+  echo "Modified file: $output_file"
 fi
-
-# If something else went wrong
-echo "An unexpected error occurred."

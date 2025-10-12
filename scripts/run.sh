@@ -46,7 +46,7 @@ conda activate pdbfixer_env
 conda install -c conda-forge pdbfixer
 conda install -c conda-forge openmm
 python3.13 -m pip install numpy prodigy-prot torch Bio biopython pdb-tools
-
+python3.13 -m pip prodigy-prot
 ########################################################################################################### 
 
 # Define protein
@@ -66,6 +66,15 @@ i=5
 num_seq=2
 peptide_length="15-25" # set a range (i.e."15-25") or a value ("25")
 chain="A"
+
+start_pos=91 
+end_pos=130
+name="target_${chain}${start_pos}_${end_pos}"
+params="${diffusion}diff_${temp}temp"
+aligned_pdb=${REPO_DIR}/${name}/5_${name}_${params}_i${i}_${num_seq}_complex.pdb
+
+aligned_pdb=${REPO_DIR}/target_A91_130/5_target_A91_130_50diff_0.3temp_i1_1_complex.pdb
+wc -l $aligned_pdb
 
 # check before running!
 wc -l $raw_pdb
@@ -178,4 +187,49 @@ sed -n '5,6p' "$input_file" | while IFS=$'\t' read -r chain hotspot_res_prefix s
     python3.13 ${REPO_DIR}/scripts/4_merge_seq_to_backbone.py "${REPO_DIR}" A ${i} ${num_seq} ${name} ${params} --solvent
     chmod +x "${REPO_DIR}/scripts/6_run_mmpbsa.sh"
     bash "${REPO_DIR}/scripts/calc_prodigy.sh" "${chain}" "${start_pos}" "${end_pos}" "${diffusion}" "${temp}" "${i}" "${num_seq}" "${target_sequence}" "${REPO_DIR}" "${raw_pdb}" "${input_file}"
+done
+
+sed -n '1p' "$input_file" | while IFS=$'\t' read -r chain hotspot_res_prefix start_pos end_pos; do
+    # Variables (do not modify)
+    hotspot_res="${chain}${hotspot_res_prefix}"
+    contigs="A${start_pos}-${end_pos}/0 ${peptide_length}" # e.g. "A60-90/0 15-25"
+    name="target_${chain}${start_pos}_${end_pos}"
+    params="${diffusion}diff_${temp}temp"
+    echo "Processing chain=${chain}, hotspot_res=${hotspot_res}, start_pos=${start_pos}, end_pos=${end_pos}"
+    echo "name=${name},    params=${params},    contigs=${contigs}"
+    echo ""
+
+    # Step 3: Generate merged binding alignment for peptide and target protein, and then optimize alignment 
+    # time: ~2mins per structure
+    # python3.13 ${REPO_DIR}/scripts/4_merge_seq_to_backbone.py "${REPO_DIR}" A ${i} ${num_seq} ${name} ${params} --solvent
+    # chmod +x "${REPO_DIR}/scripts/6_run_mmpbsa.sh"
+    bash "${REPO_DIR}/scripts/calc_prodigy.sh" "${chain}" "${start_pos}" "${end_pos}" "${diffusion}" "${temp}" "${i}" "${num_seq}" "${target_sequence}" "${REPO_DIR}" "${raw_pdb}" "${input_file}"
+done
+
+
+
+# Get the total number of lines in the input file
+total_lines=$(wc -l < "$input_file")
+
+sed -n "8p" "$input_file" | while IFS=$'\t' read -r chain hotspot_res_prefix start_pos end_pos; do
+    {
+        # Variables (do not modify)
+        hotspot_res="${chain}${hotspot_res_prefix}"
+        contigs="A${start_pos}-${end_pos}/0 ${peptide_length}"
+        name="target_${chain}${start_pos}_${end_pos}"
+        params="${diffusion}diff_${temp}temp"
+
+        # Assign GPUs dynamically (e.g., alternate between GPU 0 and GPU 1)
+        line_index=$((++index % 2))  # Alternate between 0 and 1
+        export CUDA_VISIBLE_DEVICES=1
+
+        echo "Running on GPU ${CUDA_VISIBLE_DEVICES}"
+        echo "Processing chain=${chain}, hotspot_res=${hotspot_res}, start_pos=${start_pos}, end_pos=${end_pos}"
+        echo "name=${name},    params=${params},    contigs=${contigs}"
+        echo ""
+
+        # Step 3: Generate merged binding alignment for peptide and target protein, and then optimize alignment 
+        python3.13 "${REPO_DIR}/scripts/4_merge_seq_to_backbone.py" "${REPO_DIR}" A ${i} ${num_seq} ${name} ${params} --solvent
+        bash "${REPO_DIR}/scripts/5_run_prodigy.sh" "${chain}" "${start_pos}" "${end_pos}" "${diffusion}" "${temp}" "${i}" "${num_seq}" "${target_sequence}" "${REPO_DIR}" "${raw_pdb}" "${input_file}"
+    } &
 done
