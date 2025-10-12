@@ -27,15 +27,24 @@ if [[ $# -lt 11 ]]; then
     continue
 fi
 
-name="target_${chain}${start_pos}_${end_pos}"
-params="${diffusion}diff_${temp}temp"
-echo $name
-
+# start_pos=91
+# end_pos=130
+# name="target_${chain}${start_pos}_${end_pos}"
+# params="${diffusion}diff_${temp}temp"
+# iteration=1
+# num=1
+# aligned_pdb=${REPO_DIR}/${name}/5_${name}_${params}_i${iteration}_${num}_complex.pdb
+# wc -l "$aligned_pdb"
+# wc -l "${REPO_DIR}/${name}/3_${name}_${params}_i${iteration}.fasta"
+# prodigy "$aligned_pdb" -np 4 --contact_list
 echo ""
 echo "####################################################"
 echo "5. Running PRODIGY to calculate dissociation constant"
 echo "####################################################"
 echo "REPO_DIR: $REPO_DIR"
+name="target_${chain}${start_pos}_${end_pos}"
+params="${diffusion}diff_${temp}temp"
+echo "name: $name"
 echo ""
 
 # REPO_DIR="/home/ubuntu/protein-binder-design"
@@ -45,7 +54,7 @@ for iteration in $(seq 1 $i); do
 
         aligned_pdb=${REPO_DIR}/${name}/5_${name}_${params}_i${iteration}_${num}_complex.pdb
 
-        echo "Input: ${name}/5_${name}_${params}_i${iteration}_${num}_complex.pdb"
+        echo "Aligned PDB:  5_${name}_${params}_i${iteration}_${num}_complex.pdb"
         echo ""
         if [ ! -f "$aligned_pdb" ]; then
             echo "MISSING: $aligned_pdb"
@@ -60,12 +69,29 @@ for iteration in $(seq 1 $i); do
 
             # Get peptide binder sequence from proteinPMNN output
             pmnn_file="${REPO_DIR}/${name}/3_${name}_${params}_i${iteration}.fasta"
+            if [ ! -f "$pmnn_file" ]; then
+                echo "MISSING: $pmnn_file"
+                echo ""
+                continue
+            fi
             start_line=$((num * 2 + 1))
             end_line=$((num * 2 + 2))
             pmnn_result=$(sed -n "${start_line},${end_line}p" "$pmnn_file")
 
             # 2. Run PRODIGY to predict binding affinity (kcal.mol-1)
             prodigy_output=$(prodigy "$aligned_pdb" -np 4 --contact_list)
+
+            # Check for errors in PRODIGY output
+            if echo "$prodigy_output" | grep -q -e "Error" -e "No contacts"; then
+                echo "============================================================="
+                echo ""
+                echo "$prodigy_output"  # Print the error message from PRODIGY
+                echo ""
+                echo "[!] Stopping /5_run_prodigy.sh due to error"
+                echo ""
+                echo "============================================================="
+                return 1  # Gracefully stop the script by returning a status code
+            fi
 
             # Extract all the necessary values from the output
             binding_affinity=$(echo "$prodigy_output" | grep "Predicted binding affinity" | awk '{print $6}')

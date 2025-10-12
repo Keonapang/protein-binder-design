@@ -230,4 +230,4 @@ for iteration in range(1, iterations + 1):
 total_end_time = time.time()
 total_time = total_end_time - total_start_time
 minutes = total_time / 60
-print(f"\nTotal time to process {num_structures} structures: {minutes:.2f} mins\n")
+print(f"\nTotal time to process {num_structures} structure(s): {minutes:.2f} mins\n")

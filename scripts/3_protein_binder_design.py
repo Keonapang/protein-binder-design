@@ -26,7 +26,7 @@ parser.add_argument("--temp", type=float, default=0.2,help="Sampling temperature
 parser.add_argument("--target_sequence", type=str, required=True, help="Input sequence")
 parser.add_argument("--contigs",type=str,required=True,help="Contigs string, e.g., 'A60-90/0 15-25'")
 parser.add_argument("--i", type=int, required=True, default=1,help="iterations")
-parser.add_argument("--hotspot_res", nargs='+', required=True, help="Hotspot residues (e.g., A67 A80)")
+parser.add_argument("--hotspot_res", nargs='+',help="Hotspot residues (e.g., A67 A80)")
 parser.add_argument("--target_pdb", type=str, required=True, help="Path to precomputed PDB file of target protein")
 parser.add_argument("--cycle", type=str,help="Cycle/peptide name (e.g., '1', '1A', '1B', or '2')")
 parser.add_argument("--root", type=str)
@@ -158,26 +158,49 @@ def get_reduced_pdb(pdb_id: str, rcsb_path: str = None) -> str:
     lines = filter(lambda line: line.startswith("ATOM"), pdb.read_text().split("\n"))
     return "\n".join(list(lines))
 
-class ExampleRequestParams:
-    def __init__(self,
-                target_sequence: str,
-                contigs: str, 
-                hotspot_res: List[str],
-                input_pdb_chains: List[str],
-                ca_only: bool,
-                use_soluble_model: bool,
-                sampling_temp: List[float],
-                diffusion_steps: int = 15,
-                num_seq_per_target: int = 20):
-        self.target_sequence = target_sequence
-        self.contigs = contigs
-        self.hotspot_res = hotspot_res
-        self.input_pdb_chains = input_pdb_chains
-        self.ca_only = ca_only
-        self.use_soluble_model = use_soluble_model
-        self.sampling_temp = sampling_temp
-        self.diffusion_steps = diffusion_steps
-        self.num_seq_per_target = num_seq_per_target
+if hotspot_res:  # Add hotspot_res only if it's provided
+    class ExampleRequestParams:
+        def __init__(self,
+                    target_sequence: str,
+                    contigs: str, 
+                    hotspot_res: List[str],
+                    input_pdb_chains: List[str],
+                    ca_only: bool,
+                    use_soluble_model: bool,
+                    sampling_temp: List[float],
+                    diffusion_steps: int = 15,
+                    num_seq_per_target: int = 20):
+            self.target_sequence = target_sequence
+            self.contigs = contigs
+            self.hotspot_res = hotspot_res
+            self.input_pdb_chains = input_pdb_chains
+            self.ca_only = ca_only
+            self.use_soluble_model = use_soluble_model
+            self.sampling_temp = sampling_temp
+            self.diffusion_steps = diffusion_steps
+            self.num_seq_per_target = num_seq_per_target
+else:
+    class ExampleRequestParams:
+        def __init__(self,
+                    target_sequence: str,
+                    contigs: str, 
+                    input_pdb_chains: List[str],
+                    ca_only: bool,
+                    use_soluble_model: bool,
+                    sampling_temp: List[float],
+                    diffusion_steps: int = 15,
+                    num_seq_per_target: int = 20):
+            self.target_sequence = target_sequence
+            self.contigs = contigs
+            self.hotspot_res = hotspot_res
+            self.input_pdb_chains = input_pdb_chains or []  # Default to empty list
+            self.ca_only = ca_only
+            self.use_soluble_model = use_soluble_model
+            self.sampling_temp = sampling_temp or []
+            self.diffusion_steps = diffusion_steps
+            self.num_seq_per_target = num_seq_per_target
+
+
 status = check_nim_readiness(NIM_PORTS.RFDIFFUSION_PORT.value)
 print(f"RFDiffusion ready: {status}")
 status = check_nim_readiness(NIM_PORTS.PROTEINMPNN_PORT.value)
@@ -194,7 +217,7 @@ print(f"\n ================== {cycle} ==================\n")
 example = ExampleRequestParams(
     target_sequence= target_sequence,
     contigs=contigs, 
-    hotspot_res=hotspot_res, # hotspot_res=["A67", "A80"]
+    hotspot_res=hotspot_res, # hotspot_res=["A67", "A80"], optional 
     input_pdb_chains=["A"], # [Optional] default is to design for all chains in the protein
     ca_only=False, # [Optional]  CA-only model helps to address specific needs in protein design where focusing on the alpha carbon (CA)
     use_soluble_model=True, 
@@ -214,13 +237,21 @@ for iteration in range(i):
     print(f"\n-----------[Iteration {iteration + 1} of {i}]-----------")
     outfile=f"{outdir}/2_{name}_i{iteration + 1}.pdb"
     
-    print(f"1. Running RFdiffusion...")
-    rfdiffusion_query = {
+    if hotspot_res:  # Add hotspot_res only if it's provided
+        print(f"1. Running RFdiffusion...")
+        rfdiffusion_query = {
+            "input_pdb": precomputed_pdb,  # Now using the precomputed PDB structure
+            "contigs": contigs,
+            "hotspot_res": hotspot_res,
+            "diffusion_steps": diffusion
+        }
+    else: 
+        print(f"1. Running RFdiffusion without hotspot_res ...")
+        rfdiffusion_query = {
         "input_pdb": precomputed_pdb,  # Now using the precomputed PDB structure
         "contigs": contigs,
-        "hotspot_res": hotspot_res,
         "diffusion_steps": diffusion
-    }
+        }
     rc, rfdiffusion_response = query_nim(
         payload=rfdiffusion_query,
         nim_endpoint=NIM_ENDPOINTS.RFDIFFUSION.value,
@@ -232,7 +263,6 @@ for iteration in range(i):
     
     # clear python memory 
     del rfdiffusion_query
-    del rfdiffusion_response
     gc.collect()
 ##############################################################
 # 3. ProteinMPNN
@@ -280,65 +310,65 @@ for iteration in range(i):
     ##############################################################
     # 3. AlphaFold to predict the structure of the binder alone
     ##############################################################
-    print(f"3. Running AlphaFold2 for {num_seq} seqs...")
+#     print(f"3. Running AlphaFold2 for {num_seq} seqs...")
 
-    # Preview binder_target_pairs
-    counter = 0
-    response_codes = [0 for i in binder_target_pairs]
-    results = [None for i in binder_target_pairs]
+#     # Preview binder_target_pairs
+#     counter = 0
+#     response_codes = [0 for i in binder_target_pairs]
+#     results = [None for i in binder_target_pairs]
 
-    for binder_target_pair in binder_target_pairs:
-        output_file = os.path.join(outdir, f"4_{name}_binder_i{iteration + 1}_{counter+1}.pdb")
+#     for binder_target_pair in binder_target_pairs:
+#         output_file = os.path.join(outdir, f"4_{name}_binder_i{iteration + 1}_{counter+1}.pdb")
         
-        # Check if the output file already exists
-        if os.path.exists(output_file):
-            print(f"Output file already exists: {output_file}. Skipping this binder.")
-            counter += 1
-            continue  # Skip this iteration if the file exists
+#         # Check if the output file already exists
+#         if os.path.exists(output_file):
+#             print(f"Output file already exists: {output_file}. Skipping this binder.")
+#             counter += 1
+#             continue  # Skip this iteration if the file exists
         
-        current_time = time.time()
-        predicted_binder = binder_target_pair[0]
-        print(f"\nDesigned binder ({counter+1} of {len(binder_target_pairs)}): {predicted_binder}")
-        alphafold2_query = {
-            "sequence" : predicted_binder,
-            "algorithm" : "mmseqs2",
-        }
-        rc, alphafold2_response = query_nim(
-            payload=alphafold2_query,
-            nim_endpoint=NIM_ENDPOINTS.ALPHAFOLD2.value,
-            nim_port=NIM_PORTS.ALPHAFOLD2_PORT.value
-        )
-        alphafold2_response[0][0:160]
-        if alphafold2_response and len(alphafold2_response) > 0:
-            first_structure = alphafold2_response[0]
+#         current_time = time.time()
+#         predicted_binder = binder_target_pair[0]
+#         print(f"\nDesigned binder ({counter+1} of {len(binder_target_pairs)}): {predicted_binder}")
+#         alphafold2_query = {
+#             "sequence" : predicted_binder,
+#             "algorithm" : "mmseqs2",
+#         }
+#         rc, alphafold2_response = query_nim(
+#             payload=alphafold2_query,
+#             nim_endpoint=NIM_ENDPOINTS.ALPHAFOLD2.value,
+#             nim_port=NIM_PORTS.ALPHAFOLD2_PORT.value
+#         )
+#         alphafold2_response[0][0:160]
+#         if alphafold2_response and len(alphafold2_response) > 0:
+#             first_structure = alphafold2_response[0]
             
-            with open(output_file, "w") as f:
-                f.write(first_structure)
-            # print(f"Saved best structure to {output_file}")
-        else:
-            print("WARNING: no structure predictions found!")
-        # response_codes[counter] = rc
-        # results[counter] = alphafold2_response
-        end_time = time.time()
-        elapsed_minutes = (end_time - current_time) / 60
-        print(f"Time: {elapsed_minutes:.2f} mins")
-        counter += 1
-        if counter >= num_seq:
-            break
+#             with open(output_file, "w") as f:
+#                 f.write(first_structure)
+#             # print(f"Saved best structure to {output_file}")
+#         else:
+#             print("WARNING: no structure predictions found!")
+#         # response_codes[counter] = rc
+#         # results[counter] = alphafold2_response
+#         end_time = time.time()
+#         elapsed_minutes = (end_time - current_time) / 60
+#         print(f"Time: {elapsed_minutes:.2f} mins")
+#         counter += 1
+#         if counter >= num_seq:
+#             break
 
-        # clear python memory 
-        del first_structure
-        del alphafold2_response
-        del output_file
-        del alphafold2_query
-        gc.collect()
+#         # clear python memory 
+#         del first_structure
+#         del alphafold2_response
+#         del output_file
+#         del alphafold2_query
+#         gc.collect()
 
-print(f"Results saved in : {outdir}")
-end_time = time.time()
-elapsed_minutes = (end_time - start_time) / 60
-print(f"Total time: {elapsed_minutes:.2f} mins")
+# print(f"Results saved in : {outdir}")
+# end_time = time.time()
+# elapsed_minutes = (end_time - start_time) / 60
+# print(f"Total time: {elapsed_minutes:.2f} mins")
 
-    # Print probabilities and sequence scores
+#     # Print probabilities and sequence scores
     # probs = proteinmpnn_response["probs"]
     # with open(f"{outdir}/3_{name}_proteinmpnn_probs_i{iteration + 1}.txt", "w") as probs_file:
     #     for i, prob_matrix in enumerate(probs):

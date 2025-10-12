@@ -4,11 +4,18 @@
 # chmod +x /home/ubuntu/protein-binder-design/scripts/get_target_pdb.sh
 # get_target_pdb ${input_file} ${output_file} ${chain} ${start_pos} ${end_pos}
 
+
 input_file="$1"
 output_file="$2"
 chain="$3"
 start_pos="$4"
 end_pos="$5"
+
+
+echo "--------------------------------"
+echo "Extracting target PDB"
+echo "--------------------------------"
+echo ""
 
 echo "input_file: ${input_file}"
 echo "output_file: ${output_file}"
@@ -16,11 +23,11 @@ echo "chain: ${chain}"
 echo "start_pos: ${start_pos}"
 echo "end_pos: ${end_pos}"
 
-start_pos=603
-end_pos=642
-chain="A"
-input_file="/home/shadeform/protein-binder-design/input/apob.pdb"
-output_file="/home/shadeform/protein-binder-design/input/target_${chain}${start_pos}_${end_pos}.pdb"
+# start_pos=603
+# end_pos=642
+# chain="A"
+# input_file="/home/shadeform/protein-binder-design/input/apob.pdb"
+# output_file="/home/shadeform/protein-binder-design/input/target_${chain}${start_pos}_${end_pos}.pdb"
 
 # Check if start and end positions exist in the PDB file
 valid_positions=$(awk -v chain="$chain" -v start="$start_pos" -v end="$end_pos" '

@@ -134,8 +134,6 @@ conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/r
 ## 3. Install pre-requisites
 
 ```bash
-# Install python, if container doesn't come built with it
-sudo apt install python3.11 
 pip install prodigy-prot torch Bio
 # Install essentials
 sudo apt update
@@ -148,6 +146,7 @@ cd ~
 git clone https://github.com/openmm/pdbfixer
 cd pdbfixer
 python setup.py install
+python -m pip install numpy prodigy-prot torch Bio biopython pdb-tools
 
 # use Conda to install pdbfixer and openmm (writes to python3.13)
 conda create -n pdbfixer_env python=3.13 -y
@@ -392,9 +391,9 @@ input_file="${REPO_DIR}/input/target_hotspots_${protein}.txt"  # chain, hotspot 
 # Define script input variables
 chain="A"
 diffusion=50
-temp=0.3 
-i=5
-num_seq=2
+temp=0.5
+i=1
+num_seq=1
 peptide_length="15-25" # set a range (i.e."15-25") or a value ("25")
 
 ```
@@ -404,6 +403,7 @@ Just in case the chain ID and residue number are not properly spaced (larger pro
 
 
 ```bash
+chmod +x ${REPO_DIR}/scripts/fix_pdb_format.sh
 ${REPO_DIR}/scripts/fix_pdb_format.sh $raw_pdb
 ```
 
@@ -411,7 +411,7 @@ ${REPO_DIR}/scripts/fix_pdb_format.sh $raw_pdb
 
 
 ```bash
-# Ensure any space delimited regions are all converted to tab-delimited 
+# Ensure any space delimited regions are all converted to tab-delimited. If file is already tab-delimited, running this won't change anything.
 awk '{$1=$1; gsub(" ", "\t"); print}' "$input_file" > "$input_file.tmp" && mv "$input_file.tmp" "$input_file"
 sed -i 's/\r$//' "$input_file"
 
