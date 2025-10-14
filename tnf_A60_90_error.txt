@@ -1,0 +1,231 @@
+(base) shadeform@brev-damoeppeo:~/protein-binder-design/scripts$ 
+sed -n '2p' "$input_file" | while IFS=$'\t' read -r chain hotspot_res_prefix start_pos end_pos; do
+    # Variables (do not modify)
+    hotspot_res="${chain}${hotspot_res_prefix}"
+    contigs="A${start_pos}-${end_pos}/0 ${peptide_length}" # e.g. "A60-90/0 15-25"
+    name="target_${chain}${start_pos}_${end_pos}"
+    params="${diffusion}diff_${temp}temp"
+    echo "Processing chain=${chain}, hotspot_res=${hotspot_res}, start_pos=${start_pos}, end_pos=${end_pos}"
+    echo "name=${name},    params=${params},    contigs=${contigs}"
+    echo ""
+    echo "=========================================================================="
+    export CUDA_VISIBLE_DEVICES=1
+    # unset hotspot_res # NO HOTSPOTS SET
+
+    # Step 1: Build target structure PDB and extract target seq amino acid
+    target_pdb="${REPO_DIR}/input/${name}.pdb" # Output PDB path
+    bash ${REPO_DIR}/scripts/get_target_pdb.sh "${raw_pdb}" "${target_pdb}" "${chain}" "${start_pos}" "${end_pos}"
+    if [ -f "$target_pdb" ]; then target_sequence=$(bash "${REPO_DIR}/scripts/get_target_seq.sh" "${target_pdb}"); fi
+    echo "Processing chain=${chain}, hotspot_res=${hotspot_res}, start_pos=${start_pos}, end_pos=${end_pos}"
+
+    # Step 2: Run the protein binder design script
+    python3.11 "${REPO_DIR}/scripts/3_protein_binder_design.py" --root "${REPO_DIR}" \
+    --num_seq "${num_seq}" --diffusion "${diffusion}" --temp "${temp}" --target_sequence "${target_sequence}" \
+    --contigs "${contigs}" --i "${i}" --hotspot_res "${hotspot_res}" --target_pdb "${target_pdb}"
+
+    # Step 3: Generate merged binding alignment for peptide and target protein, and then optimize alignment 
+    python3.13 ${REPO_DIR}/scripts/4_merge_seq_to_backbone.py "${REPO_DIR}" A ${i} ${num_seq} ${name} ${params} --solvent
+    bash "${REPO_DIR}/scripts/5_run_prodigy.sh" "${chain}" "${start_pos}" "${end_pos}" "${diffusion}" "${temp}" "${i}" "${num_seq}" "${target_sequence}" "${REPO_DIR}" "${raw_pdb}" "${input_file}"
+done
+
+Processing chain=A, hotspot_res=A180, start_pos=170, end_pos=209
+name=target_A170_209,    params=50diff_0.3temp,    contigs=A170-209/0 15-25
+
+==========================================================================
+--------------------------------
+Extracting target PDB
+--------------------------------
+
+input_file: /home/shadeform/protein-binder-design/input/apob.pdb
+output_file: /home/shadeform/protein-binder-design/input/target_A170_209.pdb
+chain: A
+start_pos: 170
+end_pos: 209
+ 
+Target seq PDB: /home/shadeform/protein-binder-design/input/target_A170_209.pdb
+Processing chain=A, hotspot_res=A180, start_pos=170, end_pos=209
+Number of seqs to generate per target: 2
+Diffusion: 50
+Sampling temp: 0.3
+Contigs: A170-209/0 15-25
+Iterations: 2
+Hotspot residues: ['A180']
+
+
+Generating 2 peptide binder(s) per input sequence...
+Output dir: /home/shadeform/protein-binder-design/target_A170_209
+RFDiffusion ready: True
+ProteinMPNN ready: True
+
+ ================== target_A170_209 ==================
+
+
+-----------[Iteration 1 of 2]-----------
+1. Running RFdiffusion...
+ATOM      1  N   GLY A   1      16.411 -18.052 -13.765  1.00  0.00
+ATOM      2  CA  GLY A   1      15.760 -18.849 -12.733  1.00  0
+
+2.Running ProteinMPNN to generate 2 seq per target....
+[['SSLLQERLKKLLDKL', 'TEEAKQVLFLDTVYGNCSTHFTVKTRKGNVATEISTERDL'], ['SLKLILELLKRLELE', 'TEEAKQVLFLDTVYGNCSTHFTVKTRKGNVATEISTERDL']]
+
+
+-----------[Iteration 2 of 6]-----------
+1. Running RFdiffusion...
+ATOM      1  N   GLY A   1      -2.973  19.296  23.146  1.00  0.00
+ATOM      2  CA  GLY A   1      -2.949  18.288  22.093  1.00  0
+
+2.Running ProteinMPNN to generate 2 seq per target....
+[['EVELPDLETLLALLKKLA', 'TEEAKQVLFLDTVYGNCSTHFTVKTRKGNVATEISTERDL'], ['LARLPSEAVRRLLAEMRA', 'TEEAKQVLFLDTVYGNCSTHFTVKTRKGNVATEISTERDL']]
+
+
+########################################
+4. Merging sequences onto backbone
+########################################
+
+Current directory: /home/shadeform/protein-binder-design
+Total structures to process: 4
+
+========== Structure 1 of 4 ==========
+
+ProteinMPNN sequence: SSLLQERLKKLLDKL
+Merging seq to backbone. Chain A has 15 residues.
+Merged PDB:/home/shadeform/protein-binder-design/target_A170_209/4_target_A170_209_50diff_0.3temp_i1_1.pdb
+
+>> Running explicit solvent relaxation...
+  > Minimizing...
+1 warning generated.
+  > Equilibrating (200 ps)...
+  > Running production MD: 1.0 ns (500000 steps)...
+#"Progress (%)" "Step"  "Potential Energy (kJ/mole)"    "Temperature (K)"       "Speed (ns/day)"
+30.0%   150000  -441208.56886584056     298.0664677694579       0
+40.0%   200000  -440512.82011706126     298.8352236241413       572
+50.0%   250000  -439894.08015734446     297.48421397839934      370
+60.0%   300000  -440324.2661925007      302.9354432350419       265
+70.0%   350000  -440783.1381560017      297.63306240569375      208
+80.0%   400000  -439193.3214598347      299.6752600023842       185
+90.0%   450000  -441265.5850096394      302.2193883422767       172
+100.0%  500000  -440480.70657641185     304.566347265663        164
+110.0%  550000  -440019.10475451243     300.13141296633296      158
+120.0%  600000  -441368.05740648997     303.47093022075217      154
+>> Saved solvated + relaxed complex to /home/shadeform/protein-binder-design/target_A170_209/5_target_A170_209_50diff_0.3temp_i1_1_complex.pdb
+
+Total time: 9.32 mins
+
+========== Structure 2 of 4 ==========
+
+ProteinMPNN sequence: SLKLILELLKRLELE
+Merging seq to backbone. Chain A has 15 residues.
+Merged PDB:/home/shadeform/protein-binder-design/target_A170_209/4_target_A170_209_50diff_0.3temp_i1_2.pdb
+
+>> Running explicit solvent relaxation...
+  > Minimizing...
+1 warning generated.
+  > Equilibrating (200 ps)...
+  > Running production MD: 1.0 ns (500000 steps)...
+#"Progress (%)" "Step"  "Potential Energy (kJ/mole)"    "Temperature (K)"       "Speed (ns/day)"
+30.0%   150000  -423239.4774040822      305.2494499167384       0
+40.0%   200000  -422130.52153250016     300.63084107496877      128
+50.0%   250000  -421709.0090813283      299.27666027610246      125
+60.0%   300000  -421928.9524407033      299.00170783046843      116
+70.0%   350000  -421941.64708181657     300.3651217638393       110
+80.0%   400000  -421685.87559744157     300.60567986380903      107
+90.0%   450000  -422533.1247276906      302.8558977416743       105
+100.0%  500000  -422795.4089226369      298.49245080225813      103
+110.0%  550000  -422727.94774099626     297.7620951487908       102
+120.0%  600000  -423078.9070915822      301.9272504087381       102
+>> Saved solvated + relaxed complex to /home/shadeform/protein-binder-design/target_A170_209/5_target_A170_209_50diff_0.3temp_i1_2_complex.pdb
+
+Total time: 16.44 mins
+
+========== Structure 3 of 4 ==========
+
+ProteinMPNN sequence: EVELPDLETLLALLKKLA
+Merging seq to backbone. Chain A has 18 residues.
+Merged PDB:/home/shadeform/protein-binder-design/target_A170_209/4_target_A170_209_50diff_0.3temp_i2_1.pdb
+
+>> Running explicit solvent relaxation...
+  > Minimizing...
+1 warning generated.
+  > Equilibrating (200 ps)...
+  > Running production MD: 1.0 ns (500000 steps)...
+#"Progress (%)" "Step"  "Potential Energy (kJ/mole)"    "Temperature (K)"       "Speed (ns/day)"
+30.0%   150000  -341297.4520200356      298.87280191932064      0
+40.0%   200000  -340112.7961362465      298.2349895857597       96.7
+50.0%   250000  -340993.7698300942      304.2089115788056       105
+60.0%   300000  -340141.26543556293     302.5644441319052       107
+70.0%   350000  -341001.9363950356      299.6281441235463       107
+80.0%   400000  -340836.3829892739      301.78746121959875      107
+90.0%   450000  -341374.1390775307      302.48170690592684      107
+100.0%  500000  -341086.7237485512      302.2072366282286       107
+110.0%  550000  -340029.3721860512      300.4608360134539       107
+120.0%  600000  -341579.95861183247     299.8039409216168       107
+>> Saved solvated + relaxed complex to /home/shadeform/protein-binder-design/target_A170_209/5_target_A170_209_50diff_0.3temp_i2_1_complex.pdb
+
+Total time: 16.89 mins
+
+========== Structure 4 of 4 ==========
+
+ProteinMPNN sequence: LARLPSEAVRRLLAEMRA
+Merging seq to backbone. Chain A has 18 residues.
+Merged PDB:/home/shadeform/protein-binder-design/target_A170_209/4_target_A170_209_50diff_0.3temp_i2_2.pdb
+
+>> Running explicit solvent relaxation...
+  > Minimizing...
+1 warning generated.
+  > Equilibrating (200 ps)...
+  > Running production MD: 1.0 ns (500000 steps)...
+#"Progress (%)" "Step"  "Potential Energy (kJ/mole)"    "Temperature (K)"       "Speed (ns/day)"
+30.0%   150000  -343280.6915032242      302.182514596821        0
+40.0%   200000  -341382.670324025       299.1311835874468       107
+50.0%   250000  -341431.79729240877     299.7248195694754       115
+60.0%   300000  -342240.8807732437      297.57322551553034      116
+70.0%   350000  -343100.04996269685     298.6648183115572       114
+80.0%   400000  -342325.1308037613      298.31756014462906      113
+90.0%   450000  -341381.94394463045     302.523712253933        113
+100.0%  500000  -342548.4600579117      301.6588006161041       112
+110.0%  550000  -342893.27484673006     299.1376285325871       112
+120.0%  600000  -341366.9568230484      298.21190827201326      112
+>> Saved solvated + relaxed complex to /home/shadeform/protein-binder-design/target_A170_209/5_target_A170_209_50diff_0.3temp_i2_2_complex.pdb
+
+Total time: 15.89 mins
+
+Total time to process 4 structures: 58.72 mins
+
+
+####################################################
+5. Running PRODIGY to calculate dissociation constant
+####################################################
+REPO_DIR: /home/shadeform/protein-binder-design
+name: target_A170_209
+
+Aligned PDB:  5_target_A170_209_50diff_0.3temp_i1_1_complex.pdb
+
+Binding affinity (-4.8 kcal.mol-1)
+Dissociation constant (3.1e-04 Kb at 25.0˚C)
+Aligned PDB:  5_target_A170_209_50diff_0.3temp_i1_2_complex.pdb
+
+Binding affinity (-4.4 kcal.mol-1)
+Dissociation constant (5.9e-04 Kb at 25.0˚C)
+Aligned PDB:  5_target_A170_209_50diff_0.3temp_i2_1_complex.pdb
+
+=============================================================
+
+[!] Structure contains gaps:
+        A GLU1 < Fragment 0 > A ALA18
+        B THR1 < Fragment 1 > B LEU40
+
+[+] Executing 1 task(s) in total
+[+] Adjusting number of processors based on number of tasks
+[+] Using 1 processor(s) instead of 4
+Error processing model: No contacts found for selection
+
+[!] Stopping /5_run_prodigy.sh due to error
+
+=============================================================
+/home/shadeform/protein-binder-design/scripts/5_run_prodigy.sh: line 93: return: can only `return' from a function or sourced script
+Binding affinity ( kcal.mol-1)
+Dissociation constant ( Kb at 25.0˚C)
+Aligned PDB:  5_target_A170_209_50diff_0.3temp_i2_2_complex.pdb
+
+Binding affinity (-4.3 kcal.mol-1)
+Dissociation constant (7.1e-04 Kb at 25.0˚C)

@@ -1,0 +1,266 @@
+Processing chain=A, hotspot_res=A265, start_pos=255, end_pos=294
+name=target_A255_294,    params=50diff_0.3temp,    contigs=A255-294/0 15-25
+
+==========================================================================
+--------------------------------
+Extracting target PDB
+--------------------------------
+
+input_file: /home/shadeform/protein-binder-design/input/apob.pdb
+output_file: /home/shadeform/protein-binder-design/input/target_A255_294.pdb
+chain: A
+start_pos: 255
+end_pos: 294
+ 
+Target seq PDB: /home/shadeform/protein-binder-design/input/target_A255_294.pdb
+Processing chain=A, hotspot_res=, start_pos=255, end_pos=294
+Number of seqs to generate per target: 2
+Diffusion: 50
+Sampling temp: 0.3
+Contigs: A255-294/0 15-25
+Iterations: 2
+Hotspot residues: ['']
+
+
+Generating 2 peptide binder(s) per input sequence...
+Output dir: /home/shadeform/protein-binder-design/target_A255_294
+RFDiffusion ready: True
+ProteinMPNN ready: True
+
+ ================== target_A255_294 ==================
+
+
+-----------[Iteration 1 of 2]-----------
+1. Running RFdiffusion...
+ATOM      1  N   GLY A   1      -3.394  15.810   9.801  1.00  0.00
+ATOM      2  CA  GLY A   1      -3.168  14.662   8.931  1.00  0
+
+2.Running ProteinMPNN to generate 2 seq per target....
+[['DEEATQTQFTEDTAAKHHEQVKR', 'HVAEAICKEQHLFLPFSYKNKYGMVAQVTQTLKLEDTPKI'], ['SEVATQTQTTKLAAAKLLQEVKR', 'HVAEAICKEQHLFLPFSYKNKYGMVAQVTQTLKLEDTPKI']]
+
+
+-----------[Iteration 2 of 6]-----------
+1. Running RFdiffusion...
+ATOM      1  N   GLY A   1      -1.168  13.957   7.483  1.00  0.00
+ATOM      2  CA  GLY A   1      -0.604  14.362   6.201  1.00  0
+
+2.Running ProteinMPNN to generate 2 seq per target....
+[['HVLELPSTFGTAAKCELKYL', 'HVAEAICKEQHLFLPFSYKNKYGMVAQVTQTLKLEDTPKI'], ['HVILLPATKGSAASCQLKFL', 'HVAEAICKEQHLFLPFSYKNKYGMVAQVTQTLKLEDTPKI']]
+
+
+########################################
+4. Merging sequences onto backbone
+########################################
+
+Current directory: /home/shadeform/protein-binder-design
+Total structures to process: 4
+
+========== Structure 1 of 4 ==========
+
+ProteinMPNN sequence: DEEATQTQFTEDTAAKHHEQVKR
+Merging seq to backbone. Chain A has 23 residues.
+Merged PDB:/home/shadeform/protein-binder-design/target_A255_294/4_target_A255_294_50diff_0.3temp_i1_1.pdb
+
+>> Running explicit solvent relaxation...
+  > Minimizing...
+1 warning generated.
+  > Equilibrating (200 ps)...
+  > Running production MD: 1.0 ns (500000 steps)...
+#"Progress (%)" "Step"  "Potential Energy (kJ/mole)"    "Temperature (K)"       "Speed (ns/day)"
+30.0%   150000  -784161.3051068089      301.1368810885943       0
+40.0%   200000  -785567.7997357151      300.5347747690131       103
+50.0%   250000  -785475.1058880589      299.76246976111184      103
+60.0%   300000  -784827.2362591526      302.2879690491682       103
+70.0%   350000  -784216.8856732151      300.0773033826416       103
+80.0%   400000  -785328.3900677464      297.0353163829397       103
+90.0%   450000  -786082.2513958714      303.4406747161202       103
+100.0%  500000  -786408.9325482151      299.16969021780915      103
+110.0%  550000  -785579.9379193089      302.75910106717674      104
+120.0%  600000  -786480.3905560276      302.088212269002        103
+>> Saved solvated + relaxed complex to /home/shadeform/protein-binder-design/target_A255_294/5_target_A255_294_50diff_0.3temp_i1_1_complex.pdb
+
+Total time: 17.06 mins
+
+========== Structure 2 of 4 ==========
+
+ProteinMPNN sequence: SEVATQTQTTKLAAAKLLQEVKR
+Merging seq to backbone. Chain A has 23 residues.
+Merged PDB:/home/shadeform/protein-binder-design/target_A255_294/4_target_A255_294_50diff_0.3temp_i1_2.pdb
+
+>> Running explicit solvent relaxation...
+  > Minimizing...
+1 warning generated.
+  > Equilibrating (200 ps)...
+  > Running production MD: 1.0 ns (500000 steps)...
+#"Progress (%)" "Step"  "Potential Energy (kJ/mole)"    "Temperature (K)"       "Speed (ns/day)"
+30.0%   150000  -819845.6851744084      301.9408114708252       0
+40.0%   200000  -820665.0631040959      299.7202196025085       97
+50.0%   250000  -820727.8326353459      300.59015699958167      96.9
+60.0%   300000  -820294.8912290959      300.64859463577955      97
+70.0%   350000  -817872.9678892521      301.22029131399444      97
+80.0%   400000  -819345.5469908146      298.4718453598118       97
+90.0%   450000  -821806.2789244084      300.8272977317238       96.9
+100.0%  500000  -821074.2584165959      298.64800102684285      97.6
+110.0%  550000  -818547.7716001896      300.72250838146533      98.1
+120.0%  600000  -819985.8174986271      300.38823973940544      98.1
+>> Saved solvated + relaxed complex to /home/shadeform/protein-binder-design/target_A255_294/5_target_A255_294_50diff_0.3temp_i1_2_complex.pdb
+
+Total time: 18.06 mins
+
+========== Structure 3 of 4 ==========
+
+ProteinMPNN sequence: HVLELPSTFGTAAKCELKYL
+Merging seq to backbone. Chain A has 20 residues.
+Merged PDB:/home/shadeform/protein-binder-design/target_A255_294/4_target_A255_294_50diff_0.3temp_i2_1.pdb
+
+>> Running explicit solvent relaxation...
+  > Minimizing...
+1 warning generated.
+  > Equilibrating (200 ps)...
+  > Running production MD: 1.0 ns (500000 steps)...
+#"Progress (%)" "Step"  "Potential Energy (kJ/mole)"    "Temperature (K)"       "Speed (ns/day)"
+30.0%   150000  -782032.5333223729      301.49460319951964      0
+40.0%   200000  -782965.7574434667      299.0894456117071       98.9
+50.0%   250000  -781961.8741426854      300.6552153177338       99
+60.0%   300000  -782628.2222872167      299.53731109100784      99.1
+70.0%   350000  -782120.3223848729      300.6058901330269       99.2
+80.0%   400000  -783064.4820528417      300.22090576677977      99.1
+90.0%   450000  -783061.7969942479      300.8907045862697       99.1
+100.0%  500000  -783280.1856661229      302.02580364836166      99.8
+110.0%  550000  -781551.3795137792      297.5697820572549       100
+120.0%  600000  -782759.6666231542      299.65301633782536      100
+>> Saved solvated + relaxed complex to /home/shadeform/protein-binder-design/target_A255_294/5_target_A255_294_50diff_0.3temp_i2_1_complex.pdb
+
+Total time: 17.67 mins
+
+========== Structure 4 of 4 ==========
+
+ProteinMPNN sequence: HVILLPATKGSAASCQLKFL
+Merging seq to backbone. Chain A has 20 residues.
+Merged PDB:/home/shadeform/protein-binder-design/target_A255_294/4_target_A255_294_50diff_0.3temp_i2_2.pdb
+
+>> Running explicit solvent relaxation...
+  > Minimizing...
+1 warning generated.
+  > Equilibrating (200 ps)...
+  > Running production MD: 1.0 ns (500000 steps)...
+#"Progress (%)" "Step"  "Potential Energy (kJ/mole)"    "Temperature (K)"       "Speed (ns/day)"
+30.0%   150000  -796605.1909227478      302.7505495355947       0
+40.0%   200000  -796340.0400438416      303.539106378145        97.4
+50.0%   250000  -798341.3281297791      301.51223968908795      97.4
+60.0%   300000  -795663.4135789978      300.25374118332763      97.5
+70.0%   350000  -795465.4116258728      299.4324932596296       97.5
+80.0%   400000  -797076.9668016541      300.6939011340068       97.4
+90.0%   450000  -798231.2651414978      300.4048514303408       97.9
+100.0%  500000  -795502.1425829041      300.898775726744        101
+110.0%  550000  -796659.4941454041      299.6549420114444       107
+120.0%  600000  -795966.2055711853      300.10455741012845      113
+>> Saved solvated + relaxed complex to /home/shadeform/protein-binder-design/target_A255_294/5_target_A255_294_50diff_0.3temp_i2_2_complex.pdb
+
+Total time: 16.39 mins
+
+Total time to process 4 structures: 69.39 mins
+
+
+####################################################
+5. Running PRODIGY to calculate dissociation constant
+####################################################
+REPO_DIR: /home/shadeform/protein-binder-design
+name: target_A255_294
+
+Aligned PDB:  5_target_A255_294_50diff_0.3temp_i1_1_complex.pdb
+
+=============================================================
+
+invalid literal for int() with base 10: 'A000'
+Traceback (most recent call last):
+  File "/home/shadeform/miniconda3/lib/python3.13/site-packages/prodigy_prot/modules/parsers.py", line 151, in parse_structure
+    original_structure = parser.get_structure(structure_name, structure_path)
+  File "/home/shadeform/miniconda3/lib/python3.13/site-packages/Bio/PDB/PDBParser.py", line 89, in get_structure
+    self._parse(lines)
+    ~~~~~~~~~~~^^^^^^^
+  File "/home/shadeform/miniconda3/lib/python3.13/site-packages/Bio/PDB/PDBParser.py", line 112, in _parse
+    self.trailer = self._parse_coordinates(coords_trailer)
+                   ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "/home/shadeform/miniconda3/lib/python3.13/site-packages/Bio/PDB/PDBParser.py", line 187, in _parse_coordinates
+    resseq = int(line[22:26].split()[0])  # sequence identifier
+ValueError: invalid literal for int() with base 10: 'A000'
+
+[!] Stopping /5_run_prodigy.sh due to error
+
+=============================================================
+/home/shadeform/protein-binder-design/scripts/5_run_prodigy.sh: line 93: return: can only `return' from a function or sourced script
+Binding affinity ( kcal.mol-1)
+Dissociation constant ( Kb at 25.0˚C)
+Aligned PDB:  5_target_A255_294_50diff_0.3temp_i1_2_complex.pdb
+
+=============================================================
+
+invalid literal for int() with base 10: 'A000'
+Traceback (most recent call last):
+  File "/home/shadeform/miniconda3/lib/python3.13/site-packages/prodigy_prot/modules/parsers.py", line 151, in parse_structure
+    original_structure = parser.get_structure(structure_name, structure_path)
+  File "/home/shadeform/miniconda3/lib/python3.13/site-packages/Bio/PDB/PDBParser.py", line 89, in get_structure
+    self._parse(lines)
+    ~~~~~~~~~~~^^^^^^^
+  File "/home/shadeform/miniconda3/lib/python3.13/site-packages/Bio/PDB/PDBParser.py", line 112, in _parse
+    self.trailer = self._parse_coordinates(coords_trailer)
+                   ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "/home/shadeform/miniconda3/lib/python3.13/site-packages/Bio/PDB/PDBParser.py", line 187, in _parse_coordinates
+    resseq = int(line[22:26].split()[0])  # sequence identifier
+ValueError: invalid literal for int() with base 10: 'A000'
+
+[!] Stopping /5_run_prodigy.sh due to error
+
+=============================================================
+/home/shadeform/protein-binder-design/scripts/5_run_prodigy.sh: line 93: return: can only `return' from a function or sourced script
+Binding affinity ( kcal.mol-1)
+Dissociation constant ( Kb at 25.0˚C)
+Aligned PDB:  5_target_A255_294_50diff_0.3temp_i2_1_complex.pdb
+
+=============================================================
+
+invalid literal for int() with base 10: 'A000'
+Traceback (most recent call last):
+  File "/home/shadeform/miniconda3/lib/python3.13/site-packages/prodigy_prot/modules/parsers.py", line 151, in parse_structure
+    original_structure = parser.get_structure(structure_name, structure_path)
+  File "/home/shadeform/miniconda3/lib/python3.13/site-packages/Bio/PDB/PDBParser.py", line 89, in get_structure
+    self._parse(lines)
+    ~~~~~~~~~~~^^^^^^^
+  File "/home/shadeform/miniconda3/lib/python3.13/site-packages/Bio/PDB/PDBParser.py", line 112, in _parse
+    self.trailer = self._parse_coordinates(coords_trailer)
+                   ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "/home/shadeform/miniconda3/lib/python3.13/site-packages/Bio/PDB/PDBParser.py", line 187, in _parse_coordinates
+    resseq = int(line[22:26].split()[0])  # sequence identifier
+ValueError: invalid literal for int() with base 10: 'A000'
+
+[!] Stopping /5_run_prodigy.sh due to error
+
+=============================================================
+/home/shadeform/protein-binder-design/scripts/5_run_prodigy.sh: line 93: return: can only `return' from a function or sourced script
+Binding affinity ( kcal.mol-1)
+Dissociation constant ( Kb at 25.0˚C)
+Aligned PDB:  5_target_A255_294_50diff_0.3temp_i2_2_complex.pdb
+
+=============================================================
+
+invalid literal for int() with base 10: 'A000'
+Traceback (most recent call last):
+  File "/home/shadeform/miniconda3/lib/python3.13/site-packages/prodigy_prot/modules/parsers.py", line 151, in parse_structure
+    original_structure = parser.get_structure(structure_name, structure_path)
+  File "/home/shadeform/miniconda3/lib/python3.13/site-packages/Bio/PDB/PDBParser.py", line 89, in get_structure
+    self._parse(lines)
+    ~~~~~~~~~~~^^^^^^^
+  File "/home/shadeform/miniconda3/lib/python3.13/site-packages/Bio/PDB/PDBParser.py", line 112, in _parse
+    self.trailer = self._parse_coordinates(coords_trailer)
+                   ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "/home/shadeform/miniconda3/lib/python3.13/site-packages/Bio/PDB/PDBParser.py", line 187, in _parse_coordinates
+    resseq = int(line[22:26].split()[0])  # sequence identifier
+ValueError: invalid literal for int() with base 10: 'A000'
+
+[!] Stopping /5_run_prodigy.sh due to error
+
+=============================================================
+/home/shadeform/protein-binder-design/scripts/5_run_prodigy.sh: line 93: return: can only `return' from a function or sourced script
+Binding affinity ( kcal.mol-1)
+Dissociation constant ( Kb at 25.0˚C)

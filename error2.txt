@@ -1,0 +1,31 @@
+
+####################################################
+5. Running PRODIGY to calculate dissociation constant
+####################################################
+REPO_DIR: /home/shadeform/protein-binder-design
+name: target_A459_498
+
+Aligned PDB:  5_target_A459_498_50diff_0.5temp_i1_1_complex.pdb
+
+[!] PRODIGY encountered an error:
+[!] Structure contains gaps:
+        A GLN1 < Fragment 0 > A SER23
+
+[+] Executing 1 task(s) in total
+[+] Adjusting number of processors based on number of tasks
+[+] Using 1 processor(s) instead of 4
+Error processing model: No contacts found for selection
+[!] Stopping script execution due to error.
+/home/shadeform/protein-binder-design/scripts/5_run_prodigy.sh: line 79: return: can only `return' from a function or sourced script
+[+] PRODIGY completed successfully.
+[!] Structure contains gaps:
+        A GLN1 < Fragment 0 > A SER23
+
+[+] Executing 1 task(s) in total
+[+] Adjusting number of processors based on number of tasks
+[+] Using 1 processor(s) instead of 4
+Error processing model: No contacts found for selection
+Binding affinity ( kcal.mol-1)
+Dissociation constant ( Kb at 25.0˚C)
+Processing chain=A, hotspot_res=A541, start_pos=531, end_pos=570
+name=target_A531_570,    params=50diff_0.5temp,    contigs=A531-570/0 15-25

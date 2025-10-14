@@ -62,7 +62,7 @@ sed -i 's/\r$//' "$input_file"
 wc -l $aligned_pdb
 
 # Define protein
-protein="tnf" # apob, tnf
+protein="apob" # apob, tnf
 
 # Define repo directory  
 REPO_DIR="/home/shadeform/protein-binder-design"
@@ -73,7 +73,7 @@ input_file="${REPO_DIR}/input/target_hotspots_${protein}.txt"  # chain, hotspot 
 
 # Define script input variables
 diffusion=50
-temp=0.3
+temp=0.5
 i=1
 num_seq=1
 peptide_length="15-25" # set a range (i.e."15-25") or a value ("25")
@@ -81,12 +81,16 @@ chain="A"
 
 # check before running!
 wc -l $raw_pdb
-awk '$1 == "ATOM" && $5 == "A"' /home/shadeform/protein-binder-design/input/apob.pdb | head
-# Convert space-delimited file to tab-delimited
+
+# Clean up raw PDB format
+chmod +x ${REPO_DIR}/scripts/fix_pdb_format.sh
+${REPO_DIR}/scripts/fix_pdb_format.sh $raw_pdb
+
+# Convert residue position file to tab-delimited
 awk '{$1=$1; gsub(" ", "\t"); print}' "$input_file" > "$input_file.tmp" && mv "$input_file.tmp" "$input_file"
 sed -i 's/\r$//' "$input_file"
 
-sed -n '6p' "$input_file" | while IFS=$'\t' read -r chain hotspot_res_prefix start_pos end_pos; do
+sed -n '4p' "$input_file" | while IFS=$'\t' read -r chain hotspot_res_prefix start_pos end_pos; do
     # Variables (do not modify)
     hotspot_res="${chain}${hotspot_res_prefix}"
     contigs="A${start_pos}-${end_pos}/0 ${peptide_length}" # e.g. "A60-90/0 15-25"
@@ -105,13 +109,14 @@ sed -n '6p' "$input_file" | while IFS=$'\t' read -r chain hotspot_res_prefix sta
     if [ -f "$target_pdb" ]; then target_sequence=$(bash "${REPO_DIR}/scripts/get_target_seq.sh" "${target_pdb}"); fi
     echo "Processing chain=${chain}, hotspot_res=${hotspot_res}, start_pos=${start_pos}, end_pos=${end_pos}"
 
-    # Step 2: Run the protein binder design script
-    python3.11 "${REPO_DIR}/scripts/3_protein_binder_design.py" --root "${REPO_DIR}" \
-    --num_seq "${num_seq}" --diffusion "${diffusion}" --temp "${temp}" --target_sequence "${target_sequence}" \
-    --contigs "${contigs}" --i "${i}" --hotspot_res "${hotspot_res}" --target_pdb "${target_pdb}"
+    # # Step 2: Run the protein binder design script
+    # python3.11 "${REPO_DIR}/scripts/3_protein_binder_design.py" --root "${REPO_DIR}" \
+    # --num_seq "${num_seq}" --diffusion "${diffusion}" --temp "${temp}" --target_sequence "${target_sequence}" \
+    # --contigs "${contigs}" --i "${i}" --hotspot_res "${hotspot_res}" --target_pdb "${target_pdb}"
 
-    # Step 3: Generate merged binding alignment for peptide and target protein, and then optimize alignment 
+    # # Step 3: Generate merged binding alignment for peptide and target protein, and then optimize alignment 
     python3.13 ${REPO_DIR}/scripts/4_merge_seq_to_backbone.py "${REPO_DIR}" A ${i} ${num_seq} ${name} ${params} --solvent
+    hotspot_res="${chain}${hotspot_res_prefix}"
     bash "${REPO_DIR}/scripts/5_run_prodigy.sh" "${chain}" "${start_pos}" "${end_pos}" "${diffusion}" "${temp}" "${i}" "${num_seq}" "${target_sequence}" "${REPO_DIR}" "${raw_pdb}" "${input_file}"
 done
 
