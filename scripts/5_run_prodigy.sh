@@ -118,6 +118,9 @@ for iteration in $(seq 1 $i); do
                 echo "# ========= Input parameters ========= ";
                 echo "# target_pdb: ${target_pdb}";
                 echo "# input target coordinates: ${input_file}";
+                echo "# chain=${chain}";
+                echo "# start_pos=${start_pos}";
+                echo "# end_pos=${end_pos}";
                 echo "# diffusion=${diffusion}";
                 echo "# temp=${temp}";
                 echo "# iteration=${i} total RFDiffusion candidates";
