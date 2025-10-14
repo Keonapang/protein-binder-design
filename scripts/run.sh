@@ -97,7 +97,7 @@ head $input_file
 export NGC_CLI_API_KEY=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
 docker login nvcr.io --username='$oauthtoken' --password="${NGC_CLI_API_KEY}"
 
-sed -n '5p' "$input_file" | while IFS=$'\t' read -r chain hotspot_res_prefix start_pos end_pos; do
+sed -n '6p' "$input_file" | while IFS=$'\t' read -r chain hotspot_res_prefix start_pos end_pos; do
     # Variables (do not modify)
     hotspot_res="${chain}${hotspot_res_prefix}"
     contigs="${chain}${start_pos}-${end_pos}/0 ${peptide_length}" # e.g. "A60-90/0 15-25"
@@ -107,7 +107,7 @@ sed -n '5p' "$input_file" | while IFS=$'\t' read -r chain hotspot_res_prefix sta
     echo "name=${name},    params=${params},    contigs=${contigs}"
     echo ""
     echo "=========================================================================="
-    export CUDA_VISIBLE_DEVICES=0
+    export CUDA_VISIBLE_DEVICES=1
     # unset hotspot_res # NO HOTSPOTS SET
 
     # Step 1: Build target structure PDB and extract target seq amino acid
@@ -117,14 +117,13 @@ sed -n '5p' "$input_file" | while IFS=$'\t' read -r chain hotspot_res_prefix sta
     head $target_pdb
     echo $target_sequence
     echo ""
-    # # Step 2: Run the protein binder design script
-    python3.11 "${REPO_DIR}/scripts/3_protein_binder_design.py" --root "${REPO_DIR}" \
-    --num_seq "${num_seq}" --diffusion "${diffusion}" --temp "${temp}" --target_sequence "${target_sequence}" \
-    --contigs "${contigs}" --i "${i}" --hotspot_res "${hotspot_res}" --target_pdb "${target_pdb}" --chain "${chain}"
+    # # # Step 2: Run the protein binder design script
+    # python3.11 "${REPO_DIR}/scripts/3_protein_binder_design.py" --root "${REPO_DIR}" \
+    # --num_seq "${num_seq}" --diffusion "${diffusion}" --temp "${temp}" --target_sequence "${target_sequence}" \
+    # --contigs "${contigs}" --i "${i}" --hotspot_res "${hotspot_res}" --target_pdb "${target_pdb}" --chain "${chain}"
 
     # # Step 3: Generate merged binding alignment for peptide and target protein, and then optimize alignment 
-    python3.13 ${REPO_DIR}/scripts/4_merge_seq_to_backbone.py "${REPO_DIR}" ${chain} ${i} ${num_seq} ${name} ${params} --solvent
-    hotspot_res="${chain}${hotspot_res_prefix}"
+    # python3.13 ${REPO_DIR}/scripts/4_merge_seq_to_backbone.py "${REPO_DIR}" ${chain} ${i} ${num_seq} ${name} ${params} --solvent
     bash "${REPO_DIR}/scripts/5_run_prodigy.sh" "${chain}" "${start_pos}" "${end_pos}" "${diffusion}" "${temp}" "${i}" "${num_seq}" "${target_sequence}" "${REPO_DIR}" "${raw_pdb}" "${input_file}"
 done
 

@@ -40,9 +40,9 @@ fi
 # echo "Input file: $input_file"
 # echo ""
 
-# start_pos=66
-# end_pos=106
-# chain="A"
+# start_pos=88
+# end_pos=128
+# chain="C"
 # diffusion=50
 # temp=0.4
 # i=1

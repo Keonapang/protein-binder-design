@@ -419,6 +419,7 @@ sed -i 's/\r$//' "$input_file"
 
 **Run through each line of the input file**
 
+
 ```bash
 
 # Loop through each line of $input_file
@@ -433,8 +434,8 @@ while IFS=$'\t' read -r chain hotspot_res_prefix start_pos end_pos; do # space-d
     echo ""
 
     # Step 1: Build target structure PDB and extract target seq amino acid
-    target_pdb="/home/shadeform/protein-binder-design/input/${name}.pdb" # output
-    bash ${REPO_DIR}/scripts/get_target_pdb.sh "${raw_pdb}" "${target_pdb}" "${chain}" "${start_pos}" "${end_pos}"
+    target_pdb="${REPO_DIR}/input/${name}.pdb" # output
+    bash "${REPO_DIR}/scripts/get_target_pdb.sh" "${raw_pdb}" "${target_pdb}" "${chain}" "${start_pos}" "${end_pos}"
     if [ -f "$target_pdb" ]; then target_sequence=$(bash "${REPO_DIR}/scripts/get_target_seq.sh" "${target_pdb}"); fi
 
     # Step 2: Run the protein binder design script
@@ -442,6 +443,7 @@ while IFS=$'\t' read -r chain hotspot_res_prefix start_pos end_pos; do # space-d
     --num_seq "${num_seq}" --diffusion "${diffusion}" --temp "${temp}" --target_sequence "${target_sequence}" \
     --contigs "${contigs}" --i "${i}" --hotspot_res "${hotspot_res}" --target_pdb "${target_pdb}" --chain "${chain}"
 done < "$input_file"
+
 
 while IFS=$'\t' read -r chain hotspot_res_prefix start_pos end_pos; do # space-delimited
 
@@ -452,7 +454,6 @@ while IFS=$'\t' read -r chain hotspot_res_prefix start_pos end_pos; do # space-d
     params="${diffusion}diff_${temp}temp"
 
     # Step 3: Generate merged binding alignment for peptide and target protein, and then optimize alignment 
-    # time: ~2-5mins per structure
     python3.13 ${REPO_DIR}/scripts/4_merge_seq_to_backbone.py "${REPO_DIR}" A ${i} ${num_seq} ${name} ${params} --solvent
 
     # Step 4: Main binding free energy calculation  
