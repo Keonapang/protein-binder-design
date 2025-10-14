@@ -30,6 +30,8 @@ cd ~
 git clone https://github.com/openmm/pdbfixer
 cd pdbfixer
 python setup.py install
+python3.13 -m pip install numpy prodigy-prot torch Bio biopython pdb-tools
+python3.13 -m pip prodigy-prot
 
 # use Conda to install pdbfixer and openmm (writes to python3.13)
 conda create -n pdbfixer_env python=3.13 -y
@@ -62,90 +64,72 @@ sed -i 's/\r$//' "$input_file"
 wc -l $aligned_pdb
 
 # Define protein
-protein="apob" # apob, tnf
+protein="1TNF" # 1TNF, apob, tnf
 
 # Define repo directory  
 REPO_DIR="/home/shadeform/protein-binder-design"
 
 # Two input files
 raw_pdb="${REPO_DIR}/input/${protein}.pdb"             # target protein
-input_file="${REPO_DIR}/input/target_hotspots_${protein}.txt"  # chain, hotspot residue, start/end pos 
+input_file="${REPO_DIR}/input/target_file_${protein}.txt"  # chain, hotspot residue, start/end pos 
 
 # Define script input variables
 diffusion=50
-temp=0.5
-i=1
-num_seq=1
+temp=0.4
+i=2
+num_seq=2
 peptide_length="15-25" # set a range (i.e."15-25") or a value ("25")
-chain="A"
+chain="C"
 
 # check before running!
 wc -l $raw_pdb
+wc -l $input_file
 
 # Clean up raw PDB format
 chmod +x ${REPO_DIR}/scripts/fix_pdb_format.sh
-${REPO_DIR}/scripts/fix_pdb_format.sh $raw_pdb
+bash "${REPO_DIR}/scripts/fix_pdb_format.sh" "$raw_pdb"
 
 # Convert residue position file to tab-delimited
 awk '{$1=$1; gsub(" ", "\t"); print}' "$input_file" > "$input_file.tmp" && mv "$input_file.tmp" "$input_file"
 sed -i 's/\r$//' "$input_file"
+head $input_file
 
-sed -n '4p' "$input_file" | while IFS=$'\t' read -r chain hotspot_res_prefix start_pos end_pos; do
+export NGC_CLI_API_KEY=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
+docker login nvcr.io --username='$oauthtoken' --password="${NGC_CLI_API_KEY}"
+
+sed -n '5p' "$input_file" | while IFS=$'\t' read -r chain hotspot_res_prefix start_pos end_pos; do
     # Variables (do not modify)
     hotspot_res="${chain}${hotspot_res_prefix}"
-    contigs="A${start_pos}-${end_pos}/0 ${peptide_length}" # e.g. "A60-90/0 15-25"
+    contigs="${chain}${start_pos}-${end_pos}/0 ${peptide_length}" # e.g. "A60-90/0 15-25"
     name="target_${chain}${start_pos}_${end_pos}"
     params="${diffusion}diff_${temp}temp"
     echo "Processing chain=${chain}, hotspot_res=${hotspot_res}, start_pos=${start_pos}, end_pos=${end_pos}"
     echo "name=${name},    params=${params},    contigs=${contigs}"
     echo ""
     echo "=========================================================================="
-    export CUDA_VISIBLE_DEVICES=1
-    unset hotspot_res # NO HOTSPOTS SET
+    export CUDA_VISIBLE_DEVICES=0
+    # unset hotspot_res # NO HOTSPOTS SET
 
     # Step 1: Build target structure PDB and extract target seq amino acid
     target_pdb="${REPO_DIR}/input/${name}.pdb" # Output PDB path
     bash ${REPO_DIR}/scripts/get_target_pdb.sh "${raw_pdb}" "${target_pdb}" "${chain}" "${start_pos}" "${end_pos}"
     if [ -f "$target_pdb" ]; then target_sequence=$(bash "${REPO_DIR}/scripts/get_target_seq.sh" "${target_pdb}"); fi
-    echo "Processing chain=${chain}, hotspot_res=${hotspot_res}, start_pos=${start_pos}, end_pos=${end_pos}"
-
+    head $target_pdb
+    echo $target_sequence
+    echo ""
     # # Step 2: Run the protein binder design script
-    # python3.11 "${REPO_DIR}/scripts/3_protein_binder_design.py" --root "${REPO_DIR}" \
-    # --num_seq "${num_seq}" --diffusion "${diffusion}" --temp "${temp}" --target_sequence "${target_sequence}" \
-    # --contigs "${contigs}" --i "${i}" --hotspot_res "${hotspot_res}" --target_pdb "${target_pdb}"
+    python3.11 "${REPO_DIR}/scripts/3_protein_binder_design.py" --root "${REPO_DIR}" \
+    --num_seq "${num_seq}" --diffusion "${diffusion}" --temp "${temp}" --target_sequence "${target_sequence}" \
+    --contigs "${contigs}" --i "${i}" --hotspot_res "${hotspot_res}" --target_pdb "${target_pdb}" --chain "${chain}"
 
     # # Step 3: Generate merged binding alignment for peptide and target protein, and then optimize alignment 
-    python3.13 ${REPO_DIR}/scripts/4_merge_seq_to_backbone.py "${REPO_DIR}" A ${i} ${num_seq} ${name} ${params} --solvent
+    python3.13 ${REPO_DIR}/scripts/4_merge_seq_to_backbone.py "${REPO_DIR}" ${chain} ${i} ${num_seq} ${name} ${params} --solvent
     hotspot_res="${chain}${hotspot_res_prefix}"
     bash "${REPO_DIR}/scripts/5_run_prodigy.sh" "${chain}" "${start_pos}" "${end_pos}" "${diffusion}" "${temp}" "${i}" "${num_seq}" "${target_sequence}" "${REPO_DIR}" "${raw_pdb}" "${input_file}"
 done
 
 
 ###################
-
-
-while read -r line; do
-    chain=$(echo "$line" | cut -f1)              # First column
-    hotspot_res_prefix=$(echo "$line" | cut -f2) # Second column
-    start_pos=$(echo "$line" | cut -f3)          # Third column
-    end_pos=$(echo "$line" | cut -f4)            # Fourth column
-    hotspot_res="${chain}${hotspot_res_prefix}"
-    contigs="A${start_pos}-${end_pos}/0 ${peptide_length}" # e.g. "A60-90/0 15-25"
-    name="target_${chain}${start_pos}_${end_pos}"
-    params="${diffusion}diff_${temp}temp"
-    echo "Processing chain=${chain}, hotspot_res=${hotspot_res}, start_pos=${start_pos}, end_pos=${end_pos}"
-    echo "name=${name},    params=${params},    contigs=${contigs}"
-    echo ""
-
-    # Step 1: Build target structure PDB and extract target seq amino acid
-    # source "${REPO_DIR}/scripts/get_target_pdb.sh" # Load the get_target_pdb function
-    # get_target_pdb "${raw_pdb}" "${target_pdb}" "${chain}" "${start_pos}" "${end_pos}"
-    target_pdb="/home/shadeform/protein-binder-design/input/${name}.pdb" # output
-    # bash ${REPO_DIR}/scripts/get_target_pdb.sh "${raw_pdb}" "${target_pdb}" "${chain}" "${start_pos}" "${end_pos}"
-    echo $target_pdb
-    echo ""
-done < "$input_file"
-
 
 # Loop through each line of $input_file
 while IFS=$'\t' read -r chain hotspot_res_prefix start_pos end_pos; do # space-delimited
@@ -160,14 +144,14 @@ while IFS=$'\t' read -r chain hotspot_res_prefix start_pos end_pos; do # space-d
     echo ""
 
     # Step 1: Build target structure PDB and extract target seq amino acid
-    target_pdb="/home/shadeform/protein-binder-design/input/${name}.pdb" # output
+    target_pdb="${REPO_DIR}/input/${name}.pdb" # output
     bash ${REPO_DIR}/scripts/get_target_pdb.sh "${raw_pdb}" "${target_pdb}" "${chain}" "${start_pos}" "${end_pos}"
     if [ -f "$target_pdb" ]; then target_sequence=$(bash "${REPO_DIR}/scripts/get_target_seq.sh" "${target_pdb}"); fi
 
     # Step 2: Run the protein binder design script
     python3.11 "${REPO_DIR}/scripts/3_protein_binder_design.py" --root "${REPO_DIR}" \
     --num_seq "${num_seq}" --diffusion "${diffusion}" --temp "${temp}" --target_sequence "${target_sequence}" \
-    --contigs "${contigs}" --i "${i}" --hotspot_res "${hotspot_res}" --target_pdb "${target_pdb}"
+    --contigs "${contigs}" --i "${i}" --hotspot_res "${hotspot_res}" --target_pdb "${target_pdb}" --chain "${chain}"
 done < "$input_file"
 
 ##################################################################################################################
@@ -184,7 +168,6 @@ while IFS=$'\t' read -r chain hotspot_res_prefix start_pos end_pos; do # space-d
     echo ""
 
     # Step 3: Generate merged binding alignment for peptide and target protein, and then optimize alignment 
-    # time: ~2mins per structure
     python3.13 ${REPO_DIR}/scripts/4_merge_seq_to_backbone.py "${REPO_DIR}" A ${i} ${num_seq} ${name} ${params} --solvent
 
     # Step 5 alternative: PRODIGY

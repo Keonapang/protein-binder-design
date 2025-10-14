@@ -18,7 +18,7 @@ num_seq=$7
 target_sequence=$8
 REPO_DIR=$9
 target_pdb=${10}
-input_file=$11
+input_file=${11}
 
 # At least 11 arguments are provided
 if [[ $# -lt 11 ]]; then
@@ -27,8 +27,26 @@ if [[ $# -lt 11 ]]; then
     continue
 fi
 
-# start_pos=91
-# end_pos=130
+# echo "Chain: $chain"
+# echo "Start position: $start_pos"
+# echo "End position: $end_pos"
+# echo "Diffusion steps: $diffusion"
+# echo "Temperature: $temp"
+# echo "Number of RFDiffusion iterations: $i"
+# echo "Number of ProteinMPNN sequences per target: $num_seq"
+# echo "Target sequence: $target_sequence"
+# echo "REPO_DIR: $REPO_DIR"
+# echo "Target PDB: $target_pdb"
+# echo "Input file: $input_file"
+# echo ""
+
+# start_pos=66
+# end_pos=106
+# chain="A"
+# diffusion=50
+# temp=0.4
+# i=1
+# num_seq=1
 # name="target_${chain}${start_pos}_${end_pos}"
 # params="${diffusion}diff_${temp}temp"
 # iteration=1
@@ -37,6 +55,7 @@ fi
 # wc -l "$aligned_pdb"
 # wc -l "${REPO_DIR}/${name}/3_${name}_${params}_i${iteration}.fasta"
 # prodigy "$aligned_pdb" -np 4 --contact_list
+
 echo ""
 echo "####################################################"
 echo "5. Running PRODIGY to calculate dissociation constant"
@@ -62,10 +81,32 @@ for iteration in $(seq 1 $i); do
             continue
         fi
 
-        # if grep -q "Final PDB complex of target protein and designed peptide binder" "$aligned_pdb"; then
-        #     echo "ERROR: The aligned PDB file contains headers already!!"
-        #     continue
-        # fi
+        # Remove lines starting with '#' and overwrite the original file
+        grep -v "^#" "$aligned_pdb" > temp.pdb && mv temp.pdb "$aligned_pdb"
+
+        if grep -q "Final PDB complex of target protein and designed peptide binder" "$aligned_pdb"; then
+            echo "ERROR: The aligned PDB file contains headers already!!"
+            continue
+        fi
+
+        # Re-align pdb formatting (cols 5 and 6)
+        grep "A000" $aligned_pdb
+        chmod +x ${REPO_DIR}/scripts/fix_pdb_format.sh
+        bash "${REPO_DIR}/scripts/fix_pdb_format.sh" "$aligned_pdb"
+
+        # Remove lines that start with "HETATM" and overwrite the original file
+        # grep -v "^HETATM" "$aligned_pdb" > temp.pdb && mv temp.pdb "$aligned_pdb"
+        
+        # Process the file and fix merged "HETATM" entries
+        awk '
+        # If the line starts with "HETATM" but column 2 is merged with column 1
+        /^HETATM[0-9]/ {
+            # Separate "HETATM" and the numeric part into two columns
+            $1 = substr($1, 1, 6) " " substr($1, 7)
+        }
+        # Print the modified line
+        { print }
+        ' "$aligned_pdb" > temp.pdb && mv temp.pdb "$aligned_pdb"
 
             # Get peptide binder sequence from proteinPMNN output
             pmnn_file="${REPO_DIR}/${name}/3_${name}_${params}_i${iteration}.fasta"

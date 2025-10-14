@@ -440,7 +440,7 @@ while IFS=$'\t' read -r chain hotspot_res_prefix start_pos end_pos; do # space-d
     # Step 2: Run the protein binder design script
     python3.11 "${REPO_DIR}/scripts/3_protein_binder_design.py" --root "${REPO_DIR}" \
     --num_seq "${num_seq}" --diffusion "${diffusion}" --temp "${temp}" --target_sequence "${target_sequence}" \
-    --contigs "${contigs}" --i "${i}" --hotspot_res "${hotspot_res}" --target_pdb "${target_pdb}"
+    --contigs "${contigs}" --i "${i}" --hotspot_res "${hotspot_res}" --target_pdb "${target_pdb}" --chain "${chain}"
 done < "$input_file"
 
 while IFS=$'\t' read -r chain hotspot_res_prefix start_pos end_pos; do # space-delimited

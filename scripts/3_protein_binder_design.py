@@ -30,6 +30,7 @@ parser.add_argument("--hotspot_res", nargs='+',help="Hotspot residues (e.g., A67
 parser.add_argument("--target_pdb", type=str, required=True, help="Path to precomputed PDB file of target protein")
 parser.add_argument("--cycle", type=str,help="Cycle/peptide name (e.g., '1', '1A', '1B', or '2')")
 parser.add_argument("--root", type=str)
+parser.add_argument("--chain", type=str)
 args = parser.parse_args()
 
 # Assign input arguments to variables
@@ -43,16 +44,18 @@ i = args.i
 hotspot_res = args.hotspot_res
 target_pdb = args.target_pdb
 root = args.root
+chain = args.chain
 
-# target_pdb = "/home/ubuntu/protein-binder-design/input/target_A60_90.pdb" # precomputed on AlphaFold2 colab
-# cycle = "1A"
+# target_pdb = "/home/shadeform/protein-binder-design/input/target_C88_128.pdb" # precomputed on AlphaFold2 colab
 # num_seq = 1
 # diffusion = 50
-# temp = 0.15
-# contigs="15-25"
-# target_sequence="SQVLFSGQGCPSTHVLLTHTISRISTTHNQP"
-# i=1
-# hotspot_res=['A20']
+# temp = 0.4
+# contigs="C88-128/0 15-25"
+# target_sequence="QTKVNLLSAIKSPCQRETPEGAEAKPWYEPIYLGGVFQLEK"
+# i=2
+# hotspot_res=['C108']
+# root = "/home/shadeform/protein-binder-design"
+# chain = "C"
 
 print(f"Number of seqs to generate per target: {num_seq}"
       f"\nDiffusion: {diffusion}"
@@ -196,7 +199,7 @@ else:
             self.input_pdb_chains = input_pdb_chains or []  # Default to empty list
             self.ca_only = ca_only
             self.use_soluble_model = use_soluble_model
-            self.sampling_temp = sampling_temp or []
+            self.sampling_temp = sampling_temp
             self.diffusion_steps = diffusion_steps
             self.num_seq_per_target = num_seq_per_target
 
@@ -214,11 +217,12 @@ print(f"ProteinMPNN ready: {status}")
 # Query code 
 ##############################################################
 print(f"\n ================== {cycle} ==================\n")
+chain="A"
 example = ExampleRequestParams(
     target_sequence= target_sequence,
     contigs=contigs, 
     hotspot_res=hotspot_res, # hotspot_res=["A67", "A80"], optional 
-    input_pdb_chains=["A"], # [Optional] default is to design for all chains in the protein
+    input_pdb_chains=[chain], # [Optional] default is to design for all chains in the protein
     ca_only=False, # [Optional]  CA-only model helps to address specific needs in protein design where focusing on the alpha carbon (CA)
     use_soluble_model=True, 
     sampling_temp=[temp], # (range: 0 - 1) adjust the probability values for the 20 amino acids at each position, controls the diversity of the design outcomes
@@ -231,6 +235,9 @@ example = ExampleRequestParams(
 ##############################################################
 
 precomputed_pdb = get_reduced_pdb(pdb_path, rcsb_path=None)
+print("\nPreview of input PDB file:\n")
+print(precomputed_pdb[0:130])
+print("")
 
 # iterate through i iterations
 for iteration in range(i):
@@ -264,9 +271,10 @@ for iteration in range(i):
     # clear python memory 
     del rfdiffusion_query
     gc.collect()
+
 ##############################################################
 # 3. ProteinMPNN
-##############################################################
+##############################################################    
     print(f"\n2.Running ProteinMPNN to generate {num_seq} seq per target....")
     proteinmpnn_query = {
         "input_pdb" : rfdiffusion_response["output_pdb"],
