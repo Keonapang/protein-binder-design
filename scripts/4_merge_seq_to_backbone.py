@@ -143,8 +143,8 @@ for iteration in range(1, iterations + 1):
                     outfile.write(line)  # Write the line, but don't implicitly print anything
         print(f"Merged PDB:{output_fixed_pdb}")
 
-        if os.path.exists(output_pdb):
-            os.remove(output_pdb)
+        # if os.path.exists(output_pdb):
+        #     os.remove(output_pdb)
 
         # 3. Performs energy minimization and molecular dynamics (MD) simulations
         #######################################################################

@@ -19,11 +19,12 @@ target_sequence=$8
 REPO_DIR=$9
 target_pdb=${10}
 input_file=${11}
+hotspot=${12}
 
 # At least 11 arguments are provided
-if [[ $# -lt 11 ]]; then
-    echo "At least 11 arguments are required."
-    echo "Usage: $0 {name} {params} {i} {num_seq} {target_sequence} {REPO_DIR} {target_pdb} {input_file}"
+if [[ $# -lt 12 ]]; then
+    echo "At least 12 arguments are required."
+    echo "Usage: $0 {name} {params} {i} {num_seq} {target_sequence} {REPO_DIR} {target_pdb} {input_file} {hotspot}"
     continue
 fi
 
@@ -162,6 +163,7 @@ for iteration in $(seq 1 $i); do
                 echo "# chain=${chain}";
                 echo "# start_pos=${start_pos}";
                 echo "# end_pos=${end_pos}";
+                echo "# hotspot: ${hotspot}";
                 echo "# diffusion=${diffusion}";
                 echo "# temp=${temp}";
                 echo "# iteration=${i} total RFDiffusion candidates";
