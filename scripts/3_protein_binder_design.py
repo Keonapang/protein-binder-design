@@ -46,7 +46,7 @@ target_pdb = args.target_pdb
 root = args.root
 chain = args.chain
 
-# target_pdb = "/home/shadeform/protein-binder-design/input/target_C88_128.pdb" # precomputed on AlphaFold2 colab
+# target_pdb = "/home/shadeform/protein-binder-design/input/tnf1.pdb" ==
 # num_seq = 1
 # diffusion = 50
 # temp = 0.4
@@ -203,15 +203,10 @@ else:
             self.diffusion_steps = diffusion_steps
             self.num_seq_per_target = num_seq_per_target
 
-
 status = check_nim_readiness(NIM_PORTS.RFDIFFUSION_PORT.value)
 print(f"RFDiffusion ready: {status}")
 status = check_nim_readiness(NIM_PORTS.PROTEINMPNN_PORT.value)
 print(f"ProteinMPNN ready: {status}")
-# status = check_nim_readiness(NIM_PORTS.AF2_MULTIMER_PORT.value)
-# print(f"AlphaFold-Multimer ready: {status}")
-# status = check_nim_readiness(NIM_PORTS.ALPHAFOLD2_PORT.value)
-# print(f"AlphaFold2 ready: {status}")
 
 ##############################################################
 # Query code 

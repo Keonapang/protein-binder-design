@@ -77,11 +77,11 @@ input_file="${REPO_DIR}/input/target_file_${protein}.txt"  # chain, hotspot resi
 
 # Define script input variables
 diffusion=50
-temp=0.4
+temp=0.5
 i=2
 num_seq=2
 peptide_length="15-25" # set a range (i.e."15-25") or a value ("25")
-chain="C"
+chain="B"
 
 # check before running!
 wc -l $raw_pdb
@@ -99,7 +99,7 @@ awk '{$1=$1; gsub(" ", "\t"); print}' "$input_file" > "$input_file.tmp" && mv "$
 sed -i 's/\r$//' "$input_file"
 head $input_file
 
-sed -n '1p' "$input_file" | while IFS=$'\t' read -r chain hotspot_res_prefix start_pos end_pos; do
+sed -n '6p' "$input_file" | while IFS=$'\t' read -r chain hotspot_res_prefix start_pos end_pos; do
     # Variables (do not modify)
     hotspot_res="${chain}${hotspot_res_prefix}"
     contigs="${chain}${start_pos}-${end_pos}/0 ${peptide_length}" # e.g. "A60-90/0 15-25"
@@ -110,22 +110,19 @@ sed -n '1p' "$input_file" | while IFS=$'\t' read -r chain hotspot_res_prefix sta
     echo ""
     echo "=========================================================================="
     export CUDA_VISIBLE_DEVICES=1
-    # unset hotspot_res # NO HOTSPOTS SET
+    unset hotspot_res # NO HOTSPOTS SET
 
     # Step 1: Build target structure PDB and extract target seq amino acid
     target_pdb="${REPO_DIR}/input/${name}.pdb" # Output PDB path
     bash ${REPO_DIR}/scripts/get_target_pdb.sh "${raw_pdb}" "${target_pdb}" "${chain}" "${start_pos}" "${end_pos}"
     if [ -f "$target_pdb" ]; then target_sequence=$(bash "${REPO_DIR}/scripts/get_target_seq.sh" "${target_pdb}"); fi
-    head $target_pdb
-    echo $target_sequence
-    echo ""
     # # # Step 2: Run the protein binder design script
     python3.11 "${REPO_DIR}/scripts/3_protein_binder_design.py" --root "${REPO_DIR}" \
     --num_seq "${num_seq}" --diffusion "${diffusion}" --temp "${temp}" --target_sequence "${target_sequence}" \
     --contigs "${contigs}" --i "${i}" --hotspot_res "${hotspot_res}" --target_pdb "${target_pdb}" --chain "${chain}"
 
     # # Step 3: Generate merged binding alignment for peptide and target protein, and then optimize alignment 
-    python3.13 ${REPO_DIR}/scripts/4_merge_seq_to_backbone.py "${REPO_DIR}" ${chain} ${i} ${num_seq} ${name} ${params} --solvent
+    python3.13 "${REPO_DIR}/scripts/4_merge_seq_to_backbone.py" "${REPO_DIR}" "${chain}" "${i}" "${num_seq}" "${name}" "${params}" --solvent
     bash "${REPO_DIR}/scripts/5_run_prodigy.sh" "${chain}" "${start_pos}" "${end_pos}" "${diffusion}" "${temp}" "${i}" "${num_seq}" "${target_sequence}" "${REPO_DIR}" "${raw_pdb}" "${input_file}" "${hotspot_res}"
 done
 
