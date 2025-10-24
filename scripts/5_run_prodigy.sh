@@ -41,21 +41,22 @@ fi
 # echo "Input file: $input_file"
 # echo ""
 
-# start_pos=88
-# end_pos=128
-# chain="C"
+# start_pos=6
+# end_pos=28
+# chain="A"
 # diffusion=50
-# temp=0.4
+# temp=0.3
 # i=1
 # num_seq=1
 # name="target_${chain}${start_pos}_${end_pos}"
 # params="${diffusion}diff_${temp}temp"
 # iteration=1
 # num=1
+# REPO_DIR="/home/shadeform/protein-binder-design"
 # aligned_pdb=${REPO_DIR}/${name}/5_${name}_${params}_i${iteration}_${num}_complex.pdb
 # wc -l "$aligned_pdb"
 # wc -l "${REPO_DIR}/${name}/3_${name}_${params}_i${iteration}.fasta"
-# prodigy "$aligned_pdb" -np 4 --contact_list
+# # prodigy "$aligned_pdb" -np 4 --contact_list
 
 echo ""
 echo "####################################################"
@@ -91,23 +92,22 @@ for iteration in $(seq 1 $i); do
         fi
 
         # Re-align pdb formatting (cols 5 and 6)
-        grep "A000" $aligned_pdb
-        chmod +x ${REPO_DIR}/scripts/fix_pdb_format.sh
-        bash "${REPO_DIR}/scripts/fix_pdb_format.sh" "$aligned_pdb"
-
-        # Remove lines that start with "HETATM" and overwrite the original file
-        # grep -v "^HETATM" "$aligned_pdb" > temp.pdb && mv temp.pdb "$aligned_pdb"
-        
+        if grep -q "A000" "$aligned_pdb"; then
+            chmod +x "${REPO_DIR}/scripts/fix_pdb_format.sh"
+            bash "${REPO_DIR}/scripts/fix_pdb_format.sh" "$aligned_pdb"
+        else
+            echo " "
+        fi
         # Process the file and fix merged "HETATM" entries
-        awk '
-        # If the line starts with "HETATM" but column 2 is merged with column 1
-        /^HETATM[0-9]/ {
-            # Separate "HETATM" and the numeric part into two columns
-            $1 = substr($1, 1, 6) " " substr($1, 7)
-        }
-        # Print the modified line
-        { print }
-        ' "$aligned_pdb" > temp.pdb && mv temp.pdb "$aligned_pdb"
+        # awk '
+        # # If the line starts with "HETATM" but column 2 is merged with column 1
+        # /^HETATM[0-9]/ {
+        #     # Separate "HETATM" and the numeric part into two columns
+        #     $1 = substr($1, 1, 6) " " substr($1, 7)
+        # }
+        # # Print the modified line
+        # { print }
+        # ' "$aligned_pdb" > temp.pdb && mv temp.pdb "$aligned_pdb"
 
             # Get peptide binder sequence from proteinPMNN output
             pmnn_file="${REPO_DIR}/${name}/3_${name}_${params}_i${iteration}.fasta"
@@ -124,7 +124,7 @@ for iteration in $(seq 1 $i); do
             prodigy_output=$(prodigy "$aligned_pdb" -np 4 --contact_list)
 
             # Check for errors in PRODIGY output
-            if echo "$prodigy_output" | grep -q -e "Error" -e "No contacts"; then
+            if echo "$prodigy_output" | grep -q -e "Invalid" -e "No contacts"; then
                 echo "============================================================="
                 echo ""
                 echo "$prodigy_output"  # Print the error message from PRODIGY
@@ -190,3 +190,5 @@ for iteration in $(seq 1 $i); do
         done
 done
 
+# Clean up intermediate .ic files
+rm ${REPO_DIR}/${name}/5_*.ic
