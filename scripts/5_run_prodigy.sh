@@ -20,6 +20,7 @@ REPO_DIR=$9
 target_pdb=${10}
 input_file=${11}
 hotspot=${12}
+remove_water=TRUE
 
 # At least 11 arguments are provided
 if [[ $# -lt 12 ]]; then
@@ -41,19 +42,20 @@ fi
 # echo "Input file: $input_file"
 # echo ""
 
-start_pos=106
-end_pos=136
-chain="A"
-diffusion=50
-temp=0.3
-i=4
-num_seq=2
-name="target_${chain}${start_pos}_${end_pos}"
-params="${diffusion}diff_${temp}temp"
-iteration=2
-num=2
-for iteration in $(seq 1 $i); do
-    for num in $(seq 1 $num_seq); do
+# start_pos=6
+# end_pos=157
+# chain="A"
+# diffusion=50
+# temp=0.3
+# i=4
+# num_seq=2
+# name="target'A6','A7','A8','A9','A34'" #name="target_${chain}${start_pos}_${end_pos}"
+# params="${diffusion}diff_${temp}temp"
+# iteration=1
+# num=1
+
+# for iteration in $(seq 1 $i); do
+#     for num in $(seq 1 $num_seq); do
 
 # REPO_DIR="/home/shadeform/protein-binder-design"
 # aligned_pdb=${REPO_DIR}/${name}/5_${name}_${params}_i${iteration}_${num}_complex.pdb
