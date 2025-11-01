@@ -36,5 +36,5 @@ for (f in json_files) {
 
 # Write all lines to the output file
 writeLines(output_lines, output_file)
-
+print(head(output_lines))
 cat("✅ Output file written to:", output_file, "\n")
