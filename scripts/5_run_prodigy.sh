@@ -29,18 +29,19 @@ if [[ $# -lt 12 ]]; then
     continue
 fi
 
-# echo "Chain: $chain"
-# echo "Start position: $start_pos"
-# echo "End position: $end_pos"
-# echo "Diffusion steps: $diffusion"
-# echo "Temperature: $temp"
-# echo "Number of RFDiffusion iterations: $i"
-# echo "Number of ProteinMPNN sequences per target: $num_seq"
-# echo "Target sequence: $target_sequence"
-# echo "REPO_DIR: $REPO_DIR"
-# echo "Target PDB: $target_pdb"
-# echo "Input file: $input_file"
-# echo ""
+echo "Chain: $chain"
+echo "Start position: $start_pos"
+echo "hotspot: $hotspot"
+echo "End position: $end_pos"
+echo "Diffusion steps: $diffusion"
+echo "Temperature: $temp"
+echo "Number of RFDiffusion iterations: $i"
+echo "Number of ProteinMPNN sequences per target: $num_seq"
+echo "Target sequence: $target_sequence"
+echo "REPO_DIR: $REPO_DIR"
+echo "Target PDB: $target_pdb"
+echo "Input file: $input_file"
+echo ""
 
 # start_pos=6
 # end_pos=157
@@ -140,7 +141,6 @@ fi
 #                 echo "# ";
 #                 cat "$aligned_pdb";
 #             } > "$aligned_pdb".tmp && mv "$aligned_pdb".tmp "$aligned_pdb"
-
 # done
 # done
 
@@ -150,6 +150,7 @@ echo "5. Running PRODIGY to calculate dissociation constant"
 echo "####################################################"
 echo "REPO_DIR: $REPO_DIR"
 name="target_${chain}${start_pos}_${end_pos}"
+name="target_${hotspot}"
 params="${diffusion}diff_${temp}temp"
 echo "name: $name"
 echo ""
@@ -195,7 +196,6 @@ for iteration in $(seq 1 $i); do
         #     # Separate "HETATM" and the numeric part into two columns
         #     $1 = substr($1, 1, 6) " " substr($1, 7)
         # }
-        # # Print the modified line
         # { print }
         # ' "$aligned_pdb" > temp.pdb && mv temp.pdb "$aligned_pdb"
 
@@ -213,7 +213,6 @@ for iteration in $(seq 1 $i); do
             # 2. Run PRODIGY to predict binding affinity (kcal.mol-1)
             prodigy_output=$(prodigy "$aligned_pdb" -np 4 --contact_list)
 
-            # Check for errors in PRODIGY output
             if echo "$prodigy_output" | grep -q -e "Invalid" -e "No contacts"; then
                 echo "============================================================="
                 echo ""
@@ -225,7 +224,6 @@ for iteration in $(seq 1 $i); do
                 return 1  # Gracefully stop the script by returning a status code
             fi
 
-            # Extract all the necessary values from the output
             binding_affinity=$(echo "$prodigy_output" | grep "Predicted binding affinity" | awk '{print $6}')
             diss_constant=$(echo "$prodigy_output" | grep "Predicted dissociation constant" | awk '{print $8}')
             num_contacts=$(echo "$prodigy_output" | grep "No. of intermolecular contacts" | awk '{print $6}')

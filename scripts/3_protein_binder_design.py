@@ -46,6 +46,9 @@ target_pdb = args.target_pdb
 root = args.root
 chain = args.chain
 
+if ',' in hotspot_res:
+    hotspot_res = [res.strip("'") for res in hotspot_res[0].strip('"').split(',')]
+
 # target_pdb = "/home/shadeform/protein-binder-design/input/tnf1.pdb" ==
 # num_seq = 1
 # diffusion = 50
