@@ -38,11 +38,11 @@ wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
 bash Miniconda3-latest-Linux-x86_64.sh # installed to /home/shadeform/miniconda3
 echo 'export PATH="$HOME/miniconda3/bin:$PATH"' >> ~/.bashrc
 source ~/.bashrc # conda --version
-conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/main
-conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/r
 conda create -n pdbfixer_env python=3.13 -y
 conda init
 # Open new temrinal window(s) and install these packages:
+conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/main
+conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/r
 conda activate pdbfixer_env
 conda install -c conda-forge pdbfixer
 conda install -c conda-forge openmm
@@ -68,22 +68,20 @@ raw_pdb="${REPO_DIR}/input/${protein}.pdb"             # target protein
 input_file="${REPO_DIR}/input/target_file_${protein}.txt"  # chain, hotspot residue, start/end pos 
 
 # Optional 
-REPO_DIR="/home/shadeform/protein-binder-design"
-sed -i 's/\r$//' "${REPO_DIR}/scripts/get_target_pdb.sh" # optional (to remove any hidden spaces from Windows)
-sed -i 's/\r$//' "${REPO_DIR}/scripts/5_run_prodigy.sh" 
-sed -i 's/^[ \t]*//;s/[ \t]*$//' "${REPO_DIR}/scripts/5_run_prodigy.sh"
+# REPO_DIR="/home/shadeform/protein-binder-design"
+# sed -i 's/\r$//' "${REPO_DIR}/scripts/get_target_pdb.sh" # optional (to remove any hidden spaces from Windows)
+# sed -i 's/\r$//' "${REPO_DIR}/scripts/5_run_prodigy.sh" 
+# sed -i 's/^[ \t]*//;s/[ \t]*$//' "${REPO_DIR}/scripts/5_run_prodigy.sh"
 
-# Clean up raw PDB format
-chmod +x ${REPO_DIR}/scripts/fix_pdb_format.sh
-bash "${REPO_DIR}/scripts/fix_pdb_format.sh" "$raw_pdb"
+# # Clean up raw PDB format
+# chmod +x ${REPO_DIR}/scripts/fix_pdb_format.sh
+# bash "${REPO_DIR}/scripts/fix_pdb_format.sh" "$raw_pdb"
 
-# Convert residue position file to tab-delimited
-awk '{$1=$1; gsub(" ", "\t"); print}' "$input_file" > "$input_file.tmp" && mv "$input_file.tmp" "$input_file"
-sed -i 's/\r$//' "$input_file"
-head $input_file
-cat -A "$input_file"
-
-
+# # Convert residue position file to tab-delimited
+# awk '{$1=$1; gsub(" ", "\t"); print}' "$input_file" > "$input_file.tmp" && mv "$input_file.tmp" "$input_file"
+# sed -i 's/\r$//' "$input_file"
+# head $input_file
+# cat -A "$input_file"
 
 
 # check before running!
@@ -93,7 +91,7 @@ wc -l $input_file
 export NGC_CLI_API_KEY=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
 docker login nvcr.io --username='$oauthtoken' --password="${NGC_CLI_API_KEY}"
 
-sed -n '3p' "$input_file" | while IFS=$'\t' read -r chain hotspot_res_prefix start_pos end_pos; do
+sed -n '13p' "$input_file" | while IFS=$'\t' read -r chain hotspot_res_prefix start_pos end_pos; do
     # Define script input variables
     diffusion=50
     temp=0.3
@@ -111,7 +109,7 @@ sed -n '3p' "$input_file" | while IFS=$'\t' read -r chain hotspot_res_prefix sta
     echo "name=${name},    params=${params},    contigs=${contigs}"
     echo ""
     echo "=========================================================================="
-    export CUDA_VISIBLE_DEVICES=1
+    export CUDA_VISIBLE_DEVICES=0
     unset hotspot_res # NO HOTSPOTS SET
 
     # Step 1: Build target structure PDB and extract target seq amino acid
@@ -120,16 +118,14 @@ sed -n '3p' "$input_file" | while IFS=$'\t' read -r chain hotspot_res_prefix sta
     if [ -f "$target_pdb" ]; then target_sequence=$(bash "${REPO_DIR}/scripts/get_target_seq.sh" "${target_pdb}"); fi
 
     # Step 2: Run the protein binder design script
-    # python3.11 "${REPO_DIR}/scripts/3_protein_binder_design.py" --root "${REPO_DIR}" \
-    # --num_seq "${num_seq}" --diffusion "${diffusion}" --temp "${temp}" --target_sequence "${target_sequence}" \
-    # --contigs "${contigs}" --i "${i}" --hotspot_res "${hotspot_res}" --target_pdb "${target_pdb}" --chain "${chain}"
+    python3.11 "${REPO_DIR}/scripts/3_protein_binder_design.py" --root "${REPO_DIR}" \
+    --num_seq "${num_seq}" --diffusion "${diffusion}" --temp "${temp}" --target_sequence "${target_sequence}" \
+    --contigs "${contigs}" --i "${i}" --hotspot_res "${hotspot_res}" --target_pdb "${target_pdb}" --chain "${chain}"
 
     # Step 3: Generate merged binding alignment for peptide-target protein, and optimize alignment 
     python3.13 "${REPO_DIR}/scripts/4_merge_seq_to_backbone.py" "${REPO_DIR}" "${chain}" "${i}" "${num_seq}" "${name}" "${params}" --solvent
     bash "${REPO_DIR}/scripts/5_run_prodigy.sh" "${chain}" "${start_pos}" "${end_pos}" "${diffusion}" "${temp}" "${i}" "${num_seq}" "${target_sequence}" "${REPO_DIR}" "${raw_pdb}" "${input_file}" "${hotspot_res}"
 done
-
-
 # ---------------- Clean up if necessary 
 # # remove all files from ${REPO_DIR}/${name} directory that begin with "5_target_" and end with ".pdb"
 # ls ./5_target_*.pdb
@@ -138,8 +134,6 @@ done
 # for file in 5_target_*_complex.pdb_old; do
 #     mv "$file" "${file%_old}"
 # done
-
-
 
 ####################################################################
 # CODE WORKS!
@@ -150,7 +144,12 @@ summary_file="${REPO_DIR}/summary_${protein}.txt"
 echo -e "Target\titeration\tnum_seq\tbinding_affinity\tdiss_constant" > "$summary_file"
 
 # Read input file and process for each chain, hotspot, start, and end position
-sed -n '1,6p' "$input_file" | while IFS=$'\t' read -r chain hotspot_res_prefix start_pos end_pos; do
+sed -n '1,13p' "$input_file" | while IFS=$'\t' read -r chain hotspot_res_prefix start_pos end_pos; do
+        diffusion=50
+        temp=0.3
+        i=4
+        num_seq=2
+        chain="A" 
     for iteration in $(seq 1 $i); do
         for num in $(seq 1 $num_seq); do
 
