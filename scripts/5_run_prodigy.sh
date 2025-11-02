@@ -149,8 +149,11 @@ echo "####################################################"
 echo "5. Running PRODIGY to calculate dissociation constant"
 echo "####################################################"
 echo "REPO_DIR: $REPO_DIR"
-name="target_${chain}${start_pos}_${end_pos}"
-name="target_${hotspot}"
+if [[ "$hotspot_res" == *","* ]]; then
+    name="target${hotspot}"
+else
+    name="target_${chain}${start_pos}_${end_pos}"
+fi
 params="${diffusion}diff_${temp}temp"
 echo "name: $name"
 echo ""

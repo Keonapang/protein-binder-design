@@ -151,22 +151,6 @@ mkdir $HOME/inputs $HOME/outputs $HOME/models
 bash scripts/download_models.sh $HOME/models
 
 # Edit the configuration file by turning recentre=FALSE: config/inference/base.yaml
-
-# To run docker
-docker run -it --rm --gpus all \
-  -v $HOME/models:$HOME/models \
-  -v $HOME/inputs:$HOME/inputs \
-  -v $HOME/outputs:$HOME/outputs \
-  rfdiffusion \
-  inference.output_prefix=$HOME/outputs/motifscaffolding \
-  inference.model_directory_path=$HOME/models \
-  inference.input_pdb=$HOME/inputs/5TPN.pdb \
-  inference.num_designs=3 \
-  inference.recenter=False \
-  'contigmap.contigs=[10-40/A163-181/10-40]'
-```
-
-
 **Set up `openmm` and `pdbfier` to align backbones (requires python 3.13):**
 
 ```bash

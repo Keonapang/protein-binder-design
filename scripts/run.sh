@@ -48,6 +48,9 @@ conda install -c conda-forge pdbfixer
 conda install -c conda-forge openmm
 python3.13 -m pip install numpy prodigy-prot torch Bio biopython pdb-tools
 
+export NGC_CLI_API_KEY=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
+docker login nvcr.io --username='$oauthtoken' --password="${NGC_CLI_API_KEY}"
+
 
 ###########################################################################################################
 curl localhost:8082/v1/health/ready # RFdiffusion
@@ -58,14 +61,13 @@ curl localhost:8083/v1/health/ready # Protein MPNN
 # name="target_${chain}${start_pos}_${end_pos}"
 # params="${diffusion}diff_${temp}temp"
 # aligned_pdb=${REPO_DIR}/${name}/5_${name}_${params}_i${i}_${num_seq}_complex.pdb
-# aligned_pdb=${REPO_DIR}/target_A91_130/5_target_A91_130_50diff_0.3temp_i1_1_complex.pdb
 wc -l $aligned_pdb
 
 # Define protein
-protein="1TNF_surface" # 1TNF, apob, tnf
+protein="1TNF" # 1TNF, apob, tnf
 REPO_DIR="/home/shadeform/protein-binder-design"
 raw_pdb="${REPO_DIR}/input/${protein}.pdb"             # target protein
-input_file="${REPO_DIR}/input/target_file_${protein}.txt"  # chain, hotspot residue, start/end pos 
+input_file="${REPO_DIR}/input/target_file_${protein}_surface.txt"  # chain, hotspot residue, start/end pos 
 
 # Optional 
 # REPO_DIR="/home/shadeform/protein-binder-design"
@@ -85,9 +87,6 @@ input_file="${REPO_DIR}/input/target_file_${protein}.txt"  # chain, hotspot resi
 # check before running!
 wc -l $raw_pdb
 wc -l $input_file
-
-export NGC_CLI_API_KEY=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
-docker login nvcr.io --username='$oauthtoken' --password="${NGC_CLI_API_KEY}"
 
 sed -n '13p' "$input_file" | while IFS=$'\t' read -r chain hotspot_res_prefix start_pos end_pos; do
     # Define script input variables
@@ -134,43 +133,51 @@ done
 # done
 
 # alternative code: Nov 1 
+# Define protein
+protein="1TNF" # 1TNF, apob, tnf
+REPO_DIR="/home/shadeform/protein-binder-design"
+raw_pdb="${REPO_DIR}/input/${protein}.pdb"             # target protein
+input_file="${REPO_DIR}/input/target_file_${protein}_surface.txt"  # chain, hotspot residue, start/end pos 
+export NGC_CLI_API_KEY=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
+docker login nvcr.io --username='$oauthtoken' --password="${NGC_CLI_API_KEY}"
 
-sed -n '1,20p' "$input_file" | while IFS=$'\t' read -r hotspot_res_prefix; do
+sed -n '4,5p' "$input_file" | while IFS=$'\t' read -r hotspot_res_prefix; do
     # Define script input variables
     diffusion=50
     temp=0.3
     i=4
     num_seq=2
-    peptide_length="15-40" # set a range (i.e."15-25") or a value ("25")
+    peptide_length="15-25" # set a range (i.e."15-25") or a value ("25")
     chain="A" 
 
    # Variables (do not modify)
     start_pos="6"
     end_pos="157"
     hotspot_res="${hotspot_res_prefix}"
+    name="target${hotspot_res}"
+
+    # name="target'A102','A103','A104'"
+    # hotspot_res="'A102','A103','A104'"
     contigs="${chain}${start_pos}-${end_pos}/0 ${peptide_length}" # e.g. "A60-90/0 15-25"
-    name="target${hotspot_res_prefix}"
     params="${diffusion}diff_${temp}temp"
     echo "Processing chain=${chain}, hotspot_res=${hotspot_res}, start_pos=${start_pos}, end_pos=${end_pos}"
     echo "name=${name},    params=${params},    contigs=${contigs}"
-    echo ""
     echo "=========================================================================="
     export CUDA_VISIBLE_DEVICES=0
     # unset hotspot_res # NO HOTSPOTS SET
-
-    # # Step 1: Build target structure PDB and extract target seq amino acid
-    # target_pdb="${REPO_DIR}/input/${name}.pdb"
-    # bash ${REPO_DIR}/scripts/get_target_pdb.sh "${raw_pdb}" "${target_pdb}" "${chain}" "${start_pos}" "${end_pos}"
-    # if [ -f "$target_pdb" ]; then target_sequence=$(bash "${REPO_DIR}/scripts/get_target_seq.sh" "${target_pdb}"); fi
-
+    Step 1: Build target structure PDB and extract target seq amino acid
+    target_pdb="${REPO_DIR}/input/${name}.pdb"
+    bash ${REPO_DIR}/scripts/get_target_pdb.sh "${raw_pdb}" "${target_pdb}" "${chain}" "${start_pos}" "${end_pos}"
+    if [ -f "$target_pdb" ]; then target_sequence=$(bash "${REPO_DIR}/scripts/get_target_seq.sh" "${target_pdb}"); fi
+    echo "Target sequence: ${target_sequence}"
     # # Step 2: Run the protein binder design script
-    # python3.11 "${REPO_DIR}/scripts/3_protein_binder_design.py" --root "${REPO_DIR}" \
-    # --num_seq "${num_seq}" --diffusion "${diffusion}" --temp "${temp}" --target_sequence "${target_sequence}" \
-    # --contigs "${contigs}" --i "${i}" --hotspot_res "${hotspot_res}" --target_pdb "${target_pdb}" --chain "${chain}"
+    python3.11 "${REPO_DIR}/scripts/3_protein_binder_design.py" --root "${REPO_DIR}" \
+    --num_seq "${num_seq}" --diffusion "${diffusion}" --temp "${temp}" --target_sequence "${target_sequence}" \
+    --contigs "${contigs}" --i "${i}" --hotspot_res "${hotspot_res}" --target_pdb "${target_pdb}" --chain "${chain}"
 
     # # Step 3: Generate merged binding alignment for peptide-target protein, and optimize alignment 
-    # python3.13 "${REPO_DIR}/scripts/4_merge_seq_to_backbone.py" "${REPO_DIR}" "${chain}" "${i}" "${num_seq}" "${name}" "${params}" --solvent
-    # bash "${REPO_DIR}/scripts/5_run_prodigy.sh" "${chain}" "${start_pos}" "${end_pos}" "${diffusion}" "${temp}" "${i}" "${num_seq}" "${target_sequence}" "${REPO_DIR}" "${raw_pdb}" "${input_file}" "${hotspot_res}"
+    python3.13 "${REPO_DIR}/scripts/4_merge_seq_to_backbone.py" "${REPO_DIR}" "${chain}" "${i}" "${num_seq}" "${name}" "${params}" --solvent
+    bash "${REPO_DIR}/scripts/5_run_prodigy.sh" "${chain}" "${start_pos}" "${end_pos}" "${diffusion}" "${temp}" "${i}" "${num_seq}" "${target_sequence}" "${REPO_DIR}" "${raw_pdb}" "${input_file}" "${hotspot_res}"
 
 done
 
@@ -183,6 +190,39 @@ summary_file="${REPO_DIR}/summary_${protein}.txt"
 echo -e "Target\titeration\tnum_seq\tbinding_affinity\tdiss_constant" > "$summary_file"
 
 # Read input file and process for each chain, hotspot, start, and end position
+sed -n '4,5p' "$input_file" | while IFS=$'\t' read -r hotspot_res_prefix; do
+        diffusion=50
+        temp=0.3
+        i=4
+        num_seq=2
+        chain="A" 
+    for iteration in $(seq 1 $i); do
+        for num in $(seq 1 $num_seq); do
+        start_pos="6"
+        end_pos="157"
+        name="target${hotspot_res_prefix}"
+        params="${diffusion}diff_${temp}temp"
+        aligned_pdb="${REPO_DIR}/${name}/5_${name}_${params}_i${iteration}_${num}_complex.pdb"
+            if [[ -f "$aligned_pdb" ]]; then
+                binding_affinity=$(grep "# Binding affinity (kcal.mol-1): " "$aligned_pdb" | awk -F": " '{print $2}')
+                diss_constant=$(grep "# Dissociation constant (Kb) at 25.0˚C: " "$aligned_pdb" | awk -F": " '{print $2}')
+                echo -e "${name}\t${iteration}\t${num}\t${binding_affinity}\t${diss_constant}" >> "$summary_file"
+            echo "5_${name}_${params}_i${iteration}_${num}_complex.pdb:  diss_constant=${diss_constant}"
+            else
+                echo "Warning: File '$aligned_pdb' not found. Skipping this entry."
+            fi
+            echo ""
+            unset binding_affinity
+            unset diss_constant
+        done
+    done
+done
+echo "Summary file created: $summary_file"
+
+
+
+summary_file="${REPO_DIR}/summary_${protein}.txt"
+echo -e "Target\titeration\tnum_seq\tbinding_affinity\tdiss_constant" > "$summary_file"
 sed -n '1,13p' "$input_file" | while IFS=$'\t' read -r chain hotspot_res_prefix start_pos end_pos; do
         diffusion=50
         temp=0.3
@@ -192,7 +232,6 @@ sed -n '1,13p' "$input_file" | while IFS=$'\t' read -r chain hotspot_res_prefix 
     for iteration in $(seq 1 $i); do
         for num in $(seq 1 $num_seq); do
 
-            # Variables (do not modify)
             chain="A"
             hotspot_res="${chain}${hotspot_res_prefix}"
             contigs="${chain}${start_pos}-${end_pos}/0 ${peptide_length}" # e.g. "A60-90/0 15-25"
@@ -200,18 +239,14 @@ sed -n '1,13p' "$input_file" | while IFS=$'\t' read -r chain hotspot_res_prefix 
             params="${diffusion}diff_${temp}temp"
             aligned_pdb="${REPO_DIR}/${name}/5_${name}_${params}_i${iteration}_${num}_complex.pdb"
 
-            # Check if the aligned PDB file exists
             if [[ -f "$aligned_pdb" ]]; then
-                # Extract binding affinity and dissociation constant from the aligned PDB file
                 binding_affinity=$(grep "# Binding affinity (kcal.mol-1): " "$aligned_pdb" | awk -F": " '{print $2}')
                 diss_constant=$(grep "# Dissociation constant (Kb) at 25.0˚C: " "$aligned_pdb" | awk -F": " '{print $2}')
-
-                # Append results to the summary file
                 echo -e "${name}\t${iteration}\t${num}\t${binding_affinity}\t${diss_constant}" >> "$summary_file"
+                echo "Name=${name}, iteration=${iteration}, num=${num}, binding_affinity=${binding_affinity}, diss_constant=${diss_constant}"
             else
                 echo "Warning: File '$aligned_pdb' not found. Skipping this entry."
             fi
-            echo "Name=${name}, iteration=${iteration}, num=${num}, binding_affinity=${binding_affinity}, diss_constant=${diss_constant}"
             echo ""
         done
     done
