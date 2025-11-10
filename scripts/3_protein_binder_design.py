@@ -46,7 +46,7 @@ target_pdb = args.target_pdb
 root = args.root
 chain = args.chain
 
-if ',' in hotspot_res:
+if isinstance(hotspot_res, list) and ',' in hotspot_res[0]:
     hotspot_res = [res.strip("'") for res in hotspot_res[0].strip('"').split(',')]
 
 # target_pdb = "/home/shadeform/protein-binder-design/input/tnf1.pdb" ==
@@ -60,12 +60,12 @@ if ',' in hotspot_res:
 # root = "/home/shadeform/protein-binder-design"
 # chain = "C"
 
-print(f"Number of seqs to generate per target: {num_seq}"
+print(f"\nNumber of seqs to generate per target: {num_seq}"
       f"\nDiffusion: {diffusion}"
       f"\nSampling temp: {temp}"
       f"\nContigs: {contigs}"
       f"\nIterations: {i}"
-      f"\nHotspot residues: {hotspot_res}\n"
+      f"\nHotspot residues: {hotspot_res}"
 )
 # Set input directory 
 # root = "/home/ubuntu/protein-binder-design"
@@ -81,7 +81,7 @@ name = f"{cycle}_{diffusion}diff_{temp}temp"
 # outdir = f"{root}/{diffusion}diff_{temp}temp"
 outdir = f"{root}/{cycle}"
 os.makedirs(outdir, exist_ok=True)
-print(f"Output dir: {outdir}")
+print(f"\nOutput dir: {outdir}\n")
     
 pdb_path = target_pdb
 if not os.path.exists(pdb_path):
