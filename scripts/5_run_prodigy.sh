@@ -19,7 +19,7 @@ target_sequence=$8
 REPO_DIR=$9
 target_pdb=${10}
 input_file=${11}
-hotspot=${12}
+hotspot="${12}"
 remove_water=TRUE
 
 # At least 11 arguments are provided
@@ -28,17 +28,29 @@ if [[ $# -lt 12 ]]; then
     echo "Usage: $0 {name} {params} {i} {num_seq} {target_sequence} {REPO_DIR} {target_pdb} {input_file} {hotspot}"
     continue
 fi
+if [[ $hotspot == *","* ]]; then
+    name="target${hotspot}"
+else
+    name="target_${chain}${start_pos}_${end_pos}"
+fi
 
-echo "Chain: $chain"
-echo "Start position: $start_pos"
+echo ""
+echo "####################################################"
+echo "5. Running PRODIGY to calculate dissociation constant"
+echo "####################################################"
+params="${diffusion}diff_${temp}temp"
+echo "REMOVING WATER?: $remove_water"
+echo ""
+echo "name: $name"
+echo "params: $params"
+echo ""
+echo "Chain: $chain   Start: $start_pos  End: $end_pos"
 echo "hotspot: $hotspot"
-echo "End position: $end_pos"
-echo "Diffusion steps: $diffusion"
-echo "Temperature: $temp"
-echo "Number of RFDiffusion iterations: $i"
-echo "Number of ProteinMPNN sequences per target: $num_seq"
+echo "Diffusion: $diffusion    Temperature: $temp"
+echo "Number of RFDiffusion iterations: $i    ProteinMPNN seqs per target: $num_seq"
+echo ""
 echo "Target sequence: $target_sequence"
-echo "REPO_DIR: $REPO_DIR"
+echo ""
 echo "Target PDB: $target_pdb"
 echo "Input file: $input_file"
 echo ""
@@ -144,19 +156,6 @@ echo ""
 # done
 # done
 
-echo ""
-echo "####################################################"
-echo "5. Running PRODIGY to calculate dissociation constant"
-echo "####################################################"
-echo "REPO_DIR: $REPO_DIR"
-if [[ "$hotspot_res" == *","* ]]; then
-    name="target${hotspot}"
-else
-    name="target_${chain}${start_pos}_${end_pos}"
-fi
-params="${diffusion}diff_${temp}temp"
-echo "name: $name"
-echo ""
 
 for iteration in $(seq 1 $i); do
     for num in $(seq 1 $num_seq); do
