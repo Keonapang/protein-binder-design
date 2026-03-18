@@ -21,6 +21,7 @@ params=$3
 i=$4
 num=$5
 
+# --------- example variables ---------
 # REPO_DIR="/home/shadeform/protein-binder-design"
 # name="target_A60_90"
 # params="50diff_0.3temp"
@@ -41,6 +42,7 @@ num=$5
 # export FRAME_EVERY_PS=100
 # export RECEPTOR_CHAIN=A
 # export LIGAND_CHAIN=B
+# ------------------------------------
 
 set -euo pipefail
 
@@ -54,8 +56,8 @@ FRAME_EVERY_PS=100      # snapshot spacing for MM/PBSA
 RECEPTOR_CHAIN=A
 LIGAND_CHAIN=B
 
-# record start time
 start_time=$(date +%s)
+
 input_pdb=${REPO_DIR}/${name}/5_${name}_${params}_i${i}_${num}_complex.pdb
 
 echo ""
