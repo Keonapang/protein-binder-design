@@ -94,7 +94,7 @@ start_time = time.time()
 ##############################################################
 # Authenticator for NGC API
 
-NVIDIA_API_KEY = os.getenv("NGC_CLI_API_KEY") # NVIDIA_API_KEY = os.getenv("NVIDIA_API_KEY") or input("Paste Run Key: ")
+NVIDIA_API_KEY = os.getenv("NGC_CLI_API_KEY")
 if not NVIDIA_API_KEY:
     raise ValueError("NGC_CLI_API_KEY environment variable is not set. Please export it before running script.")
 
@@ -270,10 +270,10 @@ for iteration in range(i):
     del rfdiffusion_query
     gc.collect()
 
-##############################################################
-# 3. ProteinMPNN
-##############################################################    
-    print(f"\n2.Running ProteinMPNN to generate {num_seq} seq per target....")
+    ##############################################################
+    # 3. ProteinMPNN
+    ##############################################################    
+    print(f"\n2.ProteinMPNN to generate {num_seq} seq per target....")
     proteinmpnn_query = {
         "input_pdb" : rfdiffusion_response["output_pdb"],
         "input_pdb_chains" : example.input_pdb_chains,
@@ -297,7 +297,7 @@ for iteration in range(i):
     for i in range(len(lines)):
         if lines[i].startswith(">T="):  # Identify lines with binder headers
             if i + 1 < len(lines):  # Ensure the next line exists
-                fasta_sequences.append(lines[i + 1].strip())  # Collect the sequence
+                fasta_sequences.append(lines[i + 1].strip())  # Collect sequence
     # Save proteinmpnn_response["mfasta"] to a .fasta file
     with open(f"{outdir}/3_{name}_i{iteration + 1}.fasta", "w") as fasta_file:
         fasta_file.write(proteinmpnn_response["mfasta"])
@@ -313,6 +313,8 @@ for iteration in range(i):
     del proteinmpnn_response
     del proteinmpnn_query
     gc.collect()
+
+    
     ##############################################################
     # 3. AlphaFold to predict the structure of the binder alone
     ##############################################################

@@ -34,7 +34,7 @@ docker compose up
 
 # # Install conda
 # wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
-# bash Miniconda3-latest-Linux-x86_64.sh # installed to /home/shadeform/miniconda3
+# bash Miniconda3-latest-Linux-x86_64.sh # installed to $HOME/miniconda3
 # echo 'export PATH="$HOME/miniconda3/bin:$PATH"' >> ~/.bashrc
 # source ~/.bashrc # conda --version
 # conda create -n pdbfixer_env python=3.13 -y
@@ -56,12 +56,12 @@ curl localhost:8083/v1/health/ready # Protein MPNN
     
 # Define protein
 protein="1TNF" # 1TNF, apob, tnf
-REPO_DIR="/home/shadeform/protein-binder-design"
+REPO_DIR="$HOME/protein-binder-design"
 raw_pdb="${REPO_DIR}/input/${protein}.pdb"             # target protein
 input_file="${REPO_DIR}/input/target_file_${protein}_surface.txt"  # chain, hotspot residue, start/end pos 
 
 # Clean up raw  format
-REPO_DIR="/home/shadeform/protein-binder-design"
+REPO_DIR="$HOME/protein-binder-design"
 sed -i 's/\r$//' "${REPO_DIR}/scripts/get_target_pdb.sh" # optional (to remove any hidden spaces from Windows)
 sed -i 's/\r$//' "${REPO_DIR}/scripts/5_run_prodigy.sh" 
 sed -i 's/^[ \t]*//;s/[ \t]*$//' "${REPO_DIR}/scripts/5_run_prodigy.sh"
