@@ -13,54 +13,47 @@
 sudo apt-get update # updated nvidia toolkit
 sudo apt-get install -y docker-compose # docker compose version 2+
 sudo apt install python3.11
+
+# Create cache directory for the NIMs
 mkdir -p ~/.cache/nim
 chmod -R 777 ~/.cache/nim    
 export HOST_NIM_CACHE=~/.cache/nim
 
-export NGC_CLI_API_KEY=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
+# 3. Export NGC API key and login to NGC container registry
+export NGC_CLI_API_KEY=<insert>
 docker login nvcr.io --username='$oauthtoken' --password="${NGC_CLI_API_KEY}"
 cd ~
 cd protein-binder-design/deploy/
 docker compose up
 
 ###########################################################################################################
-# **Set up `openmm` and `pdbfier` to align backbones (requires python 3.13):**
+# Alternative download of the models
 ###########################################################################################################
-# cd ~
-# git clone https://github.com/openmm/pdbfixer
-# cd pdbfixer
-# python setup.py install
-# python3.13 -m pip install numpy prodigy-prot torch Bio biopython pdb-tools
 
-# # Install conda
-# wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
-# bash Miniconda3-latest-Linux-x86_64.sh # installed to /home/shadeform/miniconda3
-# echo 'export PATH="$HOME/miniconda3/bin:$PATH"' >> ~/.bashrc
-# source ~/.bashrc # conda --version
-# conda create -n pdbfixer_env python=3.13 -y
-# conda init
-# # Open new temrinal window(s) and install these packages:
-# conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/main
-# conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/r
-# conda activate pdbfixer_env
-# conda install -c conda-forge pdbfixer
-# conda install -c conda-forge openmm
-# python3.13 -m pip install numpy prodigy-prot torch Bio biopython pdb-tools
+# docker run -it \
+#     --runtime=nvidia \
+#     --gpus='"device=0"' \
+#     -p 8082:8000 \
+#     -e NGC_CLI_API_KEY \
+#     -v "$LOCAL_NIM_CACHE":/opt/nim/.cache \
+#     nvcr.io/nim/ipd/rfdiffusion:2.2.0
 
-# export NGC_CLI_API_KEY=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
-# docker login nvcr.io --username='$oauthtoken' --password="${NGC_CLI_API_KEY}"
+# docker run -it \
+#     --runtime=nvidia \
+#     --gpus='"device=0"' \
+#     -p 8083:8000 \
+#     -e NGC_CLI_API_KEY \
+#     -v "$LOCAL_NIM_CACHE":/home/nvs/.cache/nim \
+#     nvcr.io/nim/ipd/proteinmpnn:latest
 
-###########################################################################################################
 curl localhost:8082/v1/health/ready # RFdiffusion
 curl localhost:8083/v1/health/ready # Protein MPNN
     
-# Define protein
-protein="1TNF" # 1TNF, apob, tnf
-REPO_DIR="/home/shadeform/protein-binder-design"
-raw_pdb="${REPO_DIR}/input/${protein}.pdb"             # target protein
-input_file="${REPO_DIR}/input/target_file_${protein}_surface.txt"  # chain, hotspot residue, start/end pos 
 
-# Clean up raw  format
+###########################################################################################################
+# Clean up script format
+###########################################################################################################
+
 REPO_DIR="/home/shadeform/protein-binder-design"
 sed -i 's/\r$//' "${REPO_DIR}/scripts/get_target_pdb.sh" # optional (to remove any hidden spaces from Windows)
 sed -i 's/\r$//' "${REPO_DIR}/scripts/5_run_prodigy.sh" 
@@ -74,6 +67,56 @@ cat -A "$input_file"
 wc -l $input_file
 wc -l $raw_pdb
 
+###########################################################################################################
+# Define analysis
+###########################################################################################################
+
+# Define protein
+protein="1TNF" # 1TNF, apob, tnf
+REPO_DIR="/home/shadeform/protein-binder-design"
+raw_pdb="${REPO_DIR}/input/${protein}.pdb"             # target protein
+input_file="${REPO_DIR}/input/target_file_${protein}_surface.txt"  # chain, hotspot residue, start/end pos 
+
+# Input chain (where the design will occur) - in this case, it is the trimer's chain A (AA position 6 to 157)
+chain="A" 
+start_pos="6"
+end_pos="157"
+
+# Design parameters
+diffusion=50
+temp=0.3
+peptide_length="15-25" # set a range (i.e."15-25") or a value ("25")
+i=10 # RFDiffusions structures
+num_seq=4 #Protein_PMNN sequences per structure
+export CUDA_VISIBLE_DEVICES=0
+
+# hotspots - yes or no?
+unset hotspot_res # NO HOTSPOTS SET
+# hotspot_res="${chain}${hotspot_res_prefix}"
+
+# Variables 
+contigs="${chain}${start_pos}-${end_pos}/0 ${peptide_length}" # e.g. "A60-90/0 15-25"
+name="target_${chain}${start_pos}_${end_pos}"
+params="${diffusion}diff_${temp}temp"
+
+# Step 1: Build target structure PDB and extract target seq amino acid
+target_pdb="${REPO_DIR}/input/${name}.pdb"
+bash ${REPO_DIR}/scripts/get_target_pdb.sh "${raw_pdb}" "${target_pdb}" "${chain}" "${start_pos}" "${end_pos}"
+if [ -f "$target_pdb" ]; then target_sequence=$(bash "${REPO_DIR}/scripts/get_target_seq.sh" "${target_pdb}"); fi
+
+# Step 2: Run the protein binder design script
+python3.11 "${REPO_DIR}/scripts/3_protein_binder_design.py" --root "${REPO_DIR}" \
+    --num_seq "${num_seq}" --diffusion "${diffusion}" --temp "${temp}" --target_sequence "${target_sequence}" \
+    --contigs "${contigs}" --i "${i}" --hotspot_res "${hotspot_res}" --target_pdb "${target_pdb}" --chain "${chain}"
+
+# Step 3: Generate merged binding alignment for peptide-target protein, and optimize alignment 
+python3.13 "${REPO_DIR}/scripts/4_merge_seq_to_backbone.py" "${REPO_DIR}" "${chain}" "${i}" "${num_seq}" "${name}" "${params}" --solvent
+bash "${REPO_DIR}/scripts/5_run_prodigy.sh" "${chain}" "${start_pos}" "${end_pos}" "${diffusion}" "${temp}" "${i}" "${num_seq}" "${target_sequence}" "${REPO_DIR}" "${raw_pdb}" "${input_file}" "${hotspot_res}"
+
+
+###########################################################################################################
+# OPTION 2: Run each line of $input_file, defining hotspots and start/end positions
+###########################################################################################################
 sed -n '13p' "$input_file" | while IFS=$'\t' read -r chain hotspot_res_prefix start_pos end_pos; do
     # Define script input variables
     diffusion=50
@@ -149,11 +192,13 @@ sed -n '9,21p' "$input_file" | while IFS=$'\t' read -r hotspot_res_prefix; do
     echo "name=${name},    params=${params},    contigs=${contigs}"
     echo "=========================================================================="
     # unset hotspot_res # NO HOTSPOTS SET
+
     # Step 1: Build target structure PDB and extract target seq amino acid
     target_pdb="${REPO_DIR}/input/${name}.pdb"
     # bash ${REPO_DIR}/scripts/get_target_pdb.sh "${raw_pdb}" "${target_pdb}" "${chain}" "${start_pos}" "${end_pos}"
     if [ -f "$target_pdb" ]; then target_sequence=$(bash "${REPO_DIR}/scripts/get_target_seq.sh" "${target_pdb}"); fi
     echo "Target sequence: ${target_sequence}"
+
     # # Step 2: Run the protein binder design script
     # python3.11 "${REPO_DIR}/scripts/3_protein_binder_design.py" --root "${REPO_DIR}" \
     # --num_seq "${num_seq}" --diffusion "${diffusion}" --temp "${temp}" --target_sequence "${target_sequence}" \
@@ -163,6 +208,8 @@ sed -n '9,21p' "$input_file" | while IFS=$'\t' read -r hotspot_res_prefix; do
     # python3.13 "${REPO_DIR}/scripts/4_merge_seq_to_backbone.py" "${REPO_DIR}" "${chain}" "${i}" "${num_seq}" "${name}" "${params}" --solvent
     bash "${REPO_DIR}/scripts/5_run_prodigy.sh" "${chain}" "${start_pos}" "${end_pos}" "${diffusion}" "${temp}" "${i}" "${num_seq}" "${target_sequence}" "${REPO_DIR}" "${raw_pdb}" "${input_file}" "${hotspot_res}"
 done
+
+
 
 ####################################################################
 # CODE WORKS!
@@ -271,9 +318,9 @@ done
 echo "Summary file created: $summary_file"
 
 
-###################
-
-# Loop through each line of $input_file
+###########################################################################
+# OPTION 4: Loop through each line of $input_file
+###########################################################################
 while IFS=$'\t' read -r chain hotspot_res_prefix start_pos end_pos; do # space-delimited
 
     # Variables (do not modify)
