@@ -16,7 +16,7 @@ sudo apt install python3.11
 
 # Create cache directory for the NIMs
 mkdir -p ~/.cache/nim
-chmod -R 777 ~/.cache/nim    
+sudo chmod -R 777 ~/.cache/nim    
 export HOST_NIM_CACHE=~/.cache/nim
 
 # 3. Export NGC API key and login to NGC container registry
@@ -68,21 +68,21 @@ wc -l $input_file
 wc -l $raw_pdb
 
 ###########################################################################################################
-# Define analysis
+# Define analysis variables
 ###########################################################################################################
 
-# Define protein
+# ------ Define protein ------
 protein="1TNF" # 1TNF, apob, tnf
 REPO_DIR="/home/shadeform/protein-binder-design"
 raw_pdb="${REPO_DIR}/input/${protein}.pdb"             # target protein
-input_file="${REPO_DIR}/input/target_file_${protein}_surface.txt"  # chain, hotspot residue, start/end pos 
 
-# Input chain (where the design will occur) - in this case, it is the trimer's chain A (AA position 6 to 157)
+# ------ Input chain (region where the generated peptides will bind to) ------
+#       in this case, it is the trimer's chain A (AA position 6 to 157)
 chain="A" 
 start_pos="6"
 end_pos="157"
 
-# Design parameters
+# ------ peptide design parameters ------
 diffusion=50
 temp=0.3
 peptide_length="15-25" # set a range (i.e."15-25") or a value ("25")
@@ -90,11 +90,11 @@ i=10 # RFDiffusions structures
 num_seq=4 #Protein_PMNN sequences per structure
 export CUDA_VISIBLE_DEVICES=0
 
-# hotspots - yes or no?
+# ------ hotspots - yes or no? ------
 unset hotspot_res # NO HOTSPOTS SET
-# hotspot_res="${chain}${hotspot_res_prefix}"
+# hotspot_res="${chain}${hotspot_res_prefix}" # SET A HOTSPOT
 
-# Variables 
+# Other variables 
 contigs="${chain}${start_pos}-${end_pos}/0 ${peptide_length}" # e.g. "A60-90/0 15-25"
 name="target_${chain}${start_pos}_${end_pos}"
 params="${diffusion}diff_${temp}temp"
@@ -115,28 +115,35 @@ bash "${REPO_DIR}/scripts/5_run_prodigy.sh" "${chain}" "${start_pos}" "${end_pos
 
 
 ###########################################################################################################
-# OPTION 2: Run each line of $input_file, defining hotspots and start/end positions
+# OPTION 2: Loop through each line within $input_file, defining hotspots and start/end positions
+# Requires additionally:
+#   -   Input file with each row being: Chain, hotspot residues, start/end positions
+
 ###########################################################################################################
+input_file="${REPO_DIR}/input/target_file_${protein}_surface.txt"  # chain, hotspot residue, start/end pos 
+head $input_file
+# A 60 50 90
+# A 156 50 157
+
 sed -n '13p' "$input_file" | while IFS=$'\t' read -r chain hotspot_res_prefix start_pos end_pos; do
-    # Define script input variables
+    
+    # ------ Define variables WITHIN loop ------
     diffusion=50
     temp=0.3
     i=4
     num_seq=2
     peptide_length="15-25" # set a range (i.e."15-25") or a value ("25")
-    chain="A" 
 
    # Variables (do not modify)
     hotspot_res="${chain}${hotspot_res_prefix}"
     contigs="${chain}${start_pos}-${end_pos}/0 ${peptide_length}" # e.g. "A60-90/0 15-25"
     name="target_${chain}${start_pos}_${end_pos}"
     params="${diffusion}diff_${temp}temp"
+    
     echo "Processing chain=${chain}, hotspot_res=${hotspot_res}, start_pos=${start_pos}, end_pos=${end_pos}"
     echo "name=${name},    params=${params},    contigs=${contigs}"
-    echo ""
     echo "=========================================================================="
     export CUDA_VISIBLE_DEVICES=0
-    unset hotspot_res # NO HOTSPOTS SET
 
     # Step 1: Build target structure PDB and extract target seq amino acid
     target_pdb="${REPO_DIR}/input/${name}.pdb"
@@ -152,7 +159,8 @@ sed -n '13p' "$input_file" | while IFS=$'\t' read -r chain hotspot_res_prefix st
     python3.13 "${REPO_DIR}/scripts/4_merge_seq_to_backbone.py" "${REPO_DIR}" "${chain}" "${i}" "${num_seq}" "${name}" "${params}" --solvent
     bash "${REPO_DIR}/scripts/5_run_prodigy.sh" "${chain}" "${start_pos}" "${end_pos}" "${diffusion}" "${temp}" "${i}" "${num_seq}" "${target_sequence}" "${REPO_DIR}" "${raw_pdb}" "${input_file}" "${hotspot_res}"
 done
-# ---------------- Clean up if necessary 
+
+# ---------------- Clean up NVIDIA workspace if necessary  ----------------
 # # remove all files from ${REPO_DIR}/${name} directory that begin with "5_target_" and end with ".pdb"
 # ls ./5_target_*.pdb
 # rm ./5_target_*.pdb
@@ -161,15 +169,22 @@ done
 #     mv "$file" "${file%_old}"
 # done
 
-########### alternative code: Nov 1 ##########
+###########################################################################################################
+# OPTION 3: Loop through each line within $input_file, defining hotspots positions ONLY
+# Requires additionally:
+#   -   Input file with each row being: a list of hotspot residues
+
+###########################################################################################################
 # Define protein
 protein="1TNF" # 1TNF, apob, tnf
 REPO_DIR="/home/shadeform/protein-binder-design"
 raw_pdb="${REPO_DIR}/input/${protein}.pdb"             # target protein
-input_file="${REPO_DIR}/input/target_file_${protein}_surface.txt"  # chain, hotspot residue, start/end pos 
-export NGC_CLI_API_KEY=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
-docker login nvcr.io --username='$oauthtoken' --password="${NGC_CLI_API_KEY}"
-export CUDA_VISIBLE_DEVICES=1
+
+input_file="${REPO_DIR}/input/target_file_${protein}_surface.txt"
+head $input_file
+# 'A6','A7','A8','A9','A34'
+# 'A10','A11','A38','A39','A156'
+
 
 sed -n '9,21p' "$input_file" | while IFS=$'\t' read -r hotspot_res_prefix; do
     # Define script input variables
@@ -179,6 +194,7 @@ sed -n '9,21p' "$input_file" | while IFS=$'\t' read -r hotspot_res_prefix; do
     num_seq=2
     peptide_length="15-25" # set a range (i.e."15-25") or a value ("25")
     chain="A" 
+    export CUDA_VISIBLE_DEVICES=1
 
    # Variables (do not modify)
     start_pos="6"
